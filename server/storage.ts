@@ -14,6 +14,7 @@ import {
   metrics,
   predictions,
   chatSessions,
+  anysAcademics,
   type User,
   type UpsertUser,
   type Professor,
