@@ -51,9 +51,9 @@ export default function AssignedGuards() {
   // Filter guards based on selected filters
   const filteredGuards = guards.filter(guard => {
     if (dateFilter && guard.data !== dateFilter) return false;
-    if (professorFilter && !guard.assignacions.some(a => a.professorId.toString() === professorFilter)) return false;
-    if (typeFilter && guard.tipusGuardia !== typeFilter) return false;
-    if (statusFilter && guard.estat !== statusFilter) return false;
+    if (professorFilter && professorFilter !== "all" && !guard.assignacions.some(a => a.professorId.toString() === professorFilter)) return false;
+    if (typeFilter && typeFilter !== "all" && guard.tipusGuardia !== typeFilter) return false;
+    if (statusFilter && statusFilter !== "all" && guard.estat !== statusFilter) return false;
     return true;
   });
 
@@ -161,7 +161,7 @@ export default function AssignedGuards() {
                   <SelectValue placeholder="Tots els professors" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tots els professors</SelectItem>
+                  <SelectItem value="all">Tots els professors</SelectItem>
                   {professors.map((prof: any) => (
                     <SelectItem key={prof.id} value={prof.id.toString()}>
                       {prof.nom} {prof.cognoms}
@@ -177,7 +177,7 @@ export default function AssignedGuards() {
                   <SelectValue placeholder="Tots els tipus" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tots els tipus</SelectItem>
+                  <SelectItem value="all">Tots els tipus</SelectItem>
                   <SelectItem value="pati">Pati</SelectItem>
                   <SelectItem value="biblioteca">Biblioteca</SelectItem>
                   <SelectItem value="entrada">Entrada</SelectItem>
@@ -193,7 +193,7 @@ export default function AssignedGuards() {
                   <SelectValue placeholder="Tots els estats" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tots els estats</SelectItem>
+                  <SelectItem value="all">Tots els estats</SelectItem>
                   <SelectItem value="assignada">Assignada</SelectItem>
                   <SelectItem value="completada">Completada</SelectItem>
                   <SelectItem value="pendent">Pendent</SelectItem>

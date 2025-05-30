@@ -70,7 +70,7 @@ export default function Assignments() {
 
   // Filter assignments by selected date
   const filteredAssignments = assignments.filter(assignment => 
-    assignment.guardia.data === selectedDate
+    assignment.guardia && assignment.guardia.data === selectedDate
   );
 
   // Create assignment mutation
