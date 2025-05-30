@@ -1,0 +1,81 @@
+erDiagram
+    PROFESSORS {
+        SERIAL professor_id PK
+        VARCHAR nom
+        VARCHAR cognoms
+        VARCHAR email
+        VARCHAR password_hash
+        VARCHAR rol
+    }
+    GRUPS {
+        SERIAL grup_id PK
+        VARCHAR nom_grup
+    }
+    ALUMNES {
+        SERIAL alumne_id PK
+        VARCHAR nom
+        VARCHAR cognoms
+        INTEGER grup_id FK
+    }
+    AULES {
+        SERIAL aula_id PK
+        VARCHAR nom_aula
+        INTEGER capacitat
+    }
+    HORARIS {
+        SERIAL horari_id PK
+        INTEGER professor_id FK
+        INTEGER grup_id FK
+        INTEGER aula_id FK
+        SMALLINT dia_setmana
+        TIME hora_inici
+        TIME hora_fi
+    }
+    SORTIDES {
+        SERIAL sortida_id PK
+        VARCHAR nom_sortida
+        TIMESTAMP data_inici
+        TIMESTAMP data_fi
+        INTEGER grup_id FK
+    }
+    GUARDIES {
+        SERIAL guardia_id PK
+        DATE data
+        TIME hora_inici
+        TIME hora_fi
+        VARCHAR tipus_guardia
+        VARCHAR estat
+    }
+    ASSIGNACIONS_GUARDIA {
+        SERIAL assigna_id PK
+        INTEGER guardia_id FK
+        INTEGER professor_id FK
+        SMALLINT prioritat
+        TIMESTAMP timestamp_asg
+    }
+    TASQUES {
+        SERIAL tasca_id PK
+        INTEGER assigna_id FK
+        TEXT descripcio
+        VARCHAR estat
+        TIMESTAMP data_creacio
+        DATE data_venciment
+    }
+    COMUNICACIONS {
+        SERIAL com_id PK
+        VARCHAR tipus_dest
+        INTEGER destinatari_id
+        TEXT missatge
+        TIMESTAMP data_enviament
+    }
+
+    %% Relacions
+    PROFESSORS ||--o{ HORARIS            : "1 professor té * horaris"
+    GRUPS     ||--o{ HORARIS            : "1 grup té * horaris"
+    AULES     ||--o{ HORARIS            : "1 aula té * horaris"
+    GRUPS     ||--o{ ALUMNES            : "1 grup té * alumnes"
+    GRUPS     ||--o{ SORTIDES           : "1 grup té * sortides"
+    GUARDIES  ||--o{ ASSIGNACIONS_GUARDIA : "1 guàrdia té * assignacions"
+    PROFESSORS||--o{ ASSIGNACIONS_GUARDIA : "1 professor té * assignacions"
+    ASSIGNACIONS_GUARDIA ||--o{ TASQUES : "1 assignació té * tasques"
+    ASSIGNACIONS_GUARDIA ||--o{ COMUNICACIONS : "1 assignació pot generar * comunicacions"
