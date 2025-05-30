@@ -285,7 +285,36 @@ export class DatabaseStorage implements IStorage {
 
   // Horari operations
   async getHoraris(): Promise<Horari[]> {
-    return await db.select().from(horaris).orderBy(horaris.diaSetmana, horaris.horaInici);
+    return await db
+      .select({
+        id: horaris.id,
+        professorId: horaris.professorId,
+        grupId: horaris.grupId,
+        aulaId: horaris.aulaId,
+        diaSetmana: horaris.diaSetmana,
+        horaInici: horaris.horaInici,
+        horaFi: horaris.horaFi,
+        assignatura: horaris.assignatura,
+        createdAt: horaris.createdAt,
+        professor: {
+          id: professors.id,
+          nom: professors.nom,
+          cognoms: professors.cognoms,
+        },
+        grup: {
+          id: grups.id,
+          nomGrup: grups.nomGrup,
+        },
+        aula: {
+          id: aules.id,
+          nomAula: aules.nomAula,
+        },
+      })
+      .from(horaris)
+      .leftJoin(professors, eq(horaris.professorId, professors.id))
+      .leftJoin(grups, eq(horaris.grupId, grups.id))
+      .leftJoin(aules, eq(horaris.aulaId, aules.id))
+      .orderBy(horaris.diaSetmana, horaris.horaInici);
   }
 
   async getHorarisByProfessor(professorId: number): Promise<Horari[]> {
