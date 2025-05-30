@@ -31,6 +31,11 @@ const navigationItems = [
     icon: Shield,
   },
   {
+    href: "/calendari-guardies",
+    label: "Calendari de Guàrdies",
+    icon: Calendar,
+  },
+  {
     href: "/assignacions",
     label: "Assignacions",
     icon: Users,

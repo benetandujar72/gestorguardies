@@ -51,10 +51,9 @@ export default function Communications() {
     select: (data: Communication[]) => data,
   });
 
-  // Fetch professors for recipient selection
+  // Fetch professors for the recipient dropdown
   const { data: professors = [] } = useQuery({
     queryKey: ['/api/professors'],
-    enabled: isCreateDialogOpen,
   });
 
   // Filter communications
