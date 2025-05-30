@@ -136,7 +136,7 @@ export default function ImportCSV() {
     importMutation.mutate({ file, entityType, academicYearId });
   };
 
-  const handleDownloadTemplate = () => {
+  const handleDownloadTemplate = async () => {
     if (!entityType) {
       toast({
         title: "Selecciona un tipus",
@@ -146,18 +146,40 @@ export default function ImportCSV() {
       return;
     }
 
-    const templateUrl = `/api/download/template?type=${entityType}`;
-    const link = document.createElement('a');
-    link.href = templateUrl;
-    link.download = `plantilla_${entityType}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    try {
+      const response = await fetch(`/api/download/template?type=${entityType}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-    toast({
-      title: "Plantilla descarregada",
-      description: `S'ha descarregat la plantilla per ${entityType}`,
-    });
+      if (!response.ok) {
+        throw new Error('Error al descarregar la plantilla');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `plantilla_${entityType}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Plantilla descarregada",
+        description: `S'ha descarregat la plantilla per ${entityType}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No s'ha pogut descarregar la plantilla.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleExport = () => {
