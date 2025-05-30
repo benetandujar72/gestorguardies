@@ -345,7 +345,23 @@ export class DatabaseStorage implements IStorage {
 
   // Sortida operations
   async getSortides(): Promise<Sortida[]> {
-    return await db.select().from(sortides).orderBy(desc(sortides.dataInici));
+    return await db.select({
+      id: sortides.id,
+      nomSortida: sortides.nomSortida,
+      dataInici: sortides.dataInici,
+      dataFi: sortides.dataFi,
+      grupId: sortides.grupId,
+      descripcio: sortides.descripcio,
+      lloc: sortides.lloc,
+      responsable: sortides.responsable,
+      createdAt: sortides.createdAt,
+      grup: {
+        id: grups.id,
+        nomGrup: grups.nomGrup,
+      }
+    }).from(sortides)
+      .leftJoin(grups, eq(sortides.grupId, grups.id))
+      .orderBy(desc(sortides.dataInici));
   }
 
   async getSortidesThisWeek(): Promise<Sortida[]> {
@@ -357,7 +373,22 @@ export class DatabaseStorage implements IStorage {
     endOfWeek.setDate(endOfWeek.getDate() + 6);
     endOfWeek.setHours(23, 59, 59, 999);
 
-    return await db.select().from(sortides)
+    return await db.select({
+      id: sortides.id,
+      nomSortida: sortides.nomSortida,
+      dataInici: sortides.dataInici,
+      dataFi: sortides.dataFi,
+      grupId: sortides.grupId,
+      descripcio: sortides.descripcio,
+      lloc: sortides.lloc,
+      responsable: sortides.responsable,
+      createdAt: sortides.createdAt,
+      grup: {
+        id: grups.id,
+        nomGrup: grups.nomGrup,
+      }
+    }).from(sortides)
+      .leftJoin(grups, eq(sortides.grupId, grups.id))
       .where(between(sortides.dataInici, startOfWeek, endOfWeek));
   }
 

@@ -347,7 +347,7 @@ export default function Outings() {
                   </div>
                   <CardDescription className="flex items-center space-x-2">
                     <Users className="w-3 h-3" />
-                    <span>{outing.grup.nomGrup}</span>
+                    <span>{outing.grup?.nomGrup || 'Grup no assignat'}</span>
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
