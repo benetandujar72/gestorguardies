@@ -15,7 +15,7 @@ import Professors from "@/pages/professors";
 import Groups from "@/pages/groups";
 import Classrooms from "@/pages/classrooms";
 import Analytics from "@/pages/analytics";
-import ChatBot from "@/pages/chat-bot";
+import SimpleChat from "@/pages/simple-chat";
 import ImportCSV from "@/pages/import-csv";
 import Setup from "@/pages/setup";
 import NotFound from "@/pages/not-found";
@@ -63,7 +63,7 @@ function Router() {
             <Route path="/grups" component={Groups} />
             <Route path="/aules" component={Classrooms} />
             <Route path="/analytics" component={Analytics} />
-            <Route path="/chat-bot" component={ChatBot} />
+            <Route path="/chat-bot" component={SimpleChat} />
             <Route path="/import" component={ImportCSV} />
             <Route component={NotFound} />
           </Switch>

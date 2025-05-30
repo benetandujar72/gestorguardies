@@ -534,6 +534,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simple Chat route
+  app.post('/api/chat/simple', isAuthenticated, async (req, res) => {
+    try {
+      console.log("=== SIMPLE CHAT ENDPOINT HIT ===");
+      const { message } = req.body;
+      const userId = (req as any).user.claims.sub;
+      
+      console.log("User message:", message);
+      console.log("User ID:", userId);
+      
+      // Generate AI response directly without session management
+      const response = await generateChatResponse(message, []);
+      
+      console.log("AI response generated:", response);
+      
+      res.json({ response });
+    } catch (error: any) {
+      console.error("Simple chat error:", error);
+      res.status(500).json({ message: "Failed to process chat message" });
+    }
+  });
+
   // AI Chat routes
   app.get('/api/chat/sessions', isAuthenticated, async (req, res) => {
     try {
