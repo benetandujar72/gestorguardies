@@ -242,13 +242,28 @@ export default function Outings() {
 
                   <FormField
                     control={form.control}
-                    name="responsable"
+                    name="responsableId"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Responsable (opcional)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Nom del professor responsable..." {...field} />
-                        </FormControl>
+                        <Select
+                          onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
+                          value={field.value?.toString() || "none"}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona un responsable" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="none">Cap responsable</SelectItem>
+                            {professors.map((professor: any) => (
+                              <SelectItem key={professor.id} value={professor.id.toString()}>
+                                {professor.nom} {professor.cognoms}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -376,11 +391,11 @@ export default function Outings() {
                       </div>
                     )}
 
-                    {outing.responsable && (
+                    {(outing.responsable?.fullName || outing.responsableFullName || (outing.responsableNom && outing.responsableCognoms && `${outing.responsableNom} ${outing.responsableCognoms}`)) && (
                       <div className="flex items-center space-x-2 text-sm">
                         <Users className="w-3 h-3 text-text-secondary" />
                         <span className="text-text-secondary">
-                          Responsable: {outing.responsable}
+                          Responsable: {outing.responsable?.fullName || outing.responsableFullName || `${outing.responsableNom} ${outing.responsableCognoms}`}
                         </span>
                       </div>
                     )}
