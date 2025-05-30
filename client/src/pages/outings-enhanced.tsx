@@ -25,7 +25,7 @@ const outingSchema = z.object({
   grupId: z.number().min(1, "Selecciona un grup"),
   descripcio: z.string().optional(),
   lloc: z.string().optional(),
-  responsable: z.string().optional(),
+  responsableId: z.number().optional().nullable(),
 });
 
 type OutingFormData = z.infer<typeof outingSchema>;
@@ -124,7 +124,7 @@ export default function OutingsEnhanced() {
       grupId: 0,
       descripcio: "",
       lloc: "",
-      responsable: "",
+      responsableId: null,
     },
   });
 
@@ -138,7 +138,7 @@ export default function OutingsEnhanced() {
       grupId: 0,
       descripcio: "",
       lloc: "",
-      responsable: "",
+      responsableId: null,
     },
   });
 
