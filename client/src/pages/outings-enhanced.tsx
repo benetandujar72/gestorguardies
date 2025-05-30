@@ -230,7 +230,7 @@ export default function OutingsEnhanced() {
       grupId: outing.grup.id,
       descripcio: outing.descripcio || "",
       lloc: outing.lloc || "",
-      responsable: outing.responsable || "",
+      responsableId: outing.responsable?.id || null,
     });
     setIsEditDialogOpen(true);
   };
@@ -508,20 +508,20 @@ export default function OutingsEnhanced() {
 
               <FormField
                 control={createForm.control}
-                name="responsable"
+                name="responsableId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Responsable</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : null)} value={field.value ? field.value.toString() : ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecciona un professor..." />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="none">Cap professor assignat</SelectItem>
+                        <SelectItem value="">Cap professor assignat</SelectItem>
                         {professors.map((prof: any) => (
-                          <SelectItem key={prof.id} value={prof.fullName}>
+                          <SelectItem key={prof.id} value={prof.id.toString()}>
                             {prof.fullName}
                           </SelectItem>
                         ))}
@@ -661,20 +661,20 @@ export default function OutingsEnhanced() {
 
               <FormField
                 control={editForm.control}
-                name="responsable"
+                name="responsableId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Responsable</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : null)} value={field.value ? field.value.toString() : ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecciona un professor..." />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="none">Cap professor assignat</SelectItem>
+                        <SelectItem value="">Cap professor assignat</SelectItem>
                         {professors.map((prof: any) => (
-                          <SelectItem key={prof.id} value={prof.fullName}>
+                          <SelectItem key={prof.id} value={prof.id.toString()}>
                             {prof.fullName}
                           </SelectItem>
                         ))}
