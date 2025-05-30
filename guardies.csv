@@ -1,0 +1,31 @@
+data,horaInici,horaFi,lloc,tipusGuardia,estat,observacions
+2025-06-01,10:00,10:30,Pati,Pati,planificada,Guàrdia de pati - esbarjo
+2025-06-01,08:00,09:00,Cantina,Entrada,planificada,
+2025-06-01,09:00,10:00,Cantina,Entrada,planificada,
+2025-06-01,10:00,11:00,Passadís 2n pis,Passadís,planificada,
+2025-06-01,12:30,13:30,Entrada,Pati,planificada,
+2025-06-01,13:30,14:30,Passadís 1r pis,Passadís,planificada,
+2025-06-02,10:00,10:30,Pati,Pati,planificada,Guàrdia de pati - esbarjo
+2025-06-02,08:00,09:00,Cantina,Entrada,planificada,
+2025-06-02,09:00,10:00,Passadís 1r pis,Entrada,planificada,
+2025-06-02,10:00,11:00,Entrada,Entrada,planificada,
+2025-06-02,12:30,13:30,Biblioteca,Biblioteca,planificada,
+2025-06-02,13:30,14:30,Passadís 2n pis,Entrada,planificada,
+2025-06-03,10:00,10:30,Pati,Pati,planificada,Guàrdia de pati - esbarjo
+2025-06-03,08:00,09:00,Biblioteca,Passadís,planificada,
+2025-06-03,09:00,10:00,Biblioteca,Entrada,planificada,
+2025-06-03,10:00,11:00,Cantina,Pati,planificada,
+2025-06-03,12:30,13:30,Cantina,Pati,planificada,
+2025-06-03,13:30,14:30,Passadís 2n pis,Entrada,planificada,
+2025-06-04,10:00,10:30,Pati,Pati,planificada,Guàrdia de pati - esbarjo
+2025-06-04,08:00,09:00,Passadís 2n pis,Pati,planificada,
+2025-06-04,09:00,10:00,Pati,Pati,planificada,
+2025-06-04,10:00,11:00,Cantina,Passadís,planificada,
+2025-06-04,12:30,13:30,Entrada,Pati,planificada,
+2025-06-04,13:30,14:30,Cantina,Biblioteca,planificada,
+2025-06-05,10:00,10:30,Pati,Pati,planificada,Guàrdia de pati - esbarjo
+2025-06-05,08:00,09:00,Cantina,Biblioteca,planificada,
+2025-06-05,09:00,10:00,Entrada,Passadís,planificada,
+2025-06-05,10:00,11:00,Passadís 1r pis,Pati,planificada,
+2025-06-05,12:30,13:30,Pati,Entrada,planificada,
+2025-06-05,13:30,14:30,Pati,Biblioteca,planificada,

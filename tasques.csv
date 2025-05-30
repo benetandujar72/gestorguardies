@@ -1,0 +1,5 @@
+assignacioId,descripcio,estat,prioritat,dataVenciment,comentaris
+1,Revisar incidents durant el pati del migdia,pendent,mitjana,2025-06-02,Verificar que no hi ha hagut incidents i registrar observacions
+2,Controlar l'accés a la biblioteca durant l'hora lliure,en_progress,baixa,2025-06-03,Assegurar ordre i silenci a la biblioteca
+3,Supervisar l'evacuació d'emergència - simulacre,pendent,urgent,2025-06-05,Simulacre d'evacuació programat per demà
+4,Recompte d'alumnes al final de la sortida,completada,alta,,Tasca completada satisfactòriament. Tots els alumnes presents.

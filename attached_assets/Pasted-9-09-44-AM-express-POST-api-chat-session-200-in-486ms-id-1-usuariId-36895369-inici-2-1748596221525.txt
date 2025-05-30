@@ -1,0 +1,37 @@
+9:09:44 AM [express] POST /api/chat/session 200 in 486ms :: {"id":1,"usuariId":"36895369","inici":"2…
+Error generating chat response: AuthenticationError: 401 Incorrect API key provided: default_key. You can find your API key at https://platform.openai.com/account/api-keys.
+    at Function.generate (/home/runner/workspace/node_modules/openai/src/core/error.ts:76:14)
+    at OpenAI.makeStatusError (/home/runner/workspace/node_modules/openai/src/client.ts:400:28)
+    at OpenAI.makeRequest (/home/runner/workspace/node_modules/openai/src/client.ts:616:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async generateChatResponse (/home/runner/workspace/server/openai.ts:90:22)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:572:26) {
+  status: 401,
+  headers: Headers {
+    date: 'Fri, 30 May 2025 09:09:53 GMT',
+    'content-type': 'application/json; charset=utf-8',
+    'content-length': '261',
+    connection: 'keep-alive',
+    vary: 'Origin',
+    'x-request-id': 'req_dd414ca405842f9222fd25382ea65eac',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    'cf-cache-status': 'DYNAMIC',
+    'set-cookie': '__cf_bm=hPBFDLdtdQNjmaY9aoGkK98wT6yi74VPglbCSzA.Hqg-1748596193-1.0.1.1-.lCzc9FdhlasmrO10bVun_yEcMDHbTMai3PzSzk4xRCK.9YzuaE816T7ip4_UtP.CIACjaDT7EoPrq9YvR.jc5plfmhJqJc88bEq17HMsnI; path=/; expires=Fri, 30-May-25 09:39:53 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None, _cfuvid=DT8JSTUx1MGZ2e2zFJPGWjgmn5Es7Fu2ApZOu38GOag-1748596193425-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None',
+    'x-content-type-options': 'nosniff',
+    server: 'cloudflare',
+    'cf-ray': '947d18609935ba21-SEA',
+    'alt-svc': 'h3=":443"; ma=86400'
+  },
+  requestID: 'req_dd414ca405842f9222fd25382ea65eac',
+  error: {
+    message: 'Incorrect API key provided: default_key. You can find your API key at https://platform.openai.com/account/api-keys.',
+    type: 'invalid_request_error',
+    param: null,
+    code: 'invalid_api_key'
+  },
+  code: 'invalid_api_key',
+  param: null,
+  type: 'invalid_request_error'
+}
+9:09:53 AM [express] POST /api/chat/1/message 200 in 439ms :: {"response":"Hi ha hagut un error en p…
+9:09:54 AM [express] POST /api/chat/session 200 in 190ms :: {"id":1,"usuariId":"36895369","inici":"2…

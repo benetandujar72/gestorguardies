@@ -1,0 +1,16 @@
+professorId,grupId,aulaId,diaSetmana,horaInici,horaFi,assignatura
+1,1,1,Dijous,12:30,13:30,CAST
+2,2,2,Dijous,08:00,09:00,CAST
+3,3,3,Dijous,08:00,09:00,CAST
+4,4,4,Divendres,11:30,12:30,CAT
+5,5,5,Divendres,10:00,11:00,CAT
+6,6,6,Dimarts,11:30,12:30,CAT
+7,7,7,Dijous,12:30,13:30,MAT
+8,8,8,Dilluns,10:00,11:00,MAT
+9,9,9,Dijous,13:30,14:30,MAT
+10,10,10,Divendres,10:00,11:00,ANG
+11,11,11,Divendres,13:30,14:30,ANG
+12,12,12,Divendres,11:30,12:30,EF
+13,13,13,Dijous,09:00,10:00,EF
+14,14,14,Dimecres,10:00,11:00,MUS
+15,15,15,Dijous,11:30,12:30,MUS
