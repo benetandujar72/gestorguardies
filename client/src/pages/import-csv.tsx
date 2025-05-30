@@ -8,9 +8,9 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Upload, FileText, CheckCircle, AlertCircle, Download, Info, FileDown } from "lucide-react";
+import { Upload, FileText, CheckCircle, AlertCircle, Download, Info, FileDown, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ImportResult {
@@ -24,15 +24,25 @@ export default function ImportCSV() {
   const [file, setFile] = useState<File | null>(null);
   const [entityType, setEntityType] = useState<string>("");
   const [exportEntityType, setExportEntityType] = useState<string>("");
+  const [academicYearId, setAcademicYearId] = useState<string>("");
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<ImportResult | null>(null);
   const { toast } = useToast();
 
+  // Obtener años académicos
+  const { data: academicYears } = useQuery({
+    queryKey: ['/api/anys-academics'],
+  });
+
+  // Encontrar el año académico activo
+  const activeAcademicYear = academicYears?.find((year: any) => year.actiu === true);
+
   const importMutation = useMutation({
-    mutationFn: async ({ file, entityType }: { file: File; entityType: string }) => {
+    mutationFn: async ({ file, entityType, academicYearId }: { file: File; entityType: string; academicYearId: string }) => {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('entityType', entityType);
+      formData.append('academicYearId', academicYearId);
 
       return apiRequest('POST', '/api/import/csv', {
         method: 'POST',
@@ -114,16 +124,16 @@ export default function ImportCSV() {
   };
 
   const handleImport = () => {
-    if (!file || !entityType) {
+    if (!file || !entityType || !academicYearId) {
       toast({
         title: "Dades incompletes",
-        description: "Si us plau, selecciona un fitxer i un tipus d'entitat.",
+        description: "Si us plau, selecciona un fitxer, un tipus d'entitat i un curs acadèmic.",
         variant: "destructive",
       });
       return;
     }
 
-    importMutation.mutate({ file, entityType });
+    importMutation.mutate({ file, entityType, academicYearId });
   };
 
   const handleExport = () => {
@@ -212,6 +222,30 @@ export default function ImportCSV() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="academicYear">Curs acadèmic</Label>
+              <Select value={academicYearId} onValueChange={setAcademicYearId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona el curs acadèmic" />
+                </SelectTrigger>
+                <SelectContent>
+                  {academicYears?.map((year: any) => (
+                    <SelectItem key={year.id} value={String(year.id)}>
+                      {year.nom} {year.actiu && "(Actiu)"}
+                    </SelectItem>
+                  )) || []}
+                </SelectContent>
+              </Select>
+              {academicYearId && activeAcademicYear && String(activeAcademicYear.id) === academicYearId && (
+                <Alert className="border-orange-200 bg-orange-50">
+                  <AlertTriangle className="h-4 w-4 text-orange-600" />
+                  <AlertDescription className="text-orange-800">
+                    <strong>Atenció:</strong> Estàs important dades al curs acadèmic actiu. Això pot afectar les dades en ús.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="entityType">Tipus d'entitat</Label>
               <Select value={entityType} onValueChange={setEntityType}>
                 <SelectTrigger>
@@ -256,7 +290,7 @@ export default function ImportCSV() {
 
             <Button
               onClick={handleImport}
-              disabled={!file || !entityType || importMutation.isPending}
+              disabled={!file || !entityType || !academicYearId || importMutation.isPending}
               className="w-full"
             >
               <Upload className="h-4 w-4 mr-2" />

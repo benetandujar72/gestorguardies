@@ -844,10 +844,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/import/csv', isAuthenticated, upload.single('csvFile'), async (req, res) => {
     try {
       const file = req.file;
-      const { entityType } = req.body;
+      const { entityType, academicYearId } = req.body;
       
       if (!file) {
         return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      if (!academicYearId) {
+        return res.status(400).json({ message: "Academic year ID is required" });
       }
       
       // Process CSV file (simplified implementation)
@@ -868,19 +872,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             switch (entityType) {
               case 'professors':
-                await storage.createProfessor(insertProfessorSchema.parse(record));
+                const professorData = { ...record, anyAcademicId: parseInt(academicYearId) };
+                await storage.createProfessor(insertProfessorSchema.parse(professorData));
                 break;
               case 'grups':
-                await storage.createGrup(insertGrupSchema.parse(record));
+                const grupData = { ...record, anyAcademicId: parseInt(academicYearId) };
+                await storage.createGrup(insertGrupSchema.parse(grupData));
                 break;
               case 'alumnes':
-                await storage.createAlumne(insertAlumneSchema.parse(record));
+                const alumneData = { ...record, anyAcademicId: parseInt(academicYearId) };
+                await storage.createAlumne(insertAlumneSchema.parse(alumneData));
                 break;
               case 'aules':
-                await storage.createAula(insertAulaSchema.parse(record));
+                const aulaData = { ...record, anyAcademicId: parseInt(academicYearId) };
+                await storage.createAula(insertAulaSchema.parse(aulaData));
                 break;
               case 'sortides':
-                await storage.createSortida(insertSortidaSchema.parse(record));
+                const sortidaData = { ...record, anyAcademicId: parseInt(academicYearId) };
+                await storage.createSortida(insertSortidaSchema.parse(sortidaData));
                 break;
             }
             importedCount++;
