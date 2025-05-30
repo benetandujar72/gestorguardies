@@ -284,11 +284,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         usuariId: (req as any).user.claims.sub,
         accio: 'crear_sortida',
         detalls: { sortidaId: sortida.id },
+        entityType: 'sortida',
+        entityId: sortida.id
       });
       
       res.json(sortida);
     } catch (error: any) {
       res.status(400).json({ message: "Invalid outing data" });
+    }
+  });
+
+  app.put('/api/sortides/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const sortidaData = insertSortidaSchema.partial().parse(req.body);
+      const sortida = await storage.updateSortida(id, sortidaData);
+      
+      // Create metric for updated outing
+      await storage.createMetric({
+        timestamp: new Date(),
+        usuariId: (req as any).user.claims.sub,
+        accio: 'actualitzar_sortida',
+        detalls: { sortidaId: id, changes: sortidaData },
+        entityType: 'sortida',
+        entityId: id
+      });
+      
+      res.json(sortida);
+    } catch (error: any) {
+      console.error("Error updating sortida:", error);
+      res.status(400).json({ message: "Invalid outing data" });
+    }
+  });
+
+  app.delete('/api/sortides/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteSortida(id);
+      
+      // Create metric for deleted outing
+      await storage.createMetric({
+        timestamp: new Date(),
+        usuariId: (req as any).user.claims.sub,
+        accio: 'eliminar_sortida',
+        detalls: { sortidaId: id },
+        entityType: 'sortida',
+        entityId: id
+      });
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting sortida:", error);
+      res.status(500).json({ message: "Failed to delete outing" });
     }
   });
 
