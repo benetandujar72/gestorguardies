@@ -412,7 +412,43 @@ export class DatabaseStorage implements IStorage {
 
   // Guardia operations
   async getGuardies(): Promise<Guardia[]> {
-    return await db.select().from(guardies).orderBy(desc(guardies.data), guardies.horaInici);
+    const guardiasWithAssignments = await db.select({
+      id: guardies.id,
+      data: guardies.data,
+      horaInici: guardies.horaInici,
+      horaFi: guardies.horaFi,
+      tipusGuardia: guardies.tipusGuardia,
+      estat: guardies.estat,
+      lloc: guardies.lloc,
+      observacions: guardies.observacions,
+      createdAt: guardies.createdAt,
+      // Include assignment data
+      assignacions: sql`
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', ${assignacionsGuardia.id},
+              'professorId', ${assignacionsGuardia.professorId},
+              'prioritat', ${assignacionsGuardia.prioritat},
+              'estat', ${assignacionsGuardia.estat},
+              'professor', json_build_object(
+                'id', ${professors.id},
+                'nom', ${professors.nom},
+                'cognoms', ${professors.cognoms}
+              )
+            )
+          ) FILTER (WHERE ${assignacionsGuardia.id} IS NOT NULL),
+          '[]'::json
+        )
+      `
+    })
+    .from(guardies)
+    .leftJoin(assignacionsGuardia, eq(guardies.id, assignacionsGuardia.guardiaId))
+    .leftJoin(professors, eq(assignacionsGuardia.professorId, professors.id))
+    .groupBy(guardies.id)
+    .orderBy(desc(guardies.data), guardies.horaInici);
+
+    return guardiasWithAssignments;
   }
 
   async getGuardiesAvui(): Promise<Guardia[]> {

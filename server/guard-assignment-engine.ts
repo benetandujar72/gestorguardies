@@ -81,9 +81,17 @@ export class GuardAssignmentEngine {
         console.log(`Assignació creada amb ID ${assignment.id}`);
       }
 
-      // 7. Actualizar métricas
+      // 7. Actualizar estado de la guardia a "assignada"
+      await storage.updateGuardia(guardia.id, { estat: "assignada" });
+      console.log(`Guardia ${guardia.id} actualizada a estado "assignada"`);
+
+      // 8. Generar comunicaciones automáticas
+      await this.generateAssignmentCommunications(guardia, assignments);
+
+      // 9. Actualizar métricas
       await this.updateMetrics(guardia, assignments);
 
+      console.log(`=== ASSIGNACIÓ COMPLETADA ===`);
       return assignments;
 
     } catch (error) {
@@ -304,6 +312,71 @@ export class GuardAssignmentEngine {
         return 1;
       default:
         return 1;
+    }
+  }
+
+  /**
+   * Genera comunicacions automàtiques per a les assignacions
+   */
+  private async generateAssignmentCommunications(guardia: any, assignments: any[]): Promise<void> {
+    try {
+      for (const assignment of assignments) {
+        // Obtenir dades del professor assignat
+        const professor = await storage.getProfessor(assignment.professorId);
+        if (!professor) continue;
+
+        const dataFormatted = new Date(guardia.data).toLocaleDateString('ca-ES', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+        const missatge = `Nova assignació de guàrdia:
+📅 Data: ${dataFormatted}
+⏰ Horari: ${guardia.horaInici} - ${guardia.horaFi}
+📍 Tipus: ${guardia.tipusGuardia}
+${guardia.lloc ? `🏢 Lloc: ${guardia.lloc}` : ''}
+
+Assignació realitzada automàticament pel sistema.
+Si us plau, confirmeu la vostra disponibilitat.`;
+
+        // Crear comunicació per al professor assignat
+        await storage.createComunicacio({
+          tipusDest: 'Professor',
+          destinatariId: professor.id,
+          missatge: missatge,
+          tipus: 'Assignació',
+          llegit: false,
+          emissorId: 1, // Sistema
+          relatedGuardiaId: guardia.id
+        });
+
+        console.log(`Comunicació enviada al Professor ${professor.nom} ${professor.cognoms}`);
+      }
+
+      // Comunicació al coordinador o responsable de guardies
+      const coordinadorMessage = `Assignació automàtica realitzada:
+📊 Guàrdia: ${guardia.tipusGuardia} del ${new Date(guardia.data).toLocaleDateString('ca-ES')}
+👥 Professors assignats: ${assignments.length}
+🤖 Assignació automàtica completada amb èxit.
+
+Detalls: ${assignments.map(a => `Professor ID ${a.professorId}`).join(', ')}`;
+
+      await storage.createComunicacio({
+        tipusDest: 'Coordinador',
+        destinatariId: 1, // Coordinador principal
+        missatge: coordinadorMessage,
+        tipus: 'Informe',
+        llegit: false,
+        emissorId: 1,
+        relatedGuardiaId: guardia.id
+      });
+
+      console.log(`Comunicació d'informe enviada al coordinador`);
+
+    } catch (error) {
+      console.error("Error generant comunicacions:", error);
     }
   }
 
