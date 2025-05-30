@@ -39,9 +39,9 @@ interface Communication {
 
 export default function Communications() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [typeFilter, setTypeFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [recipientFilter, setRecipientFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("tots");
+  const [statusFilter, setStatusFilter] = useState("tots");
+  const [recipientFilter, setRecipientFilter] = useState("tots");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
