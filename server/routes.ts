@@ -18,6 +18,7 @@ import {
   insertComunicacioSchema,
   insertAttachmentSchema
 } from "@shared/schema";
+import { GuardAssignmentEngine } from "./guard-assignment-engine";
 import { analyzeGuardAssignments, generateChatResponse } from "./openai";
 
 // Configure multer for file uploads
@@ -337,42 +338,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { guardiaId } = req.body;
       
-      // Get guard details
-      const guardia = await storage.getGuardiesByDate(req.body.date || new Date().toISOString().split('T')[0]);
-      const professors = await storage.getProfessors();
-      const sortides = await storage.getSortidesThisWeek();
-      const currentAssignments = await storage.getAssignacionsGuardia();
+      if (!guardiaId) {
+        return res.status(400).json({ message: "Guard ID is required" });
+      }
       
-      // Use AI to help with assignment analysis
-      const context = {
-        guardia: guardia.find(g => g.id === guardiaId),
-        professors,
-        sortides,
-        currentAssignments,
-      };
+      // Use the new guard assignment engine
+      const engine = new GuardAssignmentEngine();
+      const assignacions = await engine.assignGuardAutomatically(guardiaId);
       
-      const aiAnalysis = await analyzeGuardAssignments(context);
-      
-      // Implement priority logic:
-      // 1. Professors freed by outings/activities
-      // 2. Assigned guard professors  
-      // 3. Professors with meetings/administrative duties
-      // 4. Balance distribution based on previous assignments
-      
-      const workloadBalance = await storage.getProfessorWorkloadBalance();
-      
-      // Create prediction record
-      await storage.createPrediction({
-        data: new Date().toISOString().split('T')[0],
-        context,
-        resultat: aiAnalysis,
-        confidence: aiAnalysis.confidence || 80,
-        tipus: 'assignacio',
+      // Log the assignment action
+      await storage.createMetric({
+        timestamp: new Date(),
+        usuariId: (req.user as any)?.claims?.sub || 'sistema',
+        accio: 'auto_assign_guard',
+        detalls: {
+          guardiaId: guardiaId,
+          assignedProfessors: assignacions.length,
+          assignmentIds: assignacions.map(a => a.id)
+        },
+        entityType: 'guardia',
+        entityId: guardiaId
       });
       
-      res.json(aiAnalysis);
+      res.json({
+        success: true,
+        assignacions,
+        message: `Asignados ${assignacions.length} profesores automáticamente`,
+        details: assignacions.map(a => ({
+          professorId: a.professorId,
+          observacions: a.observacions
+        }))
+      });
     } catch (error) {
-      res.status(500).json({ message: "Failed to auto-assign guard" });
+      console.error("Error in auto-assignment:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Error en la asignación automática",
+        error: error.message 
+      });
     }
   });
 
@@ -676,6 +679,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.sendFile(filePath);
     } else {
       res.status(404).json({ message: "File not found" });
+    }
+  });
+
+  // Analytics routes
+  app.get('/api/analytics/workload-balance', isAuthenticated, async (req, res) => {
+    try {
+      const engine = new GuardAssignmentEngine();
+      const workloadBalance = await engine.getWorkloadBalance();
+      res.json(workloadBalance);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get workload balance" });
+    }
+  });
+
+  app.get('/api/analytics/guard-stats', isAuthenticated, async (req, res) => {
+    try {
+      const stats = await storage.getGuardAssignmentStats();
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get guard stats" });
     }
   });
 
