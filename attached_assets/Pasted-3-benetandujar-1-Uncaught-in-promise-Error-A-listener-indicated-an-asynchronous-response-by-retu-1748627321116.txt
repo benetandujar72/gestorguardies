@@ -1,0 +1,92 @@
+3/@benetandujar:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+ [MOTE][FloatingSidebarInjector]: Error during injection: User is not authenticated
+n @ chrome-extension://a…atingSidebar.js:866Understand this error
+2/@benetandujar:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+/@benetandujar:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+43Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.Understand this error
+ Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-9076dd0e43a56c45.js:1Understand this warning
+ Unrecognized feature: 'battery'.
+_ @ framework-9076dd0e43a56c45.js:1Understand this warning
+ Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-9076dd0e43a56c45.js:1Understand this warning
+ Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-9076dd0e43a56c45.js:1Understand this warning
+ Unrecognized feature: 'layout-animations'.
+_ @ framework-9076dd0e43a56c45.js:1Understand this warning
+ Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-9076dd0e43a56c45.js:1Understand this warning
+ Unrecognized feature: 'navigation-override'.
+_ @ framework-9076dd0e43a56c45.js:1Understand this warning
+ Unrecognized feature: 'oversized-images'.
+_ @ framework-9076dd0e43a56c45.js:1Understand this warning
+ Unrecognized feature: 'publickey-credentials'.
+_ @ framework-9076dd0e43a56c45.js:1Understand this warning
+ Unrecognized feature: 'speaker-selection'.
+_ @ framework-9076dd0e43a56c45.js:1Understand this warning
+ Unrecognized feature: 'unoptimized-images'.
+_ @ framework-9076dd0e43a56c45.js:1Understand this warning
+ Unrecognized feature: 'unsized-media'.
+_ @ framework-9076dd0e43a56c45.js:1Understand this warning
+ Unrecognized feature: 'pointer-lock'.
+_ @ framework-9076dd0e43a56c45.js:1Understand this warning
+ Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-9076dd0e43a56c45.js:1Understand this warning
+ Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-9076dd0e43a56c45.js:1Understand this warning
+[Violation] Potential permissions policy violation: payment is not allowed in this document.Understand this error
+stallwart.build.js:1 stallwart: failed ping 1
+ stallwart: failed ping 1
+[Violation] Potential permissions policy violation: payment is not allowed in this document.Understand this error
+[Violation] Potential permissions policy violation: payment is not allowed in this document.Understand this error
+stallwart.build.js:1 stallwart: failed ping 1
+ stallwart: failed ping 1
+[Violation] Potential permissions policy violation: payment is not allowed in this document.Understand this error
+ Adding extension: Icon Generator Object
+stallwart.build.js:1 stallwart: failed ping 1
+stallwart.build.js:1 stallwart: failed ping 2
+ Adding extension: CSS Shadow Generator Object
+workspace_iframe.html:32 Unrecognized feature: 'ambient-light-sensor'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'battery'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-not-rendered'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-out-of-viewport'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'layout-animations'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'legacy-image-formats'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'navigation-override'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'oversized-images'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'publickey-credentials'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'speaker-selection'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'unoptimized-images'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'unsized-media'.Understand this warning
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowfullscreen'.Understand this warning
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowpaymentrequest'.Understand this warning
+Console.js:61 Warning: validateDOMNesting(...): <a> cannot appear as a descendant of <a>.
+    at a
+    at a
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=6fa8a023:337:18
+    at li
+    at ul
+    at nav
+    at aside
+    at Sidebar (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/src/components/layout/sidebar.tsx:126:22)
+    at div
+    at div
+    at Router (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/src/App.tsx?v=G94ch4V66h4N4dvLvr7uQ:47:42)
+    at Provider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=6fa8a023:38:15)
+    at TooltipProvider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=6fa8a023:64:5)
+    at QueryClientProvider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=6fa8a023:2805:3)
+    at App
+Mt.forEach.n.<computed> @ Console.js:61Understand this error
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.Understand this warning
+stallwart.build.js:1 stallwart: failed ping 1
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.Understand this warning

@@ -137,6 +137,7 @@ export default function ImportCSV() {
   };
 
   const handleDownloadTemplate = async () => {
+    alert('Botón clicked!'); // Test básico
     console.log('Download template button clicked');
     console.log('Entity type:', entityType);
     
