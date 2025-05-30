@@ -15,6 +15,7 @@ import {
   Users,
   Presentation,
   UsersIcon,
+  MessageSquare,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -33,6 +34,16 @@ const navigationItems = [
     href: "/assignacions",
     label: "Assignacions",
     icon: Users,
+  },
+  {
+    href: "/guardies-assignades",
+    label: "Guardies Assignades",
+    icon: Shield,
+  },
+  {
+    href: "/comunicacions",
+    label: "Comunicacions",
+    icon: MessageSquare,
   },
   {
     href: "/horaris",

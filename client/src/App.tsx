@@ -8,6 +8,8 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Guards from "@/pages/guards";
 import Assignments from "@/pages/assignments";
+import AssignedGuards from "@/pages/assigned-guards";
+import Communications from "@/pages/communications";
 import Schedules from "@/pages/schedules";
 import Outings from "@/pages/outings";
 import Tasks from "@/pages/tasks";
@@ -56,6 +58,8 @@ function Router() {
             <Route path="/" component={Dashboard} />
             <Route path="/guardies" component={Guards} />
             <Route path="/assignacions" component={Assignments} />
+            <Route path="/guardies-assignades" component={AssignedGuards} />
+            <Route path="/comunicacions" component={Communications} />
             <Route path="/horaris" component={Schedules} />
             <Route path="/sortides" component={Outings} />
             <Route path="/tasques" component={Tasks} />
