@@ -552,6 +552,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Academic Years routes
+  app.get('/api/anys-academics', isAuthenticated, async (req, res) => {
+    try {
+      const anysAcademics = await storage.getAnysAcademics();
+      res.json(anysAcademics);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch academic years" });
+    }
+  });
+
+  app.post('/api/anys-academics', isAuthenticated, async (req, res) => {
+    try {
+      const anyAcademic = await storage.createAnyAcademic(req.body);
+      res.json(anyAcademic);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create academic year" });
+    }
+  });
+
+  app.put('/api/anys-academics/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const anyAcademic = await storage.updateAnyAcademic(id, req.body);
+      res.json(anyAcademic);
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to update academic year" });
+    }
+  });
+
+  app.delete('/api/anys-academics/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteAnyAcademic(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to delete academic year" });
+    }
+  });
+
   // Analytics routes
   app.get('/api/analytics/guard-stats', isAuthenticated, async (req, res) => {
     try {

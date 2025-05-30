@@ -52,6 +52,7 @@ export const users = pgTable("users", {
 // Core school entities based on ER diagram
 export const professors = pgTable("professors", {
   id: serial("professor_id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   nom: varchar("nom").notNull(),
   cognoms: varchar("cognoms").notNull(),
   email: varchar("email").notNull().unique(),
