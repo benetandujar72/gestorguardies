@@ -402,15 +402,30 @@ export default function Schedules() {
                       <div className="flex items-center space-x-4 text-sm text-text-secondary mt-1">
                         <span className="flex items-center space-x-1">
                           <Users className="w-3 h-3" />
-                          <span>{schedule.professor.nom} {schedule.professor.cognoms}</span>
+                          <span>
+                            {schedule.professor ? 
+                              `${schedule.professor.nom} ${schedule.professor.cognoms}` : 
+                              'Professor no assignat'
+                            }
+                          </span>
                         </span>
                         <span className="flex items-center space-x-1">
                           <BookOpen className="w-3 h-3" />
-                          <span>{schedule.grup.nomGrup}</span>
+                          <span>
+                            {schedule.grup ? 
+                              schedule.grup.nomGrup : 
+                              schedule.assignatura === 'G' ? 'Guàrdia' : 'Grup no assignat'
+                            }
+                          </span>
                         </span>
                         <span className="flex items-center space-x-1">
                           <DoorOpen className="w-3 h-3" />
-                          <span>{schedule.aula.nomAula}</span>
+                          <span>
+                            {schedule.aula ? 
+                              schedule.aula.nomAula : 
+                              schedule.assignatura === 'G' ? 'Pati/Vigilància' : 'Aula no assignada'
+                            }
+                          </span>
                         </span>
                       </div>
                     </div>
