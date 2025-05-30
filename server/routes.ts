@@ -53,7 +53,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       const professor = await storage.getProfessorByUserId(userId);
       res.json({ ...user, professor });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
@@ -64,7 +64,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const professors = await storage.getProfessors();
       res.json(professors);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch professors" });
     }
   });
@@ -83,7 +83,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json(professor);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Invalid professor data" });
     }
   });
@@ -94,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const professorData = insertProfessorSchema.partial().parse(req.body);
       const professor = await storage.updateProfessor(id, professorData);
       res.json(professor);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Failed to update professor" });
     }
   });
@@ -104,7 +104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       await storage.deleteProfessor(id);
       res.json({ success: true });
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Failed to delete professor" });
     }
   });
@@ -114,7 +114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const grups = await storage.getGrups();
       res.json(grups);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch groups" });
     }
   });
@@ -124,7 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const grupData = insertGrupSchema.parse(req.body);
       const grup = await storage.createGrup(grupData);
       res.json(grup);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Invalid group data" });
     }
   });
@@ -135,7 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const grupData = insertGrupSchema.partial().parse(req.body);
       const grup = await storage.updateGrup(id, grupData);
       res.json(grup);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Failed to update group" });
     }
   });
@@ -145,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       await storage.deleteGrup(id);
       res.json({ success: true });
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Failed to delete group" });
     }
   });
@@ -158,7 +158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? await storage.getAlumnesByGrup(parseInt(grupId as string))
         : await storage.getAlumnes();
       res.json(alumnes);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch students" });
     }
   });
@@ -168,7 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const alumneData = insertAlumneSchema.parse(req.body);
       const alumne = await storage.createAlumne(alumneData);
       res.json(alumne);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Invalid student data" });
     }
   });
@@ -178,7 +178,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const aules = await storage.getAules();
       res.json(aules);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch classrooms" });
     }
   });
@@ -188,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const aulaData = insertAulaSchema.parse(req.body);
       const aula = await storage.createAula(aulaData);
       res.json(aula);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Invalid classroom data" });
     }
   });
@@ -208,7 +208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(horaris);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch schedules" });
     }
   });
@@ -218,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const horariData = insertHorariSchema.parse(req.body);
       const horari = await storage.createHorari(horariData);
       res.json(horari);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Invalid schedule data" });
     }
   });
@@ -231,7 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? await storage.getSortidesThisWeek()
         : await storage.getSortides();
       res.json(sortides);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch outings" });
     }
   });
@@ -250,7 +250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json(sortida);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Invalid outing data" });
     }
   });
@@ -270,7 +270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(guardies);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch guards" });
     }
   });
@@ -289,7 +289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json(guardia);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Invalid guard data" });
     }
   });
@@ -309,7 +309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(assignacions);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch guard assignments" });
     }
   });
@@ -328,7 +328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json(assignacio);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Invalid assignment data" });
     }
   });
@@ -369,7 +369,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           observacions: a.observacions
         }))
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error in auto-assignment:", error);
       res.status(500).json({ 
         success: false,
@@ -394,7 +394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(tasques);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch tasks" });
     }
   });
@@ -413,7 +413,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json(tasca);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Invalid task data" });
     }
   });
@@ -424,7 +424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tascaData = insertTascaSchema.partial().parse(req.body);
       const tasca = await storage.updateTasca(id, tascaData);
       res.json(tasca);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Failed to update task" });
     }
   });
@@ -453,7 +453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(attachments);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to upload files" });
     }
   });
@@ -463,7 +463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tascaId = parseInt(req.params.id);
       const attachments = await storage.getAttachmentsByTasca(tascaId);
       res.json(attachments);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch attachments" });
     }
   });
@@ -481,7 +481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(comunicacions);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch communications" });
     }
   });
@@ -500,7 +500,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json(comunicacio);
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Invalid communication data" });
     }
   });
@@ -510,7 +510,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       await storage.markComunicacioAsRead(id);
       res.json({ success: true });
-    } catch (error) {
+    } catch (error: any) {
       res.status(400).json({ message: "Failed to mark as read" });
     }
   });
@@ -520,7 +520,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const stats = await storage.getGuardAssignmentStats();
       res.json(stats);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch guard statistics" });
     }
   });
@@ -529,7 +529,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const balance = await storage.getProfessorWorkloadBalance();
       res.json(balance);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch workload balance" });
     }
   });
@@ -546,7 +546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(session);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to create chat session" });
     }
   });
@@ -593,7 +593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json({ response: aiResponse });
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to process chat message" });
     }
   });
@@ -665,7 +665,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalRows: lines.length - 1,
         message: `Successfully imported ${importedCount} records`
       });
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to import CSV" });
     }
   });
@@ -688,7 +688,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const engine = new GuardAssignmentEngine();
       const workloadBalance = await engine.getWorkloadBalance();
       res.json(workloadBalance);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to get workload balance" });
     }
   });
@@ -697,7 +697,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const stats = await storage.getGuardAssignmentStats();
       res.json(stats);
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ message: "Failed to get guard stats" });
     }
   });
