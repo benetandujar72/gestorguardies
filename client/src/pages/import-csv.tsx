@@ -44,10 +44,17 @@ export default function ImportCSV() {
       formData.append('entityType', entityType);
       formData.append('academicYearId', academicYearId);
 
-      return apiRequest('POST', '/api/import/csv', {
+      const response = await fetch('/api/import/csv', {
         method: 'POST',
+        credentials: 'include',
         body: formData,
       });
+      
+      if (!response.ok) {
+        throw new Error('Error en la importació');
+      }
+      
+      return response.json();
     },
     onSuccess: (data) => {
       setResult(data);
@@ -136,13 +143,8 @@ export default function ImportCSV() {
     importMutation.mutate({ file, entityType, academicYearId });
   };
 
-  const handleDownloadTemplate = async () => {
-    alert('Botón clicked!'); // Test básico
-    console.log('Download template button clicked');
-    console.log('Entity type:', entityType);
-    
-    if (!entityType) {
-      console.log('No entity type selected');
+  const handleDownloadTemplateForExport = async (exportType: string) => {
+    if (!exportType) {
       toast({
         title: "Selecciona un tipus",
         description: "Si us plau, selecciona un tipus d'entitat per descarregar la plantilla.",
@@ -152,8 +154,52 @@ export default function ImportCSV() {
     }
 
     try {
-      console.log('Making request to:', `/api/download/template?type=${entityType}`);
-      
+      const response = await fetch(`/api/download/template?type=${exportType}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al descarregar la plantilla');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `plantilla_${exportType}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Plantilla descarregada",
+        description: `S'ha descarregat la plantilla per ${exportType}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No s'ha pogut descarregar la plantilla.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadTemplate = async () => {
+    if (!entityType) {
+      toast({
+        title: "Selecciona un tipus",
+        description: "Si us plau, selecciona un tipus d'entitat per descarregar la plantilla.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
       const response = await fetch(`/api/download/template?type=${entityType}`, {
         method: 'GET',
         credentials: 'include',
@@ -162,39 +208,25 @@ export default function ImportCSV() {
         },
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-
       if (!response.ok) {
-        console.log('Response not OK');
-        const errorText = await response.text();
-        console.log('Error response:', errorText);
         throw new Error('Error al descarregar la plantilla');
       }
 
-      console.log('Getting blob from response');
       const blob = await response.blob();
-      console.log('Blob size:', blob.size);
-      
       const url = window.URL.createObjectURL(blob);
-      console.log('Created blob URL:', url);
-      
       const link = document.createElement('a');
       link.href = url;
       link.download = `plantilla_${entityType}.csv`;
       document.body.appendChild(link);
-      console.log('Clicking download link');
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      console.log('Download completed');
       toast({
         title: "Plantilla descarregada",
         description: `S'ha descarregat la plantilla per ${entityType}`,
       });
     } catch (error) {
-      console.error('Download error:', error);
       toast({
         title: "Error",
         description: "No s'ha pogut descarregar la plantilla.",
@@ -439,15 +471,27 @@ export default function ImportCSV() {
               </Select>
             </div>
 
-            <Button
-              onClick={handleExport}
-              disabled={!exportEntityType || exportMutation.isPending}
-              className="w-full"
-              variant="outline"
-            >
-              <FileDown className="h-4 w-4 mr-2" />
-              {exportMutation.isPending ? "Exportant..." : "Exportar CSV"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => handleDownloadTemplateForExport(exportEntityType)}
+                disabled={!exportEntityType}
+                variant="outline"
+                className="flex-1"
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Descarregar plantilla
+              </Button>
+              
+              <Button
+                onClick={handleExport}
+                disabled={!exportEntityType || exportMutation.isPending}
+                className="flex-1"
+                variant="outline"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {exportMutation.isPending ? "Exportant..." : "Exportar CSV"}
+              </Button>
+            </div>
 
             <Alert>
               <Info className="h-4 w-4" />
