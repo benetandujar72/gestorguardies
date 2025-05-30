@@ -34,8 +34,22 @@ export default function GuardCalendar() {
 
   // Fetch guards for the next 4 weeks
   const { data: guards = [], isLoading } = useQuery({
-    queryKey: ['/api/guardies', format(selectedWeek, 'yyyy-MM-dd')],
-    select: (data: GuardEvent[]) => data,
+    queryKey: ['/api/guardies'],
+    select: (data: any[]) => data.map(guard => ({
+      id: guard.id,
+      data: guard.data,
+      hora: guard.horaInici,
+      tipusGuardia: guard.tipusGuardia,
+      categoria: guard.estat || 'Normal',
+      observacions: guard.observacions,
+      assignacioId: guard.assignacions?.[0]?.id,
+      professor: guard.assignacions?.[0]?.professor ? {
+        id: guard.assignacions[0].professor.id,
+        nom: guard.assignacions[0].professor.nom,
+        cognoms: guard.assignacions[0].professor.cognoms,
+      } : null,
+      aula: null // Will be added later when aula relationship is fixed
+    })),
   });
 
   // Get guards for the selected week
