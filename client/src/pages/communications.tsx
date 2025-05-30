@@ -118,9 +118,9 @@ export default function Communications() {
   };
 
   const clearFilters = () => {
-    setTypeFilter("");
-    setStatusFilter("");
-    setRecipientFilter("");
+    setTypeFilter("tots");
+    setStatusFilter("tots");
+    setRecipientFilter("tots");
   };
 
   const getTypeColor = (tipus: string) => {
@@ -202,10 +202,10 @@ export default function Communications() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Tipus de Destinatari</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue />
+                                <SelectValue placeholder="Selecciona tipus" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -224,10 +224,10 @@ export default function Communications() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Tipus de Comunicació</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue />
+                                <SelectValue placeholder="Selecciona tipus" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -335,7 +335,7 @@ export default function Communications() {
                   <SelectValue placeholder="Tots els tipus" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tots els tipus</SelectItem>
+                  <SelectItem value="tots">Tots els tipus</SelectItem>
                   <SelectItem value="Assignació">Assignació</SelectItem>
                   <SelectItem value="Avís">Avís</SelectItem>
                   <SelectItem value="Recordatori">Recordatori</SelectItem>
@@ -352,7 +352,7 @@ export default function Communications() {
                   <SelectValue placeholder="Tots els estats" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tots els estats</SelectItem>
+                  <SelectItem value="tots">Tots els estats</SelectItem>
                   <SelectItem value="llegit">Llegides</SelectItem>
                   <SelectItem value="no_llegit">No llegides</SelectItem>
                 </SelectContent>
@@ -365,7 +365,7 @@ export default function Communications() {
                   <SelectValue placeholder="Tots els destinataris" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tots els destinataris</SelectItem>
+                  <SelectItem value="tots">Tots els destinataris</SelectItem>
                   <SelectItem value="Professor">Professors</SelectItem>
                   <SelectItem value="Coordinador">Coordinadors</SelectItem>
                   <SelectItem value="Alumne">Alumnes</SelectItem>
