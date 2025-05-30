@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { storage } from "./storage";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
@@ -67,15 +68,55 @@ Respon amb JSON en aquest format:
 
 export async function generateChatResponse(userMessage: string, chatHistory: any[]): Promise<string> {
   try {
+    // Obtenir dades reals del sistema per proporcionar context a la IA
+    const guardiesAvui = await storage.getGuardiesAvui();
+    const guardies = await storage.getGuardies();
+    const professors = await storage.getProfessors();
+    const sortides = await storage.getSortidesThisWeek();
+    const tasquesPendents = await storage.getTasquesPendents();
+    
+    console.log("Dades obtingudes per al chat:", {
+      guardiesAvui: guardiesAvui.length,
+      totalGuardies: guardies.length,
+      professors: professors.length,
+      sortides: sortides.length,
+      tasquesPendents: tasquesPendents.length
+    });
+
+    const contextData = {
+      guardiesAvui: guardiesAvui.length,
+      totalGuardies: guardies.length,
+      professors: professors.length,
+      sortides: sortides.length,
+      tasquesPendents: tasquesPendents.length,
+      professorsNoms: professors.slice(0, 5).map(p => p.nom), // Mostrar només alguns noms
+      darreresGuardies: guardies.slice(-3).map(g => ({
+        data: g.data,
+        horaInici: g.horaInici,
+        tipus: g.tipus
+      }))
+    };
+
     const systemPrompt = `
-Ets un assistent IA especialitzat en gestió de guardies escolars. Ajudes els coordinadors educatius amb:
+Ets un assistent IA especialitzat en gestió de guardies escolars. Tens accés a les dades reals del sistema actual:
+
+DADES SISTEMA ACTUAL:
+- Guardies avui: ${contextData.guardiesAvui}
+- Total guardies al sistema: ${contextData.totalGuardies}
+- Professors registrats: ${contextData.professors}
+- Sortides aquesta setmana: ${contextData.sortides}
+- Tasques pendents: ${contextData.tasquesPendents}
+
+Quan l'usuari pregunti sobre guardies, professors o tasques, utilitza aquestes dades reals per donar informació precisa.
+
+Ajudes amb:
 - Planificació i assignació de guardies
 - Anàlisi de càrrega de treball del professorat
 - Prediccions i optimitzacions
 - Resolució de conflictes d'horaris
 - Estadístiques i mètriques
 
-Respon sempre en català de manera útil i professional.
+Respon sempre en català de manera útil i professional utilitzant les dades reals del sistema.
 `;
 
     const messages = [
