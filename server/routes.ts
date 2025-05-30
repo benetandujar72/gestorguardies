@@ -924,11 +924,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Download CSV template endpoint
   app.get('/api/download/template', isAuthenticated, async (req, res) => {
     try {
+      console.log('Template download request received:', req.query);
       const entityType = req.query.type as string;
       
       if (!entityType) {
+        console.log('Missing entity type');
         return res.status(400).json({ message: "Entity type is required" });
       }
+      
+      console.log('Processing template for entity type:', entityType);
 
       let csvContent = '';
       let filename = '';
@@ -966,10 +970,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "Invalid entity type" });
       }
 
+      console.log('Sending CSV content:', csvContent.substring(0, 100) + '...');
+      console.log('Filename:', filename);
+      
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.send(csvContent);
+      
+      console.log('Template sent successfully');
     } catch (error: any) {
+      console.error('Error generating template:', error);
       res.status(500).json({ message: "Failed to generate template" });
     }
   });

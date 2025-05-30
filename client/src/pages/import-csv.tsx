@@ -137,7 +137,11 @@ export default function ImportCSV() {
   };
 
   const handleDownloadTemplate = async () => {
+    console.log('Download template button clicked');
+    console.log('Entity type:', entityType);
+    
     if (!entityType) {
+      console.log('No entity type selected');
       toast({
         title: "Selecciona un tipus",
         description: "Si us plau, selecciona un tipus d'entitat per descarregar la plantilla.",
@@ -147,6 +151,8 @@ export default function ImportCSV() {
     }
 
     try {
+      console.log('Making request to:', `/api/download/template?type=${entityType}`);
+      
       const response = await fetch(`/api/download/template?type=${entityType}`, {
         method: 'GET',
         credentials: 'include',
@@ -155,25 +161,39 @@ export default function ImportCSV() {
         },
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
       if (!response.ok) {
+        console.log('Response not OK');
+        const errorText = await response.text();
+        console.log('Error response:', errorText);
         throw new Error('Error al descarregar la plantilla');
       }
 
+      console.log('Getting blob from response');
       const blob = await response.blob();
+      console.log('Blob size:', blob.size);
+      
       const url = window.URL.createObjectURL(blob);
+      console.log('Created blob URL:', url);
+      
       const link = document.createElement('a');
       link.href = url;
       link.download = `plantilla_${entityType}.csv`;
       document.body.appendChild(link);
+      console.log('Clicking download link');
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
 
+      console.log('Download completed');
       toast({
         title: "Plantilla descarregada",
         description: `S'ha descarregat la plantilla per ${entityType}`,
       });
     } catch (error) {
+      console.error('Download error:', error);
       toast({
         title: "Error",
         description: "No s'ha pogut descarregar la plantilla.",
