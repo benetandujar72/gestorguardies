@@ -46,6 +46,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Test endpoint for debugging (MUST BE FIRST)
+  app.post('/api/chat/test', isAuthenticated, async (req, res) => {
+    console.log("=== TEST ENDPOINT HIT ===");
+    res.setHeader('Content-Type', 'application/json');
+    res.json({ response: "Test response working!" });
+  });
+
+  // Simple Chat route (MUST BE EARLY)
+  app.post('/api/chat/simple', isAuthenticated, async (req, res) => {
+    try {
+      console.log("=== SIMPLE CHAT ENDPOINT HIT ===");
+      const { message } = req.body;
+      const userId = (req as any).user.claims.sub;
+      
+      console.log("User message:", message);
+      console.log("User ID:", userId);
+      
+      // Set proper content type
+      res.setHeader('Content-Type', 'application/json');
+      
+      // First try without OpenAI to isolate the problem
+      const result = { response: "Hola! El sistema està funcionant. La teva pregunta era: " + message };
+      console.log("Sending JSON response:", result);
+      
+      res.json(result);
+    } catch (error: any) {
+      console.error("Simple chat error details:", error);
+      console.error("Error stack:", error.stack);
+      res.setHeader('Content-Type', 'application/json');
+      res.status(500).json({ message: "Failed to process chat message", error: error.message });
+    }
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
@@ -534,38 +567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Test endpoint for debugging
-  app.post('/api/chat/test', isAuthenticated, async (req, res) => {
-    console.log("=== TEST ENDPOINT HIT ===");
-    res.setHeader('Content-Type', 'application/json');
-    res.json({ response: "Test response working!" });
-  });
 
-  // Simple Chat route
-  app.post('/api/chat/simple', isAuthenticated, async (req, res) => {
-    try {
-      console.log("=== SIMPLE CHAT ENDPOINT HIT ===");
-      const { message } = req.body;
-      const userId = (req as any).user.claims.sub;
-      
-      console.log("User message:", message);
-      console.log("User ID:", userId);
-      
-      // Set proper content type
-      res.setHeader('Content-Type', 'application/json');
-      
-      // First try without OpenAI to isolate the problem
-      const result = { response: "Hola! El sistema està funcionant. La teva pregunta era: " + message };
-      console.log("Sending JSON response:", result);
-      
-      res.json(result);
-    } catch (error: any) {
-      console.error("Simple chat error details:", error);
-      console.error("Error stack:", error.stack);
-      res.setHeader('Content-Type', 'application/json');
-      res.status(500).json({ message: "Failed to process chat message", error: error.message });
-    }
-  });
 
   // AI Chat routes
   app.get('/api/chat/sessions', isAuthenticated, async (req, res) => {
