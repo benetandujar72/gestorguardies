@@ -420,16 +420,9 @@ export class DatabaseStorage implements IStorage {
       lloc: sortides.lloc,
       responsableId: sortides.responsableId,
       createdAt: sortides.createdAt,
-      grup: grups.id ? {
-        id: grups.id,
-        nomGrup: grups.nomGrup,
-      } : null,
-      responsable: professors.id ? {
-        id: professors.id,
-        nom: professors.nom,
-        cognoms: professors.cognoms,
-        fullName: sql<string>`CONCAT(${professors.nom}, ' ', ${professors.cognoms})`
-      } : null
+      grupNom: grups.nomGrup,
+      responsableNom: professors.nom,
+      responsableCognoms: professors.cognoms,
     }).from(sortides)
       .leftJoin(grups, eq(sortides.grupId, grups.id))
       .leftJoin(professors, eq(sortides.responsableId, professors.id))
