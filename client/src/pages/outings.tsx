@@ -405,11 +405,11 @@ export default function Outings() {
                       </div>
                     )}
 
-                    {(outing.responsable?.fullName || outing.responsableFullName || (outing.responsableNom && outing.responsableCognoms && `${outing.responsableNom} ${outing.responsableCognoms}`)) && (
+                    {(outing.responsable?.fullName || outing.responsableFullName) && (
                       <div className="flex items-center space-x-2 text-sm">
                         <Users className="w-3 h-3 text-text-secondary" />
                         <span className="text-text-secondary">
-                          Responsable: {outing.responsable?.fullName || outing.responsableFullName || `${outing.responsableNom} ${outing.responsableCognoms}`}
+                          Responsable: {outing.responsable?.fullName || outing.responsableFullName}
                         </span>
                       </div>
                     )}
