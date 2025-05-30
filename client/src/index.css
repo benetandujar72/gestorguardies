@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 250 20% 98%; /* #FAFAFA */
+  --foreground: 210 14% 13%; /* #212121 */
+  --muted: 60 5% 96%; /* #F5F5F5 */
+  --muted-foreground: 0 0% 46%; /* #757575 */
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 14% 13%;
+  --card: 0 0% 100%;
+  --card-foreground: 210 14% 13%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --primary: 207 90% 54%; /* #1976D2 */
+  --primary-foreground: 211 100% 99%;
+  --secondary: 122 39% 49%; /* #388E3C */
+  --secondary-foreground: 60 9% 98%;
+  --accent: 33 100% 49%; /* #F57C00 */
+  --accent-foreground: 60 9% 98%;
+  --destructive: 0 84% 60%; /* #D32F2F */
+  --destructive-foreground: 60 9% 98%;
+  --ring: 210 14% 13%;
+  --radius: 0.5rem;
+  
+  /* Custom educational colors */
+  --text-primary: 210 14% 13%; /* #212121 */
+  --text-secondary: 0 0% 46%; /* #757575 */
+  --surface: 250 20% 98%; /* #FAFAFA */
+  --error: 0 84% 60%; /* #D32F2F */
+}
+
+.dark {
+  --background: 240 10% 4%;
+  --foreground: 0 0% 98%;
+  --muted: 240 4% 16%;
+  --muted-foreground: 240 5% 65%;
+  --popover: 240 10% 4%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 4%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 4% 16%;
+  --input: 240 4% 16%;
+  --primary: 207 90% 54%;
+  --primary-foreground: 211 100% 99%;
+  --secondary: 122 39% 49%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 33 100% 49%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 240 5% 84%;
+  --radius: 0.5rem;
+  
+  /* Custom educational colors for dark mode */
+  --text-primary: 0 0% 98%;
+  --text-secondary: 240 5% 65%;
+  --surface: 240 10% 4%;
+  --error: 0 63% 31%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Custom utility classes for educational theme */
+  .text-text-primary {
+    color: hsl(var(--text-primary));
+  }
+
+  .text-text-secondary {
+    color: hsl(var(--text-secondary));
+  }
+
+  .bg-surface {
+    background-color: hsl(var(--surface));
+  }
+
+  .text-error {
+    color: hsl(var(--error));
+  }
+
+  .bg-error {
+    background-color: hsl(var(--error));
+  }
+}
