@@ -912,6 +912,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export CSV endpoint
+  app.get('/api/export/csv', isAuthenticated, async (req, res) => {
+    try {
+      const entityType = req.query.type as string;
+      
+      if (!entityType) {
+        return res.status(400).json({ message: "Entity type is required" });
+      }
+
+      let data: any[] = [];
+      let filename = '';
+      let headers: string[] = [];
+
+      switch (entityType) {
+        case 'sortides':
+          data = await storage.getSortides();
+          filename = 'sortides.csv';
+          headers = ['ID', 'Nom Sortida', 'Descripció', 'Lloc', 'Data Inici', 'Data Fi', 'Grup', 'Responsable'];
+          break;
+        
+        case 'professors':
+          data = await storage.getProfessors();
+          filename = 'professors.csv';
+          headers = ['ID', 'Nom', 'Cognoms', 'Email', 'Departament', 'Rol'];
+          break;
+        
+        case 'grups':
+          data = await storage.getGrups();
+          filename = 'grups.csv';
+          headers = ['ID', 'Nom Grup', 'Curs', 'Nivell', 'Alumnes Count'];
+          break;
+        
+        case 'alumnes':
+          data = await storage.getAlumnes();
+          filename = 'alumnes.csv';
+          headers = ['ID', 'Nom', 'Cognoms', 'Email', 'Grup ID'];
+          break;
+        
+        case 'aules':
+          data = await storage.getAules();
+          filename = 'aules.csv';
+          headers = ['ID', 'Nom', 'Planta', 'Capacitat', 'Tipus'];
+          break;
+        
+        case 'horaris':
+          data = await storage.getHoraris();
+          filename = 'horaris.csv';
+          headers = ['ID', 'Professor ID', 'Grup ID', 'Aula ID', 'Dia Setmana', 'Hora Inici', 'Hora Fi', 'Assignatura'];
+          break;
+        
+        case 'guardies':
+          data = await storage.getGuardies();
+          filename = 'guardies.csv';
+          headers = ['ID', 'Data', 'Hora Inici', 'Hora Fi', 'Lloc', 'Tipus Guardia', 'Estat'];
+          break;
+        
+        default:
+          return res.status(400).json({ message: "Invalid entity type" });
+      }
+
+      // Convert data to CSV format
+      const csvRows = [headers.join(',')];
+      
+      data.forEach(item => {
+        const row: string[] = [];
+        
+        switch (entityType) {
+          case 'sortides':
+            row.push(
+              String(item.id || ''),
+              `"${item.nomSortida || ''}"`,
+              `"${item.descripcio || ''}"`,
+              `"${item.lloc || ''}"`,
+              item.dataInici || '',
+              item.dataFi || '',
+              `"${item.grup?.nomGrup || ''}"`,
+              `"${item.responsable ? `${item.responsable.nom} ${item.responsable.cognoms}` : ''}"`,
+            );
+            break;
+          
+          case 'professors':
+            row.push(
+              String(item.id || ''),
+              `"${item.nom || ''}"`,
+              `"${item.cognoms || ''}"`,
+              `"${item.email || ''}"`,
+              `"${item.departament || ''}"`,
+              `"${item.rol || ''}"`,
+            );
+            break;
+          
+          case 'grups':
+            row.push(
+              String(item.id || ''),
+              `"${item.nomGrup || ''}"`,
+              `"${item.curs || ''}"`,
+              `"${item.nivell || ''}"`,
+              String(item.alumnesCount || 0),
+            );
+            break;
+          
+          case 'alumnes':
+            row.push(
+              String(item.id || ''),
+              `"${item.nom || ''}"`,
+              `"${item.cognoms || ''}"`,
+              `"${item.email || ''}"`,
+              String(item.grupId || ''),
+            );
+            break;
+          
+          case 'aules':
+            row.push(
+              String(item.id || ''),
+              `"${item.nom || ''}"`,
+              `"${item.planta || ''}"`,
+              String(item.capacitat || 0),
+              `"${item.tipus || ''}"`,
+            );
+            break;
+          
+          case 'horaris':
+            row.push(
+              String(item.id || ''),
+              String(item.professorId || ''),
+              String(item.grupId || ''),
+              String(item.aulaId || ''),
+              `"${item.diaSetmana || ''}"`,
+              item.horaInici || '',
+              item.horaFi || '',
+              `"${item.assignatura || ''}"`,
+            );
+            break;
+          
+          case 'guardies':
+            row.push(
+              String(item.id || ''),
+              item.data || '',
+              item.horaInici || '',
+              item.horaFi || '',
+              `"${item.lloc || ''}"`,
+              `"${item.tipusGuardia || ''}"`,
+              `"${item.estat || ''}"`,
+            );
+            break;
+        }
+        
+        csvRows.push(row.join(','));
+      });
+
+      const csvContent = csvRows.join('\n');
+
+      // Set headers for CSV download
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      
+      // Add BOM for UTF-8 to ensure proper encoding in Excel
+      res.write('\ufeff');
+      res.end(csvContent);
+
+    } catch (error: any) {
+      console.error('Export error:', error);
+      res.status(500).json({ message: "Failed to export CSV" });
+    }
+  });
+
   // Serve uploaded files
   app.get('/uploads/:filename', (req, res) => {
     const filename = req.params.filename;
