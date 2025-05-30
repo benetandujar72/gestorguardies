@@ -24,7 +24,7 @@ const outingSchema = z.object({
   grupId: z.number().min(1, "Selecciona un grup"),
   descripcio: z.string().optional(),
   lloc: z.string().optional(),
-  responsable: z.string().optional(),
+  responsableId: z.number().optional().nullable(),
 });
 
 type OutingFormData = z.infer<typeof outingSchema>;
@@ -38,9 +38,17 @@ interface Outing {
     id: number;
     nomGrup: string;
   };
+  responsable?: {
+    id: number;
+    nom: string;
+    cognoms: string;
+    fullName: string;
+  };
+  responsableFullName?: string;
+  responsableNom?: string;
+  responsableCognoms?: string;
   descripcio?: string;
   lloc?: string;
-  responsable?: string;
 }
 
 export default function Outings() {
@@ -60,6 +68,12 @@ export default function Outings() {
   // Fetch groups for selection
   const { data: groups = [] } = useQuery({
     queryKey: ['/api/grups'],
+    enabled: isCreateDialogOpen,
+  });
+
+  // Fetch professors for selection
+  const { data: professors = [] } = useQuery({
+    queryKey: ['/api/professors'],
     enabled: isCreateDialogOpen,
   });
 
