@@ -176,6 +176,7 @@ export default function OutingsEnhanced() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/sortides'] });
+      queryClient.refetchQueries({ queryKey: ['/api/sortides'] });
       setIsEditDialogOpen(false);
       setSelectedOuting(null);
       editForm.reset();
