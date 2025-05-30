@@ -47,6 +47,7 @@ interface Assignment {
 export default function Assignments() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedGuardId, setSelectedGuardId] = useState<number | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -62,11 +63,20 @@ export default function Assignments() {
     enabled: isCreateDialogOpen,
   });
 
-  // Fetch professors for selection
-  const { data: professors = [] } = useQuery({
-    queryKey: ['/api/professors'],
-    enabled: isCreateDialogOpen,
+  // Fetch available professors for the selected guard
+  const { data: availableProfessors = [] } = useQuery({
+    queryKey: ['/api/professors/available', selectedGuardId],
+    enabled: isCreateDialogOpen && selectedGuardId !== null,
   });
+
+  // Fetch all professors as fallback
+  const { data: allProfessors = [] } = useQuery({
+    queryKey: ['/api/professors'],
+    enabled: isCreateDialogOpen && selectedGuardId === null,
+  });
+
+  // Use available professors if a guard is selected, otherwise use all professors
+  const professors = selectedGuardId ? availableProfessors : allProfessors;
 
   // Filter assignments by selected date
   const filteredAssignments = assignments.filter(assignment => 

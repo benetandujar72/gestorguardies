@@ -65,6 +65,7 @@ export interface IStorage {
   createProfessor(professor: InsertProfessor): Promise<Professor>;
   updateProfessor(id: number, professor: Partial<InsertProfessor>): Promise<Professor>;
   deleteProfessor(id: number): Promise<void>;
+  getAvailableProfessorsForGuard(guardiaId: number): Promise<Professor[]>;
 
   // Grup operations
   getGrups(): Promise<Grup[]>;
@@ -207,6 +208,33 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProfessor(id: number): Promise<void> {
     await db.delete(professors).where(eq(professors.id, id));
+  }
+
+  async getAvailableProfessorsForGuard(guardiaId: number): Promise<Professor[]> {
+    // Get guard details
+    const [guardia] = await db.select().from(guardies).where(eq(guardies.id, guardiaId));
+    if (!guardia) return [];
+
+    // Get all professors
+    const allProfessors = await db.select().from(professors);
+
+    // Get professors already assigned to this guard
+    const assignedProfessors = await db
+      .select({ professorId: assignacionsGuardia.professorId })
+      .from(assignacionsGuardia)
+      .where(eq(assignacionsGuardia.guardiaId, guardiaId));
+
+    const assignedIds = assignedProfessors.map(a => a.professorId);
+
+    // Get professors on outings that overlap with the guard (simplified for now)
+    // Note: This would need proper implementation based on how responsable field is stored
+
+    // Filter available professors (not assigned and not on outings)
+    const availableProfessors = allProfessors.filter(prof => 
+      !assignedIds.includes(prof.id)
+    );
+
+    return availableProfessors;
   }
 
   // Grup operations

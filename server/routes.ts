@@ -385,11 +385,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         usuariId: (req as any).user.claims.sub,
         accio: 'assignar_guardia',
         detalls: { assignacioId: assignacio.id, professorId: assignacio.professorId, guardiaId: assignacio.guardiaId },
+        entityType: 'assignacio_guardia',
+        entityId: assignacio.id
       });
       
       res.json(assignacio);
     } catch (error: any) {
       res.status(400).json({ message: "Invalid assignment data" });
+    }
+  });
+
+  // Get available professors for a specific guard duty
+  app.get('/api/professors/available/:guardiaId', isAuthenticated, async (req, res) => {
+    try {
+      const guardiaId = parseInt(req.params.guardiaId);
+      const availableProfessors = await storage.getAvailableProfessorsForGuard(guardiaId);
+      res.json(availableProfessors);
+    } catch (error: any) {
+      console.error("Error fetching available professors:", error);
+      res.status(500).json({ message: "Failed to fetch available professors" });
     }
   });
 
