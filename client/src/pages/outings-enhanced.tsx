@@ -93,6 +93,21 @@ export default function OutingsEnhanced() {
     },
   });
 
+  // Fetch professors for the form
+  const { data: professors = [] } = useQuery({
+    queryKey: ['/api/professors'],
+    enabled: isCreateDialogOpen || isEditDialogOpen,
+    select: (data: any[]) => {
+      if (!Array.isArray(data)) return [];
+      return data.map((prof: any) => ({
+        id: prof.id,
+        nom: prof.nom,
+        cognoms: prof.cognoms,
+        fullName: `${prof.nom} ${prof.cognoms}`,
+      }));
+    },
+  });
+
   // Create form
   const createForm = useForm<OutingFormData>({
     resolver: zodResolver(outingSchema),
@@ -489,9 +504,21 @@ export default function OutingsEnhanced() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Responsable</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Professor responsable..." />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona un professor..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">Cap professor assignat</SelectItem>
+                        {professors.map((prof: any) => (
+                          <SelectItem key={prof.id} value={prof.fullName}>
+                            {prof.fullName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -630,9 +657,21 @@ export default function OutingsEnhanced() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Responsable</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Professor responsable..." />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona un professor..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">Cap professor assignat</SelectItem>
+                        {professors.map((prof: any) => (
+                          <SelectItem key={prof.id} value={prof.fullName}>
+                            {prof.fullName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
