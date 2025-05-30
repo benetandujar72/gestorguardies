@@ -702,6 +702,240 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Route for populating database with school data
+  app.post('/api/setup/populate-school-data', isAuthenticated, async (req, res) => {
+    try {
+      // Profesores del centro educativo
+      const profesoresData = [
+        { nom: "Patricia", cognoms: "Fajardo", email: "patricia.fajardo@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Alba", cognoms: "Serqueda", email: "alba.serqueda@escola.cat", rol: "cap_departament", passwordHash: null },
+        { nom: "Marta", cognoms: "Fernàndez", email: "marta.fernandez@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Mar", cognoms: "Villar", email: "mar.villar@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Eva", cognoms: "Martin", email: "eva.martin@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Joan", cognoms: "Marí", email: "joan.mari@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Julia", cognoms: "Coll", email: "julia.coll@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Roger", cognoms: "Sabartes", email: "roger.sabartes@escola.cat", rol: "cap_departament", passwordHash: null },
+        { nom: "Maria", cognoms: "Creus", email: "maria.creus@escola.cat", rol: "tutor", passwordHash: null },
+        { nom: "Liliana", cognoms: "Perea", email: "liliana.perea@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "JC", cognoms: "Tinoco", email: "jc.tinoco@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Toni", cognoms: "Motos", email: "toni.motos@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Teresa", cognoms: "Caralto", email: "teresa.caralto@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Albert", cognoms: "Parrilla", email: "albert.parrilla@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Noe", cognoms: "Muñoz", email: "noe.munoz@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Albert", cognoms: "Freixenet", email: "albert.freixenet@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Itziar", cognoms: "Fuentes", email: "itziar.fuentes@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Berta", cognoms: "Riera", email: "berta.riera@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Laura", cognoms: "Manchado", email: "laura.manchado@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Luis", cognoms: "Cabrera", email: "luis.cabrera@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Benet", cognoms: "Andujar", email: "benet.andujar@escola.cat", rol: "cap_departament", passwordHash: null },
+        { nom: "Dani", cognoms: "Palau", email: "dani.palau@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Inmaculada", cognoms: "Murillo", email: "inmaculada.murillo@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Mireia", cognoms: "Vendrell", email: "mireia.vendrell@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Maria J.", cognoms: "Romero", email: "mariaj.romero@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Marta", cognoms: "Lopez", email: "marta.lopez@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Xavier", cognoms: "Reyes", email: "xavier.reyes@escola.cat", rol: "professor", passwordHash: null },
+        { nom: "Elvira", cognoms: "Parra", email: "elvira.parra@escola.cat", rol: "professor", passwordHash: null }
+      ];
+
+      const grupsData = [
+        { nom: "1r ESO A", curs: "1r", nivell: "ESO" },
+        { nom: "1r ESO B", curs: "1r", nivell: "ESO" },
+        { nom: "1r ESO C", curs: "1r", nivell: "ESO" },
+        { nom: "2n ESO A", curs: "2n", nivell: "ESO" },
+        { nom: "2n ESO B", curs: "2n", nivell: "ESO" },
+        { nom: "2n ESO C", curs: "2n", nivell: "ESO" },
+        { nom: "3r ESO A", curs: "3r", nivell: "ESO" },
+        { nom: "3r ESO B", curs: "3r", nivell: "ESO" },
+        { nom: "3r ESO C", curs: "3r", nivell: "ESO" },
+        { nom: "4t ESO A", curs: "4t", nivell: "ESO" },
+        { nom: "4t ESO B", curs: "4t", nivell: "ESO" },
+        { nom: "4t ESO C", curs: "4t", nivell: "ESO" },
+        { nom: "4t ESO D", curs: "4t", nivell: "ESO" }
+      ];
+
+      const aulesData = [
+        { nom: "Aula 101", planta: "1", capacitat: 30, tipus: "Normal" },
+        { nom: "Aula 102", planta: "1", capacitat: 30, tipus: "Normal" },
+        { nom: "Aula 103", planta: "1", capacitat: 30, tipus: "Normal" },
+        { nom: "Aula 104", planta: "1", capacitat: 30, tipus: "Normal" },
+        { nom: "Aula 105", planta: "1", capacitat: 30, tipus: "Normal" },
+        { nom: "Aula 201", planta: "2", capacitat: 30, tipus: "Normal" },
+        { nom: "Aula 202", planta: "2", capacitat: 30, tipus: "Normal" },
+        { nom: "Aula 203", planta: "2", capacitat: 30, tipus: "Normal" },
+        { nom: "Aula 204", planta: "2", capacitat: 30, tipus: "Normal" },
+        { nom: "Aula 205", planta: "2", capacitat: 30, tipus: "Normal" },
+        { nom: "Lab. Ciències", planta: "1", capacitat: 24, tipus: "Laboratori" },
+        { nom: "Aula Informàtica 1", planta: "2", capacitat: 20, tipus: "Informàtica" },
+        { nom: "Aula Informàtica 2", planta: "2", capacitat: 20, tipus: "Informàtica" },
+        { nom: "Aula de Música", planta: "0", capacitat: 25, tipus: "Especial" },
+        { nom: "Gimnàs", planta: "0", capacitat: 50, tipus: "Esports" },
+        { nom: "Biblioteca", planta: "1", capacitat: 40, tipus: "Estudi" },
+        { nom: "Sala Audiovisuals", planta: "1", capacitat: 35, tipus: "Audiovisual" }
+      ];
+
+      const guardiasData = [
+        { data: "2025-06-02", horaInici: "10:00", horaFi: "10:30", lloc: "Pati", tipusGuardia: "Pati", estat: "planificada" },
+        { data: "2025-06-02", horaInici: "12:30", horaFi: "13:30", lloc: "Passadís 1r pis", tipusGuardia: "Passadís", estat: "planificada" },
+        { data: "2025-06-03", horaInici: "09:00", horaFi: "10:00", lloc: "Biblioteca", tipusGuardia: "Biblioteca", estat: "planificada" },
+        { data: "2025-06-03", horaInici: "10:00", horaFi: "10:30", lloc: "Pati", tipusGuardia: "Pati", estat: "planificada" },
+        { data: "2025-06-04", horaInici: "08:00", horaFi: "09:00", lloc: "Entrada", tipusGuardia: "Entrada", estat: "planificada" },
+        { data: "2025-06-04", horaInici: "10:00", horaFi: "10:30", lloc: "Pati", tipusGuardia: "Pati", estat: "planificada" },
+        { data: "2025-06-05", horaInici: "11:30", horaFi: "12:30", lloc: "Passadís 2n pis", tipusGuardia: "Passadís", estat: "planificada" },
+        { data: "2025-06-05", horaInici: "10:00", horaFi: "10:30", lloc: "Pati", tipusGuardia: "Pati", estat: "planificada" },
+        { data: "2025-06-06", horaInici: "13:30", horaFi: "14:30", lloc: "Cantina", tipusGuardia: "Cantina", estat: "planificada" },
+        { data: "2025-06-06", horaInici: "10:00", horaFi: "10:30", lloc: "Pati", tipusGuardia: "Pati", estat: "planificada" }
+      ];
+
+      const sortidasData = [
+        {
+          nom: "Visita al Museu de Ciències",
+          descripcio: "Visita educativa al Museu de Ciències de Barcelona per als alumnes de 3r ESO A",
+          dataInici: "2025-06-03",
+          dataFi: "2025-06-03",
+          horaInici: "09:00",
+          horaFi: "16:00",
+          lloc: "Museu de Ciències - Barcelona",
+          estat: "planificada",
+          observacions: "Transport en autocar. Dinar inclòs. Professor responsable: Benet Andujar"
+        },
+        {
+          nom: "Teatre en Anglès",
+          descripcio: "Assistència a una obra de teatre en anglès per 4t ESO",
+          dataInici: "2025-06-05",
+          dataFi: "2025-06-05",
+          horaInici: "10:00",
+          horaFi: "13:00",
+          lloc: "Teatre Principal",
+          estat: "confirmada",
+          observacions: "Obra adaptada al nivell d'anglès dels alumnes. Professor responsable: Eva Martin"
+        }
+      ];
+
+      // 1. Crear profesores
+      const profesoresCreados = [];
+      for (const profesor of profesoresData) {
+        try {
+          const created = await storage.createProfessor(profesor);
+          profesoresCreados.push(created);
+        } catch (error) {
+          if (!error.message.includes('unique')) {
+            throw error;
+          }
+        }
+      }
+
+      // 2. Crear grupos
+      const gruposCreados = [];
+      for (const grupo of grupsData) {
+        try {
+          const created = await storage.createGrup(grupo);
+          gruposCreados.push(created);
+        } catch (error) {
+          if (!error.message.includes('unique')) {
+            throw error;
+          }
+        }
+      }
+
+      // 3. Crear aulas
+      const aulasCreadas = [];
+      for (const aula of aulesData) {
+        try {
+          const created = await storage.createAula(aula);
+          aulasCreadas.push(created);
+        } catch (error) {
+          if (!error.message.includes('unique')) {
+            throw error;
+          }
+        }
+      }
+
+      // 4. Crear guardias
+      const guardiasCreadas = [];
+      for (const guardia of guardiasData) {
+        try {
+          const created = await storage.createGuardia(guardia);
+          guardiasCreadas.push(created);
+        } catch (error) {
+          if (!error.message.includes('unique')) {
+            throw error;
+          }
+        }
+      }
+
+      // 5. Crear sortidas
+      const sortidasCreadas = [];
+      for (const sortida of sortidasData) {
+        try {
+          const created = await storage.createSortida(sortida);
+          sortidasCreadas.push(created);
+        } catch (error) {
+          if (!error.message.includes('unique')) {
+            throw error;
+          }
+        }
+      }
+
+      // 6. Crear horarios para cada profesor (con G para indicar disponibilidad de guardia)
+      const allProfessors = await storage.getProfessors();
+      const allGroups = await storage.getGrups();
+      const allAulas = await storage.getAules();
+      let totalHorarios = 0;
+
+      for (const professor of allProfessors) {
+        const horariosProfesor = [
+          // Lunes
+          { professorId: professor.id, grupId: allGroups[0]?.id || null, aulaId: allAulas[0]?.id || null, diaSemana: "Dilluns", horaInici: "08:00", horaFi: "09:00", assignatura: "Classe", observacions: null },
+          { professorId: professor.id, grupId: null, aulaId: null, diaSemana: "Dilluns", horaInici: "09:00", horaFi: "10:00", assignatura: "G", observacions: "Disponible per guardia" },
+          { professorId: professor.id, grupId: null, aulaId: null, diaSemana: "Dilluns", horaInici: "10:00", horaFi: "10:30", assignatura: "G", observacions: "Disponible per guardia - Pati" },
+          { professorId: professor.id, grupId: allGroups[1]?.id || null, aulaId: allAulas[1]?.id || null, diaSemana: "Dilluns", horaInici: "10:30", horaFi: "11:30", assignatura: "Classe", observacions: null },
+          { professorId: professor.id, grupId: allGroups[2]?.id || null, aulaId: allAulas[2]?.id || null, diaSemana: "Dilluns", horaInici: "11:30", horaFi: "12:30", assignatura: "Classe", observacions: null },
+          { professorId: professor.id, grupId: null, aulaId: null, diaSemana: "Dilluns", horaInici: "12:30", horaFi: "13:30", assignatura: "G", observacions: "Disponible per guardia - Passadís" },
+          { professorId: professor.id, grupId: allGroups[3]?.id || null, aulaId: allAulas[3]?.id || null, diaSemana: "Dilluns", horaInici: "13:30", horaFi: "14:30", assignatura: "Classe", observacions: null },
+          
+          // Martes
+          { professorId: professor.id, grupId: null, aulaId: null, diaSemana: "Dimarts", horaInici: "08:00", horaFi: "09:00", assignatura: "G", observacions: "Disponible per guardia - Entrada" },
+          { professorId: professor.id, grupId: allGroups[4]?.id || null, aulaId: allAulas[4]?.id || null, diaSemana: "Dimarts", horaInici: "09:00", horaFi: "10:00", assignatura: "Classe", observacions: null },
+          { professorId: professor.id, grupId: null, aulaId: null, diaSemana: "Dimarts", horaInici: "10:00", horaFi: "10:30", assignatura: "G", observacions: "Disponible per guardia - Pati" },
+          { professorId: professor.id, grupId: allGroups[5]?.id || null, aulaId: allAulas[5]?.id || null, diaSemana: "Dimarts", horaInici: "10:30", horaFi: "11:30", assignatura: "Classe", observacions: null },
+          { professorId: professor.id, grupId: allGroups[6]?.id || null, aulaId: allAulas[6]?.id || null, diaSemana: "Dimarts", horaInici: "11:30", horaFi: "12:30", assignatura: "Classe", observacions: null },
+          { professorId: professor.id, grupId: allGroups[7]?.id || null, aulaId: allAulas[7]?.id || null, diaSemana: "Dimarts", horaInici: "12:30", horaFi: "13:30", assignatura: "Classe", observacions: null },
+          { professorId: professor.id, grupId: null, aulaId: null, diaSemana: "Dimarts", horaInici: "13:30", horaFi: "14:30", assignatura: "G", observacions: "Disponible per guardia - Cantina" }
+        ];
+
+        for (const horario of horariosProfesor) {
+          try {
+            await storage.createHorari(horario);
+            totalHorarios++;
+          } catch (error) {
+            // Ignore duplicates
+          }
+        }
+      }
+
+      res.json({
+        success: true,
+        data: {
+          profesores: profesoresCreados.length,
+          grupos: gruposCreados.length,
+          aulas: aulasCreadas.length,
+          guardias: guardiasCreadas.length,
+          sortidas: sortidasCreadas.length,
+          horarios: totalHorarios
+        },
+        message: "Datos del centro educativo creados exitosamente"
+      });
+
+    } catch (error) {
+      console.error("Error populating school data:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Error creando datos del centro educativo",
+        error: error.message 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
