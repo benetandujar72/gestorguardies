@@ -66,8 +66,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set proper content type
       res.setHeader('Content-Type', 'application/json');
       
-      // First try without OpenAI to isolate the problem
-      const result = { response: "Hola! El sistema està funcionant. La teva pregunta era: " + message };
+      // Now use OpenAI for intelligent responses
+      console.log("Calling OpenAI API...");
+      const aiResponse = await generateChatResponse(message, []);
+      console.log("OpenAI response received:", aiResponse);
+      
+      const result = { response: aiResponse };
       console.log("Sending JSON response:", result);
       
       res.json(result);
@@ -75,7 +79,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Simple chat error details:", error);
       console.error("Error stack:", error.stack);
       res.setHeader('Content-Type', 'application/json');
-      res.status(500).json({ message: "Failed to process chat message", error: error.message });
+      res.status(500).json({ message: "Error processant el missatge amb IA", error: error.message });
     }
   });
 
