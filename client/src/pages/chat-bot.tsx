@@ -51,10 +51,7 @@ export default function ChatBot() {
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async ({ sessionId, message }: { sessionId: number; message: string }) => {
-      return apiRequest(`/api/chat/sessions/${sessionId}/messages`, {
-        method: "POST",
-        body: { content: message },
-      });
+      return apiRequest(`/api/chat/sessions/${sessionId}/messages`, "POST", { content: message });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/chat/messages", currentSessionId] });
@@ -72,12 +69,9 @@ export default function ChatBot() {
   // Create new session mutation
   const createSessionMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("/api/chat/sessions", {
-        method: "POST",
-        body: {},
-      });
+      return apiRequest("/api/chat/sessions", "POST", {});
     },
-    onSuccess: (newSession) => {
+    onSuccess: (newSession: any) => {
       setCurrentSessionId(newSession.id);
       queryClient.invalidateQueries({ queryKey: ["/api/chat/sessions"] });
     },
