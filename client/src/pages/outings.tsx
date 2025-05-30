@@ -45,7 +45,10 @@ interface Outing {
 
 export default function Outings() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedOuting, setSelectedOuting] = useState<Outing | null>(null);
   const [showThisWeekOnly, setShowThisWeekOnly] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("totes");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

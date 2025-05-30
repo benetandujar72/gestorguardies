@@ -1,11 +1,33 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, CalendarDays, Clock, MapPin, User, Download, ExternalLink } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, CalendarDays, Clock, MapPin, User, Download, ExternalLink, Edit2, List, Grid3x3, Smartphone, Monitor } from "lucide-react";
 import { format, addDays, startOfWeek, endOfWeek, isSameDay, parseISO } from "date-fns";
 import { ca } from "date-fns/locale";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { apiRequest } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+
+const guardEditSchema = z.object({
+  data: z.string().min(1, "La data és obligatòria"),
+  horaInici: z.string().min(1, "L'hora d'inici és obligatòria"),
+  horaFi: z.string().min(1, "L'hora de fi és obligatòria"),
+  tipusGuardia: z.string().min(1, "El tipus de guàrdia és obligatori"),
+  estat: z.string().optional(),
+  lloc: z.string().optional(),
+  observacions: z.string().optional(),
+});
+
+type GuardEditFormData = z.infer<typeof guardEditSchema>;
 
 interface GuardEvent {
   id: number;
@@ -19,11 +41,11 @@ interface GuardEvent {
     id: number;
     nom: string;
     cognoms: string;
-  };
+  } | null;
   aula?: {
     id: number;
     nom: string;
-  };
+  } | null;
 }
 
 export default function GuardCalendar() {
@@ -31,6 +53,26 @@ export default function GuardCalendar() {
     const today = new Date();
     return startOfWeek(today, { weekStartsOn: 1 }); // Monday start
   });
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [isMobile, setIsMobile] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedGuard, setSelectedGuard] = useState<GuardEvent | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth < 768) {
+        setViewMode('list');
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Fetch guards for the next 4 weeks
   const { data: guards = [], isLoading } = useQuery({
@@ -47,10 +89,68 @@ export default function GuardCalendar() {
         id: guard.assignacions[0].professor.id,
         nom: guard.assignacions[0].professor.nom,
         cognoms: guard.assignacions[0].professor.cognoms,
-      } : null,
-      aula: null // Will be added later when aula relationship is fixed
+      } : undefined,
+      aula: undefined // Will be added later when aula relationship is fixed
     })),
   });
+
+  // Form for editing guards
+  const form = useForm<GuardEditFormData>({
+    resolver: zodResolver(guardEditSchema),
+    defaultValues: {
+      data: "",
+      horaInici: "",
+      horaFi: "",
+      tipusGuardia: "",
+      estat: "",
+      lloc: "",
+      observacions: "",
+    },
+  });
+
+  // Edit guard mutation
+  const editGuardMutation = useMutation({
+    mutationFn: async (data: GuardEditFormData & { id: number }) => {
+      return await apiRequest(`/api/guardies/${data.id}`, 'PATCH', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/guardies'] });
+      setIsEditDialogOpen(false);
+      setSelectedGuard(null);
+      form.reset();
+      toast({
+        title: "Guàrdia actualitzada",
+        description: "La guàrdia s'ha actualitzat correctament.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "No s'ha pogut actualitzar la guàrdia.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEditGuard = (guard: GuardEvent) => {
+    setSelectedGuard(guard);
+    form.reset({
+      data: guard.data,
+      horaInici: guard.hora,
+      horaFi: guard.hora, // Will need to be updated when we have horaFi in data
+      tipusGuardia: guard.tipusGuardia,
+      estat: guard.categoria,
+      lloc: "",
+      observacions: guard.observacions || "",
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const onSubmitEdit = (data: GuardEditFormData) => {
+    if (selectedGuard) {
+      editGuardMutation.mutate({ ...data, id: selectedGuard.id });
+    }
+  };
 
   // Get guards for the selected week
   const weekStart = selectedWeek;
@@ -119,17 +219,38 @@ export default function GuardCalendar() {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-text-primary">Calendari de Guàrdies</h1>
           <p className="text-text-secondary">
             Visualització setmanal de les guàrdies assignades
           </p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+          {!isMobile && (
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <Button
+                variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('calendar')}
+              >
+                <Grid3x3 className="w-4 h-4 mr-2" />
+                Calendari
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+              >
+                <List className="w-4 h-4 mr-2" />
+                Llista
+              </Button>
+            </div>
+          )}
           <Button variant="outline" onClick={exportToGoogleCalendar}>
             <ExternalLink className="w-4 h-4 mr-2" />
-            Exportar a Google Calendar
+            <span className="hidden sm:inline">Exportar a Google Calendar</span>
+            <span className="sm:hidden">Exportar</span>
           </Button>
         </div>
       </div>
