@@ -80,9 +80,7 @@ export default function ChatBot() {
   // Delete session mutation
   const deleteSessionMutation = useMutation({
     mutationFn: async (sessionId: number) => {
-      return apiRequest(`/api/chat/sessions/${sessionId}`, {
-        method: "DELETE",
-      });
+      return apiRequest(`/api/chat/sessions/${sessionId}`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/chat/sessions"] });

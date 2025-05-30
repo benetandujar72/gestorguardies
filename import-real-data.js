@@ -1,5 +1,9 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Función para leer y procesar el CSV de asignaciones
 function processAssignationsCSV() {
@@ -156,9 +160,9 @@ async function populateDatabase() {
 }
 
 // Ejecutar si se llama directamente
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   console.log('🚀 Iniciando importación de datos del centro educativo...\n');
   populateDatabase();
 }
 
-module.exports = { populateDatabase, processAssignationsCSV };
+export { populateDatabase, processAssignationsCSV };
