@@ -132,7 +132,10 @@ export default function ChatBot() {
 
       if (sessionId) {
         console.log("Sending message to session:", sessionId);
-        sendMessageMutation.mutate({ sessionId, message: input });
+        console.log("Message content:", input);
+        console.log("About to call sendMessageMutation.mutate");
+        await sendMessageMutation.mutateAsync({ sessionId, message: input });
+        console.log("sendMessageMutation completed");
       }
     } catch (error) {
       console.error("Error sending message:", error);
