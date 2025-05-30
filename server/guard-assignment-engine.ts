@@ -39,6 +39,10 @@ export class GuardAssignmentEngine {
       // 3. Calcular prioridades para todos los profesores
       const priorities = await this.calculateProfessorPriorities(context);
       
+      console.log(`=== ASSIGNACIÓ AUTOMÀTICA GUÀRDIA ${guardia.id} ===`);
+      console.log(`Data: ${guardia.data}, Hora: ${guardia.horaInici}-${guardia.horaFi}, Tipus: ${guardia.tipusGuardia}`);
+      console.log(`Professors disponibles analitzats: ${priorities.length}`);
+      
       // 4. Ordenar por prioridad y seleccionar
       const sortedProfessors = priorities.sort((a, b) => {
         if (a.priority !== b.priority) {
@@ -48,20 +52,33 @@ export class GuardAssignmentEngine {
         return a.workloadScore - b.workloadScore;
       });
 
+      console.log("=== TOP 5 PROFESSORS PER PRIORITAT ===");
+      sortedProfessors.slice(0, 5).forEach((prof, index) => {
+        console.log(`${index + 1}. Professor ID ${prof.professorId} - Prioritat: ${prof.priority} - Motiu: ${prof.reason} - Score: ${prof.workloadScore}`);
+      });
+
       // 5. Seleccionar profesores según el tipo de guardia
       const numProfessorsNeeded = this.getRequiredProfessors(guardia.tipusGuardia);
       const selectedProfessors = sortedProfessors.slice(0, numProfessorsNeeded);
 
+      console.log(`=== PROFESSORS SELECCIONATS (${selectedProfessors.length}/${numProfessorsNeeded}) ===`);
+      selectedProfessors.forEach((prof, index) => {
+        console.log(`${index + 1}. Professor ID ${prof.professorId} - Prioritat: ${prof.priority} - Motiu: ${prof.reason}`);
+      });
+
       // 6. Crear las asignaciones
       const assignments = [];
       for (const prof of selectedProfessors) {
+        console.log(`Creant assignació per Professor ID ${prof.professorId} amb prioritat ${prof.priority}`);
         const assignment = await storage.createAssignacioGuardia({
           guardiaId: guardia.id,
           professorId: prof.professorId,
+          prioritat: prof.priority, // Afegim la prioritat calculada
           estat: "assignada",
-          observacions: `Asignación automática - ${prof.reason}`
+          motiu: `Assignació automàtica - ${prof.reason}`
         });
         assignments.push(assignment);
+        console.log(`Assignació creada amb ID ${assignment.id}`);
       }
 
       // 7. Actualizar métricas
@@ -101,14 +118,17 @@ export class GuardAssignmentEngine {
   private async calculateProfessorPriorities(context: GuardAssignmentContext): Promise<AssignmentPriority[]> {
     const priorities: AssignmentPriority[] = [];
 
+    console.log(`=== ANALITZANT ${context.professors.length} PROFESSORS ===`);
     for (const professor of context.professors) {
       // Skip si ya está asignado a esta guardia
       if (context.currentAssignments.some(a => a.professorId === professor.id)) {
+        console.log(`Professor ${professor.nom} ${professor.cognoms} (ID: ${professor.id}) - SALTAT (ja assignat)`);
         continue;
       }
 
       const priority = await this.calculateProfessorPriority(professor, context);
       priorities.push(priority);
+      console.log(`Professor ${professor.nom} ${professor.cognoms} (ID: ${professor.id}) - Prioritat: ${priority.priority} - Motiu: ${priority.reason}`);
     }
 
     return priorities;
@@ -232,7 +252,7 @@ export class GuardAssignmentEngine {
       "Cap d'estudis"
     ];
 
-    return administrativeRoles.includes(professor.carrec);
+    return administrativeRoles.includes(professor.rol);
   }
 
   /**
@@ -342,8 +362,8 @@ export class GuardAssignmentEngine {
           professor: `${professor.nom} ${professor.cognoms}`,
           totalAssignments: recentAssignments.length,
           workloadScore,
-          department: professor.departament,
-          role: professor.carrec
+          department: professor.rol || 'Professor',
+          role: professor.rol || 'Professor'
         });
       }
 
