@@ -32,7 +32,7 @@ export default function ImportCSV() {
       formData.append('file', file);
       formData.append('entityType', entityType);
 
-      return apiRequest('/api/import/csv', {
+      return apiRequest('POST', '/api/import/csv', {
         method: 'POST',
         body: formData,
       });

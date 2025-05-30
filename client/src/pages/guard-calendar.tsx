@@ -111,7 +111,7 @@ export default function GuardCalendar() {
   // Edit guard mutation
   const editGuardMutation = useMutation({
     mutationFn: async (data: GuardEditFormData & { id: number }) => {
-      return await apiRequest(`/api/guardies/${data.id}`, 'PATCH', data);
+      return await apiRequest('PATCH', `/api/guardies/${data.id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/guardies'] });

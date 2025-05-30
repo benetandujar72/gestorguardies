@@ -23,7 +23,7 @@ export default function Setup() {
   const [setupResult, setSetupResult] = useState<SetupResult | null>(null);
 
   const populateDataMutation = useMutation({
-    mutationFn: () => apiRequest('/api/setup/populate-school-data', 'POST', {}),
+    mutationFn: () => apiRequest('POST', '/api/setup/populate-school-data', {}),
     onSuccess: (data) => {
       setSetupResult(data);
     },
