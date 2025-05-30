@@ -51,13 +51,24 @@ export default function ChatBot() {
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async ({ sessionId, message }: { sessionId: number; message: string }) => {
-      return apiRequestJson(`/api/chat/sessions/${sessionId}/messages`, "POST", { content: message });
+      console.log("Sending request to:", `/api/chat/sessions/${sessionId}/messages`);
+      console.log("With payload:", { content: message });
+      try {
+        const result = await apiRequestJson(`/api/chat/sessions/${sessionId}/messages`, "POST", { content: message });
+        console.log("API response:", result);
+        return result;
+      } catch (error) {
+        console.error("API request failed:", error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Message sent successfully:", data);
       queryClient.invalidateQueries({ queryKey: [`/api/chat/messages/${currentSessionId}`] });
       setInput("");
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Send message mutation error:", error);
       toast({
         title: "Error",
         description: "No s'ha pogut enviar el missatge. Comprova que l'API key d'OpenAI estigui configurada.",
@@ -107,20 +118,25 @@ export default function ChatBot() {
     if (!input.trim() || sendMessageMutation.isPending) return;
 
     try {
+      console.log("Starting to send message:", input);
       let sessionId = currentSessionId;
       
       // Create new session if none exists
       if (!sessionId) {
+        console.log("Creating new session...");
         const newSession = await createSessionMutation.mutateAsync();
+        console.log("New session created:", newSession);
         sessionId = newSession.id;
         setCurrentSessionId(sessionId);
       }
 
       if (sessionId) {
+        console.log("Sending message to session:", sessionId);
         sendMessageMutation.mutate({ sessionId, message: input });
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
     }
   };
 

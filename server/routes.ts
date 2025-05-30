@@ -606,13 +606,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/chat/sessions/:sessionId/messages', isAuthenticated, async (req, res) => {
     try {
+      console.log("POST /api/chat/sessions/:sessionId/messages - Request received");
+      console.log("Session ID:", req.params.sessionId);
+      console.log("Request body:", req.body);
+      
       const sessionId = parseInt(req.params.sessionId);
       const { content } = req.body;
       const userId = (req as any).user.claims.sub;
       
+      console.log("Parsed sessionId:", sessionId);
+      console.log("Content:", content);
+      console.log("User ID:", userId);
+      
       // Get session
       const session = await storage.getChatSession(sessionId);
+      console.log("Retrieved session:", session);
+      
       if (!session) {
+        console.log("Session not found");
         return res.status(404).json({ message: "Session not found" });
       }
       
