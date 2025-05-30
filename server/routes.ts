@@ -544,15 +544,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("User message:", message);
       console.log("User ID:", userId);
       
+      // Set proper content type
+      res.setHeader('Content-Type', 'application/json');
+      
       // Generate AI response directly without session management
+      console.log("About to call generateChatResponse");
       const response = await generateChatResponse(message, []);
+      console.log("AI response generated successfully:", response);
       
-      console.log("AI response generated:", response);
+      const result = { response };
+      console.log("Sending JSON response:", result);
       
-      res.json({ response });
+      res.json(result);
     } catch (error: any) {
-      console.error("Simple chat error:", error);
-      res.status(500).json({ message: "Failed to process chat message" });
+      console.error("Simple chat error details:", error);
+      console.error("Error stack:", error.stack);
+      res.setHeader('Content-Type', 'application/json');
+      res.status(500).json({ message: "Failed to process chat message", error: error.message });
     }
   });
 
