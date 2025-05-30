@@ -381,7 +381,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Sortida operations
-  async getSortides(): Promise<Sortida[]> {
+  async getSortides(): Promise<any[]> {
     return await db.select({
       id: sortides.id,
       nomSortida: sortides.nomSortida,
@@ -390,18 +390,18 @@ export class DatabaseStorage implements IStorage {
       grupId: sortides.grupId,
       descripcio: sortides.descripcio,
       lloc: sortides.lloc,
-      responsable: sortides.responsable,
+      responsableId: sortides.responsableId,
       createdAt: sortides.createdAt,
-      grup: {
-        id: grups.id,
-        nomGrup: grups.nomGrup,
-      }
+      grupNom: grups.nomGrup,
+      responsableNom: professors.nom,
+      responsableCognoms: professors.cognoms,
     }).from(sortides)
       .leftJoin(grups, eq(sortides.grupId, grups.id))
+      .leftJoin(professors, eq(sortides.responsableId, professors.id))
       .orderBy(desc(sortides.dataInici));
   }
 
-  async getSortidesThisWeek(): Promise<Sortida[]> {
+  async getSortidesThisWeek(): Promise<any[]> {
     const startOfWeek = new Date();
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
     startOfWeek.setHours(0, 0, 0, 0);
@@ -418,14 +418,21 @@ export class DatabaseStorage implements IStorage {
       grupId: sortides.grupId,
       descripcio: sortides.descripcio,
       lloc: sortides.lloc,
-      responsable: sortides.responsable,
+      responsableId: sortides.responsableId,
       createdAt: sortides.createdAt,
-      grup: {
+      grup: grups.id ? {
         id: grups.id,
         nomGrup: grups.nomGrup,
-      }
+      } : null,
+      responsable: professors.id ? {
+        id: professors.id,
+        nom: professors.nom,
+        cognoms: professors.cognoms,
+        fullName: sql<string>`CONCAT(${professors.nom}, ' ', ${professors.cognoms})`
+      } : null
     }).from(sortides)
       .leftJoin(grups, eq(sortides.grupId, grups.id))
+      .leftJoin(professors, eq(sortides.responsableId, professors.id))
       .where(between(sortides.dataInici, startOfWeek, endOfWeek));
   }
 
