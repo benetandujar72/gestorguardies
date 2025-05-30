@@ -17,6 +17,17 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Session storage table (mandatory for Replit Auth)
+// Taula d'anys acadèmics
+export const anysAcademics = pgTable("anys_academics", {
+  id: serial("any_academic_id").primaryKey(),
+  nom: varchar("nom").notNull(), // "2024-25"
+  dataInici: date("data_inici").notNull(),
+  dataFi: date("data_fi").notNull(),
+  estat: varchar("estat").notNull().default("actiu"), // "actiu", "inactiu", "finalitzat"
+  observacions: text("observacions"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const sessions = pgTable(
   "sessions",
   {
