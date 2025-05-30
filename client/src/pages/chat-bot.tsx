@@ -44,7 +44,7 @@ export default function ChatBot() {
 
   // Get messages for current session
   const { data: messages = [], isLoading: loadingMessages } = useQuery({
-    queryKey: ["/api/chat/messages", currentSessionId],
+    queryKey: [`/api/chat/messages/${currentSessionId}`],
     enabled: !!currentSessionId,
   });
 
@@ -54,7 +54,7 @@ export default function ChatBot() {
       return apiRequestJson(`/api/chat/sessions/${sessionId}/messages`, "POST", { content: message });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/chat/messages", currentSessionId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chat/messages/${currentSessionId}`] });
       setInput("");
     },
     onError: () => {
