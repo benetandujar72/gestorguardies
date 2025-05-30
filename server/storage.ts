@@ -50,6 +50,13 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
 
+  // Academic Year operations
+  getAnysAcademics(): Promise<any[]>;
+  getAnyAcademic(id: number): Promise<any | undefined>;
+  createAnyAcademic(anyAcademic: any): Promise<any>;
+  updateAnyAcademic(id: number, anyAcademic: any): Promise<any>;
+  deleteAnyAcademic(id: number): Promise<void>;
+
   // Professor operations
   getProfessors(): Promise<Professor[]>;
   getProfessor(id: number): Promise<Professor | undefined>;
@@ -648,6 +655,34 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(chatSessions.lastActivity))
       .limit(1);
     return session;
+  }
+
+  // Academic Year operations
+  async getAnysAcademics(): Promise<any[]> {
+    return await db.select().from(anysAcademics).orderBy(desc(anysAcademics.createdAt));
+  }
+
+  async getAnyAcademic(id: number): Promise<any | undefined> {
+    const [anyAcademic] = await db.select().from(anysAcademics).where(eq(anysAcademics.id, id));
+    return anyAcademic;
+  }
+
+  async createAnyAcademic(anyAcademicData: any): Promise<any> {
+    const [newAnyAcademic] = await db.insert(anysAcademics).values(anyAcademicData).returning();
+    return newAnyAcademic;
+  }
+
+  async updateAnyAcademic(id: number, anyAcademicData: any): Promise<any> {
+    const [updatedAnyAcademic] = await db
+      .update(anysAcademics)
+      .set(anyAcademicData)
+      .where(eq(anysAcademics.id, id))
+      .returning();
+    return updatedAnyAcademic;
+  }
+
+  async deleteAnyAcademic(id: number): Promise<void> {
+    await db.delete(anysAcademics).where(eq(anysAcademics.id, id));
   }
 }
 

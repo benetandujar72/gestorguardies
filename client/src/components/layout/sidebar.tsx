@@ -46,6 +46,11 @@ const navigationItems = [
     icon: MessageSquare,
   },
   {
+    href: "/anys-academics",
+    label: "Anys Acadèmics",
+    icon: Calendar,
+  },
+  {
     href: "/horaris",
     label: "Horaris",
     icon: Calendar,
