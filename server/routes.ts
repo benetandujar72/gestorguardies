@@ -702,9 +702,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Route for populating database with school data
-  app.post('/api/setup/populate-school-data', isAuthenticated, async (req, res) => {
+  // Route for creating professors quickly
+  app.post('/api/setup/create-professors', isAuthenticated, async (req, res) => {
     try {
+      console.log('Creating professors...');
+      
       // Profesores del centro educativo
       const profesoresData = [
         { nom: "Patricia", cognoms: "Fajardo", email: "patricia.fajardo@escola.cat", rol: "professor", passwordHash: null },
@@ -737,40 +739,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { nom: "Elvira", cognoms: "Parra", email: "elvira.parra@escola.cat", rol: "professor", passwordHash: null }
       ];
 
+      const profesoresCreados = [];
+      for (const profesor of profesoresData) {
+        try {
+          const created = await storage.createProfessor(profesor);
+          profesoresCreados.push(created);
+          console.log(`Created: ${profesor.nom} ${profesor.cognoms}`);
+        } catch (error) {
+          if (!error.message.includes('unique')) {
+            console.error(`Error creating ${profesor.nom}:`, error.message);
+          }
+        }
+      }
+
+      res.json({
+        success: true,
+        professors: profesoresCreados.length,
+        message: `Creados ${profesoresCreados.length} profesores del centro educativo`
+      });
+
+    } catch (error) {
+      console.error("Error creating professors:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Error creando profesores",
+        error: error.message 
+      });
+    }
+  });
+
       const grupsData = [
-        { nom: "1r ESO A", curs: "1r", nivell: "ESO" },
-        { nom: "1r ESO B", curs: "1r", nivell: "ESO" },
-        { nom: "1r ESO C", curs: "1r", nivell: "ESO" },
-        { nom: "2n ESO A", curs: "2n", nivell: "ESO" },
-        { nom: "2n ESO B", curs: "2n", nivell: "ESO" },
-        { nom: "2n ESO C", curs: "2n", nivell: "ESO" },
-        { nom: "3r ESO A", curs: "3r", nivell: "ESO" },
-        { nom: "3r ESO B", curs: "3r", nivell: "ESO" },
-        { nom: "3r ESO C", curs: "3r", nivell: "ESO" },
-        { nom: "4t ESO A", curs: "4t", nivell: "ESO" },
-        { nom: "4t ESO B", curs: "4t", nivell: "ESO" },
-        { nom: "4t ESO C", curs: "4t", nivell: "ESO" },
-        { nom: "4t ESO D", curs: "4t", nivell: "ESO" }
+        { nomGrup: "1r ESO A", curs: "1r", nivell: "ESO" },
+        { nomGrup: "1r ESO B", curs: "1r", nivell: "ESO" },
+        { nomGrup: "1r ESO C", curs: "1r", nivell: "ESO" },
+        { nomGrup: "2n ESO A", curs: "2n", nivell: "ESO" },
+        { nomGrup: "2n ESO B", curs: "2n", nivell: "ESO" },
+        { nomGrup: "2n ESO C", curs: "2n", nivell: "ESO" },
+        { nomGrup: "3r ESO A", curs: "3r", nivell: "ESO" },
+        { nomGrup: "3r ESO B", curs: "3r", nivell: "ESO" },
+        { nomGrup: "3r ESO C", curs: "3r", nivell: "ESO" },
+        { nomGrup: "4t ESO A", curs: "4t", nivell: "ESO" },
+        { nomGrup: "4t ESO B", curs: "4t", nivell: "ESO" },
+        { nomGrup: "4t ESO C", curs: "4t", nivell: "ESO" },
+        { nomGrup: "4t ESO D", curs: "4t", nivell: "ESO" }
       ];
 
       const aulesData = [
-        { nom: "Aula 101", planta: "1", capacitat: 30, tipus: "Normal" },
-        { nom: "Aula 102", planta: "1", capacitat: 30, tipus: "Normal" },
-        { nom: "Aula 103", planta: "1", capacitat: 30, tipus: "Normal" },
-        { nom: "Aula 104", planta: "1", capacitat: 30, tipus: "Normal" },
-        { nom: "Aula 105", planta: "1", capacitat: 30, tipus: "Normal" },
-        { nom: "Aula 201", planta: "2", capacitat: 30, tipus: "Normal" },
-        { nom: "Aula 202", planta: "2", capacitat: 30, tipus: "Normal" },
-        { nom: "Aula 203", planta: "2", capacitat: 30, tipus: "Normal" },
-        { nom: "Aula 204", planta: "2", capacitat: 30, tipus: "Normal" },
-        { nom: "Aula 205", planta: "2", capacitat: 30, tipus: "Normal" },
-        { nom: "Lab. Ciències", planta: "1", capacitat: 24, tipus: "Laboratori" },
-        { nom: "Aula Informàtica 1", planta: "2", capacitat: 20, tipus: "Informàtica" },
-        { nom: "Aula Informàtica 2", planta: "2", capacitat: 20, tipus: "Informàtica" },
-        { nom: "Aula de Música", planta: "0", capacitat: 25, tipus: "Especial" },
-        { nom: "Gimnàs", planta: "0", capacitat: 50, tipus: "Esports" },
-        { nom: "Biblioteca", planta: "1", capacitat: 40, tipus: "Estudi" },
-        { nom: "Sala Audiovisuals", planta: "1", capacitat: 35, tipus: "Audiovisual" }
+        { nomAula: "Aula 101", capacitat: 30, tipus: "Normal", equipament: "Projector" },
+        { nomAula: "Aula 102", capacitat: 30, tipus: "Normal", equipament: "Projector" },
+        { nomAula: "Aula 103", capacitat: 30, tipus: "Normal", equipament: "Projector" },
+        { nomAula: "Aula 104", capacitat: 30, tipus: "Normal", equipament: "Projector" },
+        { nomAula: "Aula 105", capacitat: 30, tipus: "Normal", equipament: "Projector" },
+        { nomAula: "Aula 201", capacitat: 30, tipus: "Normal", equipament: "Projector" },
+        { nomAula: "Aula 202", capacitat: 30, tipus: "Normal", equipament: "Projector" },
+        { nomAula: "Aula 203", capacitat: 30, tipus: "Normal", equipament: "Projector" },
+        { nomAula: "Aula 204", capacitat: 30, tipus: "Normal", equipament: "Projector" },
+        { nomAula: "Aula 205", capacitat: 30, tipus: "Normal", equipament: "Projector" },
+        { nomAula: "Lab. Ciències", capacitat: 24, tipus: "Laboratori", equipament: "Material científic" },
+        { nomAula: "Aula Informàtica 1", capacitat: 20, tipus: "Informàtica", equipament: "20 ordinadors" },
+        { nomAula: "Aula Informàtica 2", capacitat: 20, tipus: "Informàtica", equipament: "20 ordinadors" },
+        { nomAula: "Aula de Música", capacitat: 25, tipus: "Especial", equipament: "Instruments musicals" },
+        { nomAula: "Gimnàs", capacitat: 50, tipus: "Esports", equipament: "Material esportiu" },
+        { nomAula: "Biblioteca", capacitat: 40, tipus: "Estudi", equipament: "Ordinadors i llibres" },
+        { nomAula: "Sala Audiovisuals", capacitat: 35, tipus: "Audiovisual", equipament: "Projector i so" }
       ];
 
       const guardiasData = [
@@ -788,26 +819,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const sortidasData = [
         {
-          nom: "Visita al Museu de Ciències",
+          nomSortida: "Visita al Museu de Ciències",
           descripcio: "Visita educativa al Museu de Ciències de Barcelona per als alumnes de 3r ESO A",
-          dataInici: "2025-06-03",
-          dataFi: "2025-06-03",
-          horaInici: "09:00",
-          horaFi: "16:00",
+          dataInici: new Date("2025-06-03"),
+          dataFi: new Date("2025-06-03"),
           lloc: "Museu de Ciències - Barcelona",
-          estat: "planificada",
-          observacions: "Transport en autocar. Dinar inclòs. Professor responsable: Benet Andujar"
+          responsable: "Benet Andujar",
+          observacions: "Transport en autocar. Dinar inclòs."
         },
         {
-          nom: "Teatre en Anglès",
+          nomSortida: "Teatre en Anglès",
           descripcio: "Assistència a una obra de teatre en anglès per 4t ESO",
-          dataInici: "2025-06-05",
-          dataFi: "2025-06-05",
-          horaInici: "10:00",
-          horaFi: "13:00",
+          dataInici: new Date("2025-06-05"),
+          dataFi: new Date("2025-06-05"),
           lloc: "Teatre Principal",
-          estat: "confirmada",
-          observacions: "Obra adaptada al nivell d'anglès dels alumnes. Professor responsable: Eva Martin"
+          responsable: "Eva Martin",
+          observacions: "Obra adaptada al nivell d'anglès dels alumnes."
         }
       ];
 

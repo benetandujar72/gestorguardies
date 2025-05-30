@@ -17,6 +17,7 @@ import Classrooms from "@/pages/classrooms";
 import Analytics from "@/pages/analytics";
 import ChatBot from "@/pages/chat-bot";
 import ImportCSV from "@/pages/import-csv";
+import Setup from "@/pages/setup";
 import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/layout/sidebar";
 import TopNavigation from "@/components/layout/top-navigation";
