@@ -612,9 +612,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/chat/sessions/:sessionId/messages', isAuthenticated, async (req, res) => {
     try {
+      console.log("=== CHAT MESSAGE ENDPOINT HIT ===");
       console.log("POST /api/chat/sessions/:sessionId/messages - Request received");
       console.log("Session ID:", req.params.sessionId);
       console.log("Request body:", req.body);
+      console.log("Headers:", req.headers);
       
       const sessionId = parseInt(req.params.sessionId);
       const { content } = req.body;
