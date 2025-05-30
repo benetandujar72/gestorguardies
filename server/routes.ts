@@ -312,6 +312,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/guardies', isAuthenticated, async (req, res) => {
+    try {
+      const guardies = await storage.getGuardies();
+      res.json(guardies);
+    } catch (error) {
+      console.error("Error fetching guardies:", error);
+      res.status(500).json({ message: "Failed to fetch guardies" });
+    }
+  });
+
+  // Get guardies with detailed information for calendar view
+  app.get('/api/guardies-calendar', isAuthenticated, async (req, res) => {
+    try {
+      const guardies = await storage.getGuardiesWithDetails();
+      res.json(guardies);
+    } catch (error) {
+      console.error("Error fetching guardies calendar:", error);
+      res.status(500).json({ message: "Failed to fetch guardies calendar" });
+    }
+  });
+
   app.post('/api/guardies', isAuthenticated, async (req, res) => {
     try {
       const guardiaData = insertGuardiaSchema.parse(req.body);
@@ -323,6 +344,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         usuariId: (req as any).user.claims.sub,
         accio: 'crear_guardia',
         detalls: { guardiaId: guardia.id },
+        entityType: 'guardia',
+        entityId: guardia.id,
       });
       
       res.json(guardia);

@@ -104,6 +104,7 @@ export interface IStorage {
 
   // Guardia operations
   getGuardies(): Promise<Guardia[]>;
+  getGuardiesWithDetails(): Promise<any[]>;
   getGuardiesAvui(): Promise<Guardia[]>;
   getGuardiesByDate(date: string): Promise<Guardia[]>;
   createGuardia(guardia: InsertGuardia): Promise<Guardia>;
@@ -457,6 +458,46 @@ export class DatabaseStorage implements IStorage {
     .orderBy(desc(guardies.data), guardies.horaInici);
 
     return guardiasWithAssignments;
+  }
+
+  async getGuardiesWithDetails(): Promise<any[]> {
+    return await db
+      .select({
+        id: guardies.id,
+        data: guardies.data,
+        hora: guardies.horaInici,
+        tipusGuardia: guardies.tipusGuardia,
+        categoria: guardies.estat,
+        observacions: guardies.observacions,
+        assignacioId: assignacionsGuardia.id,
+        professor: sql`
+          CASE 
+            WHEN ${professors.id} IS NOT NULL THEN 
+              json_build_object(
+                'id', ${professors.id},
+                'nom', ${professors.nom},
+                'cognoms', ${professors.cognoms}
+              )
+            ELSE NULL
+          END
+        `,
+        aula: sql`
+          CASE 
+            WHEN ${aules.id} IS NOT NULL THEN 
+              json_build_object(
+                'id', ${aules.id},
+                'nom', ${aules.nomAula}
+              )
+            ELSE NULL
+          END
+        `
+      })
+      .from(guardies)
+      .leftJoin(assignacionsGuardia, eq(guardies.id, assignacionsGuardia.guardiaId))
+      .leftJoin(professors, eq(assignacionsGuardia.professorId, professors.id))
+      .leftJoin(aules, eq(guardies.aulaId, aules.id))
+      .where(gte(guardies.data, new Date().toISOString().split('T')[0]))
+      .orderBy(guardies.data, guardies.horaInici);
   }
 
   async getGuardiesAvui(): Promise<Guardia[]> {

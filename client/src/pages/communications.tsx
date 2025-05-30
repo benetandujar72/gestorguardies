@@ -258,7 +258,7 @@ export default function Communications() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {professors.map((prof: any) => (
+                            {Array.isArray(professors) && professors.map((prof: any) => (
                               <SelectItem key={prof.id} value={prof.id.toString()}>
                                 {prof.nom} {prof.cognoms}
                               </SelectItem>
