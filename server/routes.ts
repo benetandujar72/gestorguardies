@@ -534,6 +534,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test endpoint for debugging
+  app.post('/api/chat/test', isAuthenticated, async (req, res) => {
+    console.log("=== TEST ENDPOINT HIT ===");
+    res.setHeader('Content-Type', 'application/json');
+    res.json({ response: "Test response working!" });
+  });
+
   // Simple Chat route
   app.post('/api/chat/simple', isAuthenticated, async (req, res) => {
     try {
@@ -547,12 +554,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set proper content type
       res.setHeader('Content-Type', 'application/json');
       
-      // Generate AI response directly without session management
-      console.log("About to call generateChatResponse");
-      const response = await generateChatResponse(message, []);
-      console.log("AI response generated successfully:", response);
-      
-      const result = { response };
+      // First try without OpenAI to isolate the problem
+      const result = { response: "Hola! El sistema està funcionant. La teva pregunta era: " + message };
       console.log("Sending JSON response:", result);
       
       res.json(result);
