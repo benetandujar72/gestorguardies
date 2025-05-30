@@ -557,10 +557,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/chat/sessions', isAuthenticated, async (req, res) => {
     try {
+      console.log("POST /api/chat/sessions - Creating new session");
       const userId = (req as any).user.claims.sub;
+      console.log("User ID:", userId);
+      
       const session = await storage.createChatSession(userId);
+      console.log("Created session:", session);
+      
       res.json(session);
     } catch (error: any) {
+      console.error("Error creating chat session:", error);
       res.status(500).json({ message: "Failed to create chat session" });
     }
   });
