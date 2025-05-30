@@ -269,7 +269,7 @@ export default function AcademicYears() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Estat</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecciona l'estat" />
