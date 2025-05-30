@@ -39,9 +39,15 @@ interface Outing {
     id: number;
     nomGrup: string;
   };
+  responsable?: {
+    id: number;
+    nom: string;
+    cognoms: string;
+    fullName: string;
+  };
+  responsableFullName?: string;
   descripcio?: string;
   lloc?: string;
-  responsable?: string;
 }
 
 interface Group {
@@ -243,7 +249,8 @@ export default function OutingsEnhanced() {
   const filteredOutings = outings.filter(outing => {
     const matchesSearch = outing.nomSortida.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          outing.grup.nomGrup.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (outing.responsable && outing.responsable.toLowerCase().includes(searchTerm.toLowerCase()));
+                         ((outing.responsable?.fullName || outing.responsableFullName) && 
+                          (outing.responsable?.fullName || outing.responsableFullName)!.toLowerCase().includes(searchTerm.toLowerCase()));
     
     if (showThisWeekOnly) {
       const today = new Date();
@@ -379,10 +386,10 @@ export default function OutingsEnhanced() {
                   </div>
                 )}
 
-                {outing.responsable && (
+                {(outing.responsable?.fullName || outing.responsableFullName) && (
                   <div className="flex items-center text-sm">
                     <Users className="w-4 h-4 mr-2 text-gray-400" />
-                    <span>Responsable: {outing.responsable}</span>
+                    <span>Responsable: {outing.responsable?.fullName || outing.responsableFullName}</span>
                   </div>
                 )}
 
