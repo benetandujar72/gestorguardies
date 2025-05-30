@@ -40,7 +40,7 @@ export default function ImportCSV() {
   const importMutation = useMutation({
     mutationFn: async ({ file, entityType, academicYearId }: { file: File; entityType: string; academicYearId: string }) => {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('csvFile', file);
       formData.append('entityType', entityType);
       formData.append('academicYearId', academicYearId);
 
