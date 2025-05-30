@@ -535,6 +535,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI Chat routes
+  app.get('/api/chat/sessions', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).user.claims.sub;
+      // For now, return empty array as we'll implement session listing later
+      res.json([]);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch chat sessions" });
+    }
+  });
+
+  app.get('/api/chat/active-session', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).user.claims.sub;
+      const session = await storage.getUserActiveChatSession(userId);
+      res.json(session);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch active session" });
+    }
+  });
+
+  app.post('/api/chat/sessions', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).user.claims.sub;
+      const session = await storage.createChatSession(userId);
+      res.json(session);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to create chat session" });
+    }
+  });
+
+  app.get('/api/chat/messages/:sessionId', isAuthenticated, async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const session = await storage.getChatSession(sessionId);
+      
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      
+      // Convert messages to expected format
+      const messages = Array.isArray(session.missatges) ? session.missatges.map((msg: any, index: number) => ({
+        id: `msg-${index}`,
+        role: msg.emissor === 'usuari' ? 'user' : 'assistant',
+        content: msg.text,
+        timestamp: new Date(msg.moment)
+      })) : [];
+      
+      res.json(messages);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
   app.post('/api/chat/session', isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
@@ -551,10 +604,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/chat/:sessionId/message', isAuthenticated, async (req, res) => {
+  app.post('/api/chat/sessions/:sessionId/messages', isAuthenticated, async (req, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
-      const { message } = req.body;
+      const { content } = req.body;
       const userId = (req as any).user.claims.sub;
       
       // Get session
@@ -567,12 +620,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const messages = Array.isArray(session.missatges) ? session.missatges : [];
       messages.push({
         emissor: 'usuari',
-        text: message,
+        text: content,
         moment: new Date().toISOString(),
       });
       
       // Generate AI response
-      const aiResponse = await generateChatResponse(message, messages);
+      const aiResponse = await generateChatResponse(content, messages);
       
       // Add AI response
       messages.push({
@@ -589,10 +642,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         timestamp: new Date(),
         usuariId: userId,
         accio: 'chat_message',
-        detalls: { sessionId, messageLength: message.length },
+        detalls: { sessionId, messageLength: content.length },
+        entityType: 'chat',
+        entityId: sessionId,
       });
       
-      res.json({ response: aiResponse });
+      // Return the new message in the expected format
+      res.json({
+        id: `msg-${messages.length - 1}`,
+        role: 'assistant',
+        content: aiResponse,
+        timestamp: new Date()
+      });
     } catch (error: any) {
       res.status(500).json({ message: "Failed to process chat message" });
     }
