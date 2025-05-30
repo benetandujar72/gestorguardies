@@ -104,17 +104,24 @@ export default function ChatBot() {
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || sendMessageMutation.isPending) return;
 
-    let sessionId = currentSessionId;
-    
-    // Create new session if none exists
-    if (!sessionId) {
-      const newSession = await createSessionMutation.mutateAsync();
-      sessionId = newSession.id;
+    try {
+      let sessionId = currentSessionId;
+      
+      // Create new session if none exists
+      if (!sessionId) {
+        const newSession = await createSessionMutation.mutateAsync();
+        sessionId = newSession.id;
+        setCurrentSessionId(sessionId);
+      }
+
+      if (sessionId) {
+        sendMessageMutation.mutate({ sessionId, message: input });
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
     }
-
-    sendMessageMutation.mutate({ sessionId, message: input });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
