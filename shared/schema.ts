@@ -339,11 +339,16 @@ export const insertHorariSchema = createInsertSchema(horaris).omit({
 export const insertSortidaSchema = createInsertSchema(sortides).omit({
   id: true,
   createdAt: true,
+}).extend({
+  dataInici: z.coerce.date(),
+  dataFi: z.coerce.date(),
 });
 
 export const insertGuardiaSchema = createInsertSchema(guardies).omit({
   id: true,
   createdAt: true,
+}).extend({
+  data: z.coerce.date(),
 });
 
 export const insertAssignacioGuardiaSchema = createInsertSchema(assignacionsGuardia).omit({
@@ -398,3 +403,57 @@ export type InsertAttachment = z.infer<typeof insertAttachmentSchema>;
 export type Metric = typeof metrics.$inferSelect;
 export type Prediction = typeof predictions.$inferSelect;
 export type ChatSession = typeof chatSessions.$inferSelect;
+
+// Extended types for API responses with joined data
+export type SortidaWithRelations = {
+  id: number;
+  nomSortida: string;
+  dataInici: Date;
+  dataFi: Date;
+  grupId: number | null;
+  descripcio: string | null;
+  lloc: string | null;
+  responsableId: number | null;
+  createdAt: Date | null;
+  grupNom: string | null;
+  responsableNom: string | null;
+  responsableCognoms: string | null;
+  responsableFullName?: string;
+  grup?: {
+    id: number;
+    nomGrup: string;
+  } | null;
+  responsable?: {
+    id: number;
+    nom: string;
+    cognoms: string;
+    fullName: string;
+  } | null;
+};
+
+export type GuardiaWithRelations = {
+  id: number;
+  data: string;
+  horaInici: string;
+  horaFi: string;
+  tipusGuardia: string;
+  estat: string;
+  lloc: string | null;
+  observacions: string | null;
+  createdAt: Date | null;
+  assignacions?: AssignacioGuardiaWithProfessor[];
+};
+
+export type AssignacioGuardiaWithProfessor = {
+  id: number;
+  guardiaId: number;
+  professorId: number;
+  observacions: string | null;
+  createdAt: Date | null;
+  professor?: {
+    id: number;
+    nom: string;
+    cognoms: string;
+    fullName: string;
+  };
+};

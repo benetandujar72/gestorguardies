@@ -42,6 +42,9 @@ import {
   type Metric,
   type Prediction,
   type ChatSession,
+  type SortidaWithRelations,
+  type GuardiaWithRelations,
+  type AssignacioGuardiaWithProfessor,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, sql, count, between, gte, lte } from "drizzle-orm";
@@ -97,8 +100,8 @@ export interface IStorage {
   deleteHorari(id: number): Promise<void>;
 
   // Sortida operations
-  getSortides(): Promise<Sortida[]>;
-  getSortidesThisWeek(): Promise<Sortida[]>;
+  getSortides(): Promise<SortidaWithRelations[]>;
+  getSortidesThisWeek(): Promise<SortidaWithRelations[]>;
   createSortida(sortida: InsertSortida): Promise<Sortida>;
   updateSortida(id: number, sortida: Partial<InsertSortida>): Promise<Sortida>;
   deleteSortida(id: number): Promise<void>;
@@ -381,8 +384,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Sortida operations
-  async getSortides(): Promise<any[]> {
-    return await db.select({
+  async getSortides(): Promise<SortidaWithRelations[]> {
+    const rawResults = await db.select({
       id: sortides.id,
       nomSortida: sortides.nomSortida,
       dataInici: sortides.dataInici,
@@ -399,9 +402,26 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(grups, eq(sortides.grupId, grups.id))
       .leftJoin(professors, eq(sortides.responsableId, professors.id))
       .orderBy(desc(sortides.dataInici));
+
+    return rawResults.map(result => ({
+      ...result,
+      responsableFullName: result.responsableNom && result.responsableCognoms 
+        ? `${result.responsableNom} ${result.responsableCognoms}` 
+        : null,
+      grup: result.grupNom ? {
+        id: result.grupId!,
+        nomGrup: result.grupNom,
+      } : null,
+      responsable: result.responsableNom ? {
+        id: result.responsableId!,
+        nom: result.responsableNom,
+        cognoms: result.responsableCognoms!,
+        fullName: `${result.responsableNom} ${result.responsableCognoms}`,
+      } : null,
+    }));
   }
 
-  async getSortidesThisWeek(): Promise<any[]> {
+  async getSortidesThisWeek(): Promise<SortidaWithRelations[]> {
     const startOfWeek = new Date();
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
     startOfWeek.setHours(0, 0, 0, 0);
@@ -410,7 +430,7 @@ export class DatabaseStorage implements IStorage {
     endOfWeek.setDate(endOfWeek.getDate() + 6);
     endOfWeek.setHours(23, 59, 59, 999);
 
-    return await db.select({
+    const rawResults = await db.select({
       id: sortides.id,
       nomSortida: sortides.nomSortida,
       dataInici: sortides.dataInici,
@@ -427,6 +447,23 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(grups, eq(sortides.grupId, grups.id))
       .leftJoin(professors, eq(sortides.responsableId, professors.id))
       .where(between(sortides.dataInici, startOfWeek, endOfWeek));
+
+    return rawResults.map(result => ({
+      ...result,
+      responsableFullName: result.responsableNom && result.responsableCognoms 
+        ? `${result.responsableNom} ${result.responsableCognoms}` 
+        : null,
+      grup: result.grupNom ? {
+        id: result.grupId!,
+        nomGrup: result.grupNom,
+      } : null,
+      responsable: result.responsableNom ? {
+        id: result.responsableId!,
+        nom: result.responsableNom,
+        cognoms: result.responsableCognoms!,
+        fullName: `${result.responsableNom} ${result.responsableCognoms}`,
+      } : null,
+    }));
   }
 
   async createSortida(sortida: InsertSortida): Promise<Sortida> {
