@@ -136,6 +136,30 @@ export default function ImportCSV() {
     importMutation.mutate({ file, entityType, academicYearId });
   };
 
+  const handleDownloadTemplate = () => {
+    if (!entityType) {
+      toast({
+        title: "Selecciona un tipus",
+        description: "Si us plau, selecciona un tipus d'entitat per descarregar la plantilla.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const templateUrl = `/api/download/template?type=${entityType}`;
+    const link = document.createElement('a');
+    link.href = templateUrl;
+    link.download = `plantilla_${entityType}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    toast({
+      title: "Plantilla descarregada",
+      description: `S'ha descarregat la plantilla per ${entityType}`,
+    });
+  };
+
   const handleExport = () => {
     if (!exportEntityType) {
       toast({
@@ -288,14 +312,26 @@ export default function ImportCSV() {
               </div>
             )}
 
-            <Button
-              onClick={handleImport}
-              disabled={!file || !entityType || !academicYearId || importMutation.isPending}
-              className="w-full"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              {importMutation.isPending ? "Important..." : "Importar CSV"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleDownloadTemplate}
+                disabled={!entityType}
+                variant="outline"
+                className="flex-1"
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Descarregar plantilla
+              </Button>
+              
+              <Button
+                onClick={handleImport}
+                disabled={!file || !entityType || !academicYearId || importMutation.isPending}
+                className="flex-1"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {importMutation.isPending ? "Important..." : "Importar CSV"}
+              </Button>
+            </div>
 
             {result && (
               <Alert className={result.success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>

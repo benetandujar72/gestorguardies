@@ -921,6 +921,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Download CSV template endpoint
+  app.get('/api/download/template', isAuthenticated, async (req, res) => {
+    try {
+      const entityType = req.query.type as string;
+      
+      if (!entityType) {
+        return res.status(400).json({ message: "Entity type is required" });
+      }
+
+      let csvContent = '';
+      let filename = '';
+
+      switch (entityType) {
+        case 'professors':
+          csvContent = 'nom,cognoms,email,rol\nJoan,García López,joan.garcia@escola.edu,Professor\nMaria,Martínez Vidal,maria.martinez@escola.edu,Coordinadora';
+          filename = 'plantilla_professors.csv';
+          break;
+        case 'grups':
+          csvContent = 'nomGrup,nivell,especialitat\n1r ESO A,ESO,Ciències\n2n ESO B,ESO,Humanitats';
+          filename = 'plantilla_grups.csv';
+          break;
+        case 'alumnes':
+          csvContent = 'nom,cognoms,email,grupId\nPau,Ferrer Soler,pau.ferrer@estudiants.edu,1\nLaura,Vives Puig,laura.vives@estudiants.edu,1';
+          filename = 'plantilla_alumnes.csv';
+          break;
+        case 'aules':
+          csvContent = 'nomAula,capacitat,tipus,ubicacio\nAula 101,30,Estàndard,Planta baixa\nLaboratori 1,25,Laboratori,Primera planta';
+          filename = 'plantilla_aules.csv';
+          break;
+        case 'sortides':
+          csvContent = 'nomSortida,dataInici,dataFi,descripcio,lloc,grupId,responsableId\nVisita al Museu,2025-06-15,2025-06-15,Visita cultural al museu de ciències,Museu de Ciències,1,1\nExcursió muntanya,2025-06-20,2025-06-20,Sortida de senderisme per la muntanya,Parc Natural,2,2';
+          filename = 'plantilla_sortides.csv';
+          break;
+        case 'horaris':
+          csvContent = 'diaSemana,horaInici,horaFi,materia,professorId,grupId,aulaId\nDilluns,08:00,09:00,Matemàtiques,1,1,1\nDilluns,09:00,10:00,Català,2,1,2';
+          filename = 'plantilla_horaris.csv';
+          break;
+        case 'guardies':
+          csvContent = 'data,horaInici,horaFi,tipusGuardia,lloc,estat,observacions\n2025-06-15,10:30,11:30,Pati,Pati principal,pendent,Vigilància general\n2025-06-15,12:00,13:00,Biblioteca,Biblioteca,pendent,Suport acadèmic';
+          filename = 'plantilla_guardies.csv';
+          break;
+        default:
+          return res.status(400).json({ message: "Invalid entity type" });
+      }
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(csvContent);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to generate template" });
+    }
+  });
+
   // Export CSV endpoint
   app.get('/api/export/csv', isAuthenticated, async (req, res) => {
     try {
