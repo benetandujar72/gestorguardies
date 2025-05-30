@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequestJson } from "@/lib/queryClient";
 import { Send, Bot, User, Trash2, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -51,7 +51,7 @@ export default function ChatBot() {
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async ({ sessionId, message }: { sessionId: number; message: string }) => {
-      return apiRequest(`/api/chat/sessions/${sessionId}/messages`, "POST", { content: message });
+      return apiRequestJson(`/api/chat/sessions/${sessionId}/messages`, "POST", { content: message });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/chat/messages", currentSessionId] });
@@ -69,7 +69,7 @@ export default function ChatBot() {
   // Create new session mutation
   const createSessionMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("/api/chat/sessions", "POST", {});
+      return apiRequestJson("/api/chat/sessions", "POST", {});
     },
     onSuccess: (newSession: any) => {
       setCurrentSessionId(newSession.id);
@@ -80,7 +80,7 @@ export default function ChatBot() {
   // Delete session mutation
   const deleteSessionMutation = useMutation({
     mutationFn: async (sessionId: number) => {
-      return apiRequest(`/api/chat/sessions/${sessionId}`, "DELETE");
+      return apiRequestJson(`/api/chat/sessions/${sessionId}`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/chat/sessions"] });
