@@ -33,7 +33,15 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png'];
+    const allowedTypes = [
+      'application/pdf', 
+      'application/msword', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+      'image/jpeg', 
+      'image/png',
+      'text/csv',
+      'application/csv'
+    ];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
@@ -939,15 +947,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       switch (entityType) {
         case 'professors':
-          csvContent = 'nom,cognoms,email,rol,anyAcademicId\nJoan,García López,joan.garcia@escola.edu,Professor,1\nMaria,Martínez Vidal,maria.martinez@escola.edu,Coordinadora,1';
+          csvContent = 'nom,cognoms,email,rol\nJoan,García López,joan.garcia@escola.edu,Professor\nMaria,Martínez Vidal,maria.martinez@escola.edu,Coordinadora';
           filename = 'plantilla_professors.csv';
           break;
         case 'grups':
-          csvContent = 'nomGrup,nivell,especialitat,anyAcademicId\n1r ESO A,ESO,Ciències,1\n2n ESO B,ESO,Humanitats,1';
+          csvContent = 'nomGrup,nivell,especialitat\n1r ESO A,ESO,Ciències\n2n ESO B,ESO,Humanitats';
           filename = 'plantilla_grups.csv';
           break;
         case 'alumnes':
-          csvContent = 'nom,cognoms,email,grupId,anyAcademicId\nPau,Ferrer Soler,pau.ferrer@estudiants.edu,1,1\nLaura,Vives Puig,laura.vives@estudiants.edu,1,1';
+          csvContent = 'nom,cognoms,email,grupId\nPau,Ferrer Soler,pau.ferrer@estudiants.edu,1\nLaura,Vives Puig,laura.vives@estudiants.edu,1';
           filename = 'plantilla_alumnes.csv';
           break;
         case 'aules':
