@@ -55,6 +55,29 @@ export default function Guards() {
     select: (data: Guard[]) => data,
   });
 
+  // Auto-assign mutation
+  const autoAssignMutation = useMutation({
+    mutationFn: async (guardiaId: number) => {
+      const response = await apiRequest('POST', '/api/assignacions-guardia/auto-assign', { guardiaId });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/guardies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/assignacions-guardia'] });
+      toast({
+        title: "Assignació automàtica completada",
+        description: `S'han assignat ${data.assignacions?.length || 0} professors automàticament.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No s'ha pogut fer l'assignació automàtica.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Filter guards by selected date
   const filteredGuards = guards.filter(guard => guard.data === selectedDate);
 
@@ -351,9 +374,19 @@ export default function Guards() {
                   <div className="text-center py-4">
                     <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                     <p className="text-sm text-gray-500">Sense assignar</p>
-                    <Button size="sm" variant="outline" className="mt-2">
-                      Assignar Professor
-                    </Button>
+                    <div className="flex flex-col space-y-2 mt-2">
+                      <Button 
+                        size="sm" 
+                        onClick={() => autoAssignMutation.mutate(guard.id)}
+                        disabled={autoAssignMutation.isPending}
+                        className="bg-primary hover:bg-blue-800"
+                      >
+                        {autoAssignMutation.isPending ? "Assignant..." : "Assignar Automàticament"}
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        Assignar Manual
+                      </Button>
+                    </div>
                   </div>
                 )}
                 
