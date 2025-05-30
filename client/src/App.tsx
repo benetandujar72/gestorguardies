@@ -11,7 +11,7 @@ import Assignments from "@/pages/assignments";
 import AssignedGuards from "@/pages/assigned-guards";
 import Communications from "@/pages/communications";
 import AcademicYears from "@/pages/academic-years";
-import GuardCalendar from "@/pages/guard-calendar";
+import GuardCalendarResponsive from "@/pages/guard-calendar-responsive";
 import Schedules from "@/pages/schedules";
 import Outings from "@/pages/outings";
 import Tasks from "@/pages/tasks";
@@ -59,7 +59,7 @@ function Router() {
           <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/guardies" component={Guards} />
-            <Route path="/calendari-guardies" component={GuardCalendar} />
+            <Route path="/calendari-guardies" component={GuardCalendarResponsive} />
             <Route path="/assignacions" component={Assignments} />
             <Route path="/guardies-assignades" component={AssignedGuards} />
             <Route path="/comunicacions" component={Communications} />
