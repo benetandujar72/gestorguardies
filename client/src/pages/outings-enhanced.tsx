@@ -512,14 +512,14 @@ export default function OutingsEnhanced() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Responsable</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : null)} value={field.value ? field.value.toString() : ""}>
+                    <Select onValueChange={(value) => field.onChange(value === "0" ? null : parseInt(value))} value={field.value ? field.value.toString() : "0"}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecciona un professor..." />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Cap professor assignat</SelectItem>
+                        <SelectItem value="0">Cap professor assignat</SelectItem>
                         {professors.map((prof: any) => (
                           <SelectItem key={prof.id} value={prof.id.toString()}>
                             {prof.fullName}
@@ -665,14 +665,14 @@ export default function OutingsEnhanced() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Responsable</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : null)} value={field.value ? field.value.toString() : ""}>
+                    <Select onValueChange={(value) => field.onChange(value === "0" ? null : parseInt(value))} value={field.value ? field.value.toString() : "0"}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecciona un professor..." />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Cap professor assignat</SelectItem>
+                        <SelectItem value="0">Cap professor assignat</SelectItem>
                         {professors.map((prof: any) => (
                           <SelectItem key={prof.id} value={prof.id.toString()}>
                             {prof.fullName}
