@@ -233,7 +233,14 @@ export default function Assignments() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Guàrdia</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(Number(value))}>
+                        <Select 
+                          onValueChange={(value) => {
+                            const guardId = Number(value);
+                            field.onChange(guardId);
+                            setSelectedGuardId(guardId);
+                            form.resetField('professorId'); // Reset professor selection when guard changes
+                          }}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Selecciona una guàrdia" />
@@ -258,10 +265,24 @@ export default function Assignments() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Professor</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(Number(value))}>
+                        {selectedGuardId && (
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Mostrant només professors disponibles (no assignats i no de sortida)
+                          </p>
+                        )}
+                        <Select 
+                          onValueChange={(value) => field.onChange(Number(value))}
+                          disabled={!selectedGuardId}
+                        >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecciona un professor" />
+                              <SelectValue 
+                                placeholder={
+                                  selectedGuardId 
+                                    ? "Selecciona un professor disponible"
+                                    : "Primer selecciona una guàrdia"
+                                } 
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
