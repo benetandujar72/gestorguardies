@@ -108,7 +108,7 @@ export const sortides = pgTable("sortides", {
   grupId: integer("grup_id").references(() => grups.id),
   descripcio: text("descripcio"),
   lloc: varchar("lloc"),
-  responsable: varchar("responsable"),
+  responsableId: integer("responsable_id").references(() => professors.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -255,6 +255,10 @@ export const sortidesRelations = relations(sortides, ({ one }) => ({
   grup: one(grups, {
     fields: [sortides.grupId],
     references: [grups.id],
+  }),
+  responsable: one(professors, {
+    fields: [sortides.responsableId],
+    references: [professors.id],
   }),
 }));
 
