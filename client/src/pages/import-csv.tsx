@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Upload, FileText, CheckCircle, AlertCircle, Download, Info } from "lucide-react";
+import { Upload, FileText, CheckCircle, AlertCircle, Download, Info, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ImportResult {
@@ -22,6 +23,7 @@ interface ImportResult {
 export default function ImportCSV() {
   const [file, setFile] = useState<File | null>(null);
   const [entityType, setEntityType] = useState<string>("");
+  const [exportEntityType, setExportEntityType] = useState<string>("");
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<ImportResult | null>(null);
   const { toast } = useToast();
@@ -55,6 +57,47 @@ export default function ImportCSV() {
     },
   });
 
+  const exportMutation = useMutation({
+    mutationFn: async (entityType: string) => {
+      const response = await fetch(`/api/export/csv?type=${entityType}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Error en l\'exportació');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${entityType}_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      return { success: true };
+    },
+    onSuccess: () => {
+      toast({
+        title: "Exportació completada",
+        description: "El fitxer CSV s'ha descarregat correctament.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error d'exportació",
+        description: "No s'ha pogut exportar les dades.",
+        variant: "destructive",
+      });
+      console.error('Export error:', error);
+    },
+  });
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile && selectedFile.type === 'text/csv') {
@@ -83,7 +126,31 @@ export default function ImportCSV() {
     importMutation.mutate({ file, entityType });
   };
 
+  const handleExport = () => {
+    if (!exportEntityType) {
+      toast({
+        title: "Selecciona un tipus",
+        description: "Si us plau, selecciona un tipus d'entitat per exportar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    exportMutation.mutate(exportEntityType);
+  };
+
   const entityTypes = [
+    { value: "professors", label: "Professors" },
+    { value: "grups", label: "Grups" },
+    { value: "alumnes", label: "Alumnes" },
+    { value: "aules", label: "Aules" },
+    { value: "horaris", label: "Horaris" },
+    { value: "guardies", label: "Guàrdies" },
+    { value: "sortides", label: "Sortides" },
+  ];
+
+  const exportEntityTypes = [
+    { value: "sortides", label: "Sortides" },
     { value: "professors", label: "Professors" },
     { value: "grups", label: "Grups" },
     { value: "alumnes", label: "Alumnes" },
@@ -116,6 +183,10 @@ export default function ImportCSV() {
     guardies: {
       headers: ["data", "horaInici", "horaFi", "lloc", "tipusGuardia"],
       example: "2024-01-15,10:00,11:00,Pati,Pati"
+    },
+    sortides: {
+      headers: ["nomSortida", "descripcio", "lloc", "dataInici", "dataFi", "grupId", "responsableId"],
+      example: "Visita al museu,Excursió educativa,Museu d'Art,2024-03-15,2024-03-15,1,2"
     }
   };
 
@@ -130,7 +201,7 @@ export default function ImportCSV() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Import Form */}
         <Card>
           <CardHeader>
@@ -227,6 +298,63 @@ export default function ImportCSV() {
                 )}
               </Alert>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Export Form */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Exportar Dades</CardTitle>
+            <CardDescription>
+              Exporta dades del sistema a un fitxer CSV
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="exportEntityType">Tipus d'entitat</Label>
+              <Select value={exportEntityType} onValueChange={setExportEntityType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona el tipus d'entitat" />
+                </SelectTrigger>
+                <SelectContent>
+                  {exportEntityTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              onClick={handleExport}
+              disabled={!exportEntityType || exportMutation.isPending}
+              className="w-full"
+              variant="outline"
+            >
+              <FileDown className="h-4 w-4 mr-2" />
+              {exportMutation.isPending ? "Exportant..." : "Exportar CSV"}
+            </Button>
+
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Nota:</strong> El fitxer CSV es descarregarà automàticament amb totes les dades disponibles del tipus seleccionat.
+              </AlertDescription>
+            </Alert>
+
+            <Separator />
+
+            <div className="text-center">
+              <h4 className="font-medium text-sm mb-2">Dades disponibles per exportar:</h4>
+              <div className="flex flex-wrap gap-1 justify-center">
+                {exportEntityTypes.map((type) => (
+                  <Badge key={type.value} variant="outline" className="text-xs">
+                    {type.label}
+                  </Badge>
+                ))}
+              </div>
+            </div>
           </CardContent>
         </Card>
 
