@@ -511,7 +511,7 @@ export default function OutingsEnhanced() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Cap professor assignat</SelectItem>
+                        <SelectItem value="none">Cap professor assignat</SelectItem>
                         {professors.map((prof: any) => (
                           <SelectItem key={prof.id} value={prof.fullName}>
                             {prof.fullName}
@@ -664,7 +664,7 @@ export default function OutingsEnhanced() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Cap professor assignat</SelectItem>
+                        <SelectItem value="none">Cap professor assignat</SelectItem>
                         {professors.map((prof: any) => (
                           <SelectItem key={prof.id} value={prof.fullName}>
                             {prof.fullName}
