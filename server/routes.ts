@@ -881,7 +881,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             switch (entityType) {
               case 'professors':
                 const professorData = { ...record, anyAcademicId: parseInt(academicYearId) };
-                await storage.createProfessor(insertProfessorSchema.parse(professorData));
+                // Intentar buscar profesor existente por email
+                const existingProfessor = await storage.getProfessorByEmail(record.email);
+                if (existingProfessor) {
+                  // Actualizar profesor existente
+                  await storage.updateProfessor(existingProfessor.id, professorData);
+                } else {
+                  // Crear nuevo profesor
+                  await storage.createProfessor(insertProfessorSchema.parse(professorData));
+                }
                 break;
               case 'grups':
                 const grupData = { ...record, anyAcademicId: parseInt(academicYearId) };
