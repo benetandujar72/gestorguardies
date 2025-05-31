@@ -1,0 +1,88 @@
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+ Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-41f37350d978dfd3.js:1
+ Unrecognized feature: 'battery'.
+_ @ framework-41f37350d978dfd3.js:1
+ Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-41f37350d978dfd3.js:1
+ Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-41f37350d978dfd3.js:1
+ Unrecognized feature: 'layout-animations'.
+_ @ framework-41f37350d978dfd3.js:1
+ Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-41f37350d978dfd3.js:1
+ Unrecognized feature: 'navigation-override'.
+_ @ framework-41f37350d978dfd3.js:1
+ Unrecognized feature: 'oversized-images'.
+_ @ framework-41f37350d978dfd3.js:1
+ Unrecognized feature: 'publickey-credentials'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'speaker-selection'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'unoptimized-images'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'unsized-media'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'pointer-lock'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-41f37350d978dfd3.js:1
+workspace_iframe.html:32 Unrecognized feature: 'ambient-light-sensor'.
+workspace_iframe.html:32 Unrecognized feature: 'battery'.
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-not-rendered'.
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-out-of-viewport'.
+workspace_iframe.html:32 Unrecognized feature: 'layout-animations'.
+workspace_iframe.html:32 Unrecognized feature: 'legacy-image-formats'.
+workspace_iframe.html:32 Unrecognized feature: 'navigation-override'.
+workspace_iframe.html:32 Unrecognized feature: 'oversized-images'.
+workspace_iframe.html:32 Unrecognized feature: 'publickey-credentials'.
+workspace_iframe.html:32 Unrecognized feature: 'speaker-selection'.
+workspace_iframe.html:32 Unrecognized feature: 'unoptimized-images'.
+workspace_iframe.html:32 Unrecognized feature: 'unsized-media'.
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowfullscreen'.
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowpaymentrequest'.
+Console.js:61 Warning: validateDOMNesting(...): <a> cannot appear as a descendant of <a>.
+    at a
+    at a
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=60c08ed1:337:18
+    at li
+    at ul
+    at nav
+    at aside
+    at Sidebar (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/src/components/layout/sidebar.tsx:136:22)
+    at div
+    at div
+    at Router (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/src/App.tsx?v=9yciwxPfLboD92fve4rYq:49:42)
+    at Provider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=60c08ed1:38:15)
+    at TooltipProvider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=60c08ed1:64:5)
+    at QueryClientProvider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=60c08ed1:2805:3)
+    at App
+Mt.forEach.n.<computed> @ Console.js:61
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.

@@ -641,34 +641,79 @@ export default function SchedulesNew() {
                                 </div>
                               )
                             ) : (
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                                {schedulesInSlot.map((schedule: any) => (
-                                  <div 
-                                    key={schedule.id}
-                                    onClick={() => handleEditSchedule(schedule)}
-                                    className="bg-white border rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow"
-                                  >
-                                    <div className="font-medium text-blue-700 text-sm mb-2">
-                                      {schedule.grup?.nomGrup || 'Grup no assignat'}
-                                    </div>
-                                    <div className="text-gray-600 text-xs space-y-1">
-                                      <div className="font-medium">{schedule.assignatura || 'Matèria no especificada'}</div>
-                                      <div className="flex items-center gap-1">
-                                        <DoorOpen className="w-3 h-3" />
-                                        {schedule.aula?.nomAula || 'Aula no assignada'}
+                              (() => {
+                                // Group schedules by educational level
+                                const groupedSchedules = schedulesInSlot.reduce((acc: any, schedule: any) => {
+                                  if (!schedule.grup?.nomGrup) return acc;
+                                  
+                                  // Extract level from group name (e.g., "1r ESO A" -> "1r ESO")
+                                  const levelMatch = schedule.grup.nomGrup.match(/^(\d+r?\s*\w+)/);
+                                  const level = levelMatch ? levelMatch[1] : 'Altres';
+                                  
+                                  if (!acc[level]) {
+                                    acc[level] = [];
+                                  }
+                                  acc[level].push(schedule);
+                                  return acc;
+                                }, {});
+
+                                const levelOrder = ['1r ESO', '2n ESO', '3r ESO', '4t ESO', '1r BATX', '2n BATX'];
+                                const sortedLevels = Object.keys(groupedSchedules).sort((a, b) => {
+                                  const aIndex = levelOrder.indexOf(a);
+                                  const bIndex = levelOrder.indexOf(b);
+                                  if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+                                  if (aIndex === -1) return 1;
+                                  if (bIndex === -1) return -1;
+                                  return aIndex - bIndex;
+                                });
+
+                                const levelColors = [
+                                  'bg-blue-50 border-l-4 border-blue-500',
+                                  'bg-green-50 border-l-4 border-green-500', 
+                                  'bg-yellow-50 border-l-4 border-yellow-500',
+                                  'bg-purple-50 border-l-4 border-purple-500',
+                                  'bg-pink-50 border-l-4 border-pink-500',
+                                  'bg-indigo-50 border-l-4 border-indigo-500',
+                                ];
+
+                                return (
+                                  <div className="space-y-3">
+                                    {sortedLevels.map((level, levelIndex) => (
+                                      <div key={level} className={`rounded-lg p-3 ${levelColors[levelIndex % levelColors.length]}`}>
+                                        <h4 className="font-semibold text-sm text-gray-700 mb-2">{level}</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                                          {groupedSchedules[level].map((schedule: any) => (
+                                            <div 
+                                              key={schedule.id}
+                                              onClick={() => handleEditSchedule(schedule)}
+                                              className="bg-white border rounded-lg p-2 cursor-pointer hover:shadow-md transition-shadow"
+                                            >
+                                              <div className="font-medium text-blue-700 text-xs mb-1">
+                                                {schedule.grup?.nomGrup}
+                                              </div>
+                                              <div className="text-gray-600 text-xs space-y-1">
+                                                <div className="font-medium">{schedule.assignatura || 'Matèria no especificada'}</div>
+                                                <div className="flex items-center gap-1">
+                                                  <DoorOpen className="w-3 h-3" />
+                                                  {schedule.aula?.nomAula || 'Aula no assignada'}
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                  <Users className="w-3 h-3" />
+                                                  {schedule.professor ? `${schedule.professor.nom} ${schedule.professor.cognoms}` : 'Professor no assignat'}
+                                                </div>
+                                                <div className="flex items-center gap-1 text-gray-400">
+                                                  <Clock className="w-3 h-3" />
+                                                  {schedule.horaInici?.substring(0, 5)} - {schedule.horaFi?.substring(0, 5)}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
                                       </div>
-                                      <div className="flex items-center gap-1">
-                                        <Users className="w-3 h-3" />
-                                        {schedule.professor ? `${schedule.professor.nom} ${schedule.professor.cognoms}` : 'Professor no assignat'}
-                                      </div>
-                                      <div className="flex items-center gap-1 text-gray-400">
-                                        <Clock className="w-3 h-3" />
-                                        {schedule.horaInici?.substring(0, 5)} - {schedule.horaFi?.substring(0, 5)}
-                                      </div>
-                                    </div>
+                                    ))}
                                   </div>
-                                ))}
-                              </div>
+                                );
+                              })()
                             )}
                           </div>
                         </div>
