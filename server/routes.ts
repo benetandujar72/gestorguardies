@@ -1013,14 +1013,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const record: any = {};
         headers.forEach((header, index) => {
-          let value = values[index] ? values[index].trim() : '';
+          let value: any = values[index] ? values[index].trim() : '';
           
           // Map header to standard field name
           const standardFieldName = headerMapping[header] || header;
           
           // Convert numeric fields
           if ((standardFieldName === 'grupId' || standardFieldName === 'professorId' || standardFieldName === 'aulaId' || standardFieldName === 'responsableId' || standardFieldName === 'horesSetmanals') && value) {
-            value = parseInt(value) as any;
+            console.log(`Converting ${standardFieldName}: "${value}" (${typeof value}) -> ${parseInt(value)} (${typeof parseInt(value)})`);
+            value = parseInt(value);
           }
           
           // Only set non-empty values to avoid undefined issues
