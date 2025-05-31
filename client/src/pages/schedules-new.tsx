@@ -704,10 +704,12 @@ export default function SchedulesNew() {
                               )
                             ) : (
                               (() => {
+                                // Separate schedules with and without groups
+                                const schedulesWithGroups = schedulesInSlot.filter((s: any) => s.grup?.nomGrup);
+                                const schedulesWithoutGroups = schedulesInSlot.filter((s: any) => !s.grup?.nomGrup);
+                                
                                 // Group schedules by educational level
-                                const groupedSchedules = schedulesInSlot.reduce((acc: any, schedule: any) => {
-                                  if (!schedule.grup?.nomGrup) return acc;
-                                  
+                                const groupedSchedules = schedulesWithGroups.reduce((acc: any, schedule: any) => {
                                   // Extract level from group name (e.g., "1r ESO A" -> "1r ESO")
                                   const levelMatch = schedule.grup.nomGrup.match(/^(\d+r?\s*\w+)/);
                                   const level = levelMatch ? levelMatch[1] : 'Altres';
@@ -718,8 +720,13 @@ export default function SchedulesNew() {
                                   acc[level].push(schedule);
                                   return acc;
                                 }, {});
+                                
+                                // Add schedules without groups to a special category
+                                if (schedulesWithoutGroups.length > 0) {
+                                  groupedSchedules['Guardies'] = schedulesWithoutGroups;
+                                }
 
-                                const levelOrder = ['1r ESO', '2n ESO', '3r ESO', '4t ESO', '1r BATX', '2n BATX'];
+                                const levelOrder = ['Guardies', '1r ESO', '2n ESO', '3r ESO', '4t ESO', '1r BATX', '2n BATX'];
                                 const sortedLevels = Object.keys(groupedSchedules).sort((a, b) => {
                                   const aIndex = levelOrder.indexOf(a);
                                   const bIndex = levelOrder.indexOf(b);
