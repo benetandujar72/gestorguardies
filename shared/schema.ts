@@ -64,6 +64,7 @@ export const professors = pgTable("professors", {
 
 export const grups = pgTable("grups", {
   id: serial("grup_id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   nomGrup: varchar("nom_grup").notNull(),
   curs: varchar("curs"),
   nivell: varchar("nivell"),
@@ -72,6 +73,7 @@ export const grups = pgTable("grups", {
 
 export const alumnes = pgTable("alumnes", {
   id: serial("alumne_id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   nom: varchar("nom").notNull(),
   cognoms: varchar("cognoms").notNull(),
   grupId: integer("grup_id").references(() => grups.id),
@@ -81,6 +83,7 @@ export const alumnes = pgTable("alumnes", {
 
 export const aules = pgTable("aules", {
   id: serial("aula_id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   nomAula: varchar("nom_aula").notNull(),
   capacitat: integer("capacitat"),
   tipus: varchar("tipus"),
@@ -102,6 +105,7 @@ export const horaris = pgTable("horaris", {
 
 export const sortides = pgTable("sortides", {
   id: serial("sortida_id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   nomSortida: varchar("nom_sortida").notNull(),
   dataInici: timestamp("data_inici").notNull(),
   dataFi: timestamp("data_fi").notNull(),

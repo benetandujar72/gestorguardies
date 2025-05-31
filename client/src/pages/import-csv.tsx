@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Upload, FileText, CheckCircle, AlertCircle, Download, Info, FileDown, AlertTriangle } from "lucide-react";
+import { Upload, FileText, CheckCircle, AlertCircle, Download, Info, FileDown, AlertTriangle, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ImportResult {
@@ -299,6 +299,24 @@ export default function ImportCSV() {
     }
   };
 
+  const handleRefresh = () => {
+    setFile(null);
+    setEntityType("");
+    setExportEntityType("");
+    setProgress(0);
+    setResult(null);
+    
+    // Reset academic year to active one if exists
+    if (activeAcademicYear) {
+      setAcademicYearId(String(activeAcademicYear.id));
+    }
+    
+    toast({
+      title: "Pàgina actualitzada",
+      description: "S'han netejat tots els camps per una nova importació",
+    });
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -308,6 +326,14 @@ export default function ImportCSV() {
             Importa dades des d'un fitxer CSV al sistema
           </p>
         </div>
+        <Button
+          onClick={handleRefresh}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Nova importació
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
