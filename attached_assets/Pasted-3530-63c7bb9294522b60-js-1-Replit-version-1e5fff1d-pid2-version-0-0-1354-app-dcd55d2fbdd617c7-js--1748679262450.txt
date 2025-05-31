@@ -1,0 +1,141 @@
+3530-63c7bb9294522b60.js:1 Replit version 1e5fff1d, pid2 version 0.0.1354
+_app-dcd55d2fbdd617c7.js:38 
+      /////////////////////
+   ///////////////////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////        Curious and driven?
+  ///////////////@@@@@@@///////        Work with us!
+  ///////////////@@@@@@@///////
+  ///////////////@@@@@@@///////        https://join.replit.com/hack.with.us
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@#//////////////
+   ///////////////////////////
+      /////////////////////
+      
+_app-dcd55d2fbdd617c7.js:38 [LaunchDarkly] LaunchDarkly client initialized
+stallwart.build.js:1 stallwart: failed ping 1
+floatingSidebar.js:866 [MOTE][FloatingSidebarInjector]: Error during injection: User is not authenticated
+n @ floatingSidebar.js:866
+GestorGuardies:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+_app-dcd55d2fbdd617c7.js:38 Adding extension: CSS Shadow Generator Object
+_app-dcd55d2fbdd617c7.js:38 Adding extension: Icon Generator Object
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'battery'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'layout-animations'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'navigation-override'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'oversized-images'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'publickey-credentials'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'speaker-selection'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'unoptimized-images'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'unsized-media'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Unrecognized feature: 'pointer-lock'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-41f37350d978dfd3.js:1
+framework-41f37350d978dfd3.js:1 Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-41f37350d978dfd3.js:1
+stallwart.build.js:1 stallwart: failed ping 1
+stallwart.build.js:1 stallwart: failed ping 2
+stallwart.build.js:1 stallwart: failed ping 3
+stallwart.build.js:1 stallwart: failed ping 4
+stallwart.build.js:1 stallwart: failed ping 5
+stallwart.build.js:1 stallwart: session stalled
+workspace_iframe.html:32 Unrecognized feature: 'ambient-light-sensor'.
+workspace_iframe.html:32 Unrecognized feature: 'battery'.
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-not-rendered'.
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-out-of-viewport'.
+workspace_iframe.html:32 Unrecognized feature: 'layout-animations'.
+workspace_iframe.html:32 Unrecognized feature: 'legacy-image-formats'.
+workspace_iframe.html:32 Unrecognized feature: 'navigation-override'.
+workspace_iframe.html:32 Unrecognized feature: 'oversized-images'.
+workspace_iframe.html:32 Unrecognized feature: 'publickey-credentials'.
+workspace_iframe.html:32 Unrecognized feature: 'speaker-selection'.
+workspace_iframe.html:32 Unrecognized feature: 'unoptimized-images'.
+workspace_iframe.html:32 Unrecognized feature: 'unsized-media'.
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowfullscreen'.
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowpaymentrequest'.
+Console.js:61 Academic Years Data: undefined
+Console.js:61 Active Academic Year: undefined
+Console.js:61 Warning: validateDOMNesting(...): <a> cannot appear as a descendant of <a>.
+    at a
+    at a
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=60c08ed1:337:18
+    at li
+    at ul
+    at nav
+    at aside
+    at Sidebar (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/src/components/layout/sidebar.tsx:136:22)
+    at div
+    at div
+    at Router (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/src/App.tsx?v=aYn6sxQw5f_iDKbhat1hP:49:42)
+    at Provider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=60c08ed1:38:15)
+    at TooltipProvider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=60c08ed1:64:5)
+    at QueryClientProvider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=60c08ed1:2805:3)
+    at App
+Mt.forEach.n.<computed> @ Console.js:61
+Console.js:61 Academic Years Data: Array(3)
+Console.js:61 Active Academic Year: undefined
+framework-41f37350d978dfd3.js:1 Unable to preventDefault inside passive event listener invocation.
+preventDefault @ framework-41f37350d978dfd3.js:1
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
