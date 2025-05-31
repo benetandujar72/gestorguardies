@@ -919,12 +919,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           continue;
         }
         
+        // Add academic year ID to all records
+        const recordWithAcademicYear = { 
+          ...record, 
+          anyAcademicId: parseInt(academicYearId) 
+        };
+        
+        console.log(`Processing row ${i} for ${entityType}:`, recordWithAcademicYear);
+        
         try {
           switch (entityType) {
             case 'professors':
-              const professorData = { ...record, anyAcademicId: parseInt(academicYearId) };
-              
-              // Validate required fields
+              // Validate required fields for professors
               if (!record.nom || !record.email) {
                 console.log(`Skipping row ${i}: missing required fields (nom or email)`);
                 errorCount++;
@@ -934,50 +940,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Check if professor exists by email
               const existingProfessor = await storage.getProfessorByEmail(record.email);
               if (existingProfessor) {
-                await storage.updateProfessor(existingProfessor.id, professorData);
+                await storage.updateProfessor(existingProfessor.id, recordWithAcademicYear);
               } else {
-                await storage.createProfessor(insertProfessorSchema.parse(professorData));
+                await storage.createProfessor(insertProfessorSchema.parse(recordWithAcademicYear));
               }
               break;
               
             case 'grups':
-              const grupData = { ...record, anyAcademicId: parseInt(academicYearId) };
+              // Validate required fields for grups
               if (!record.nomGrup) {
                 console.log(`Skipping row ${i}: missing required field nomGrup`);
                 errorCount++;
                 continue;
               }
-              await storage.createGrup(insertGrupSchema.parse(grupData));
+              console.log('Creating grup with data:', recordWithAcademicYear);
+              await storage.createGrup(insertGrupSchema.parse(recordWithAcademicYear));
               break;
               
             case 'alumnes':
-              const alumneData = { ...record, anyAcademicId: parseInt(academicYearId) };
+              // Validate required fields for alumnes  
               if (!record.nom || !record.grupId) {
                 console.log(`Skipping row ${i}: missing required fields (nom or grupId)`);
                 errorCount++;
                 continue;
               }
-              await storage.createAlumne(insertAlumneSchema.parse(alumneData));
+              await storage.createAlumne(insertAlumneSchema.parse(recordWithAcademicYear));
               break;
               
             case 'aules':
-              const aulaData = { ...record, anyAcademicId: parseInt(academicYearId) };
+              // Validate required fields for aules
               if (!record.nomAula) {
                 console.log(`Skipping row ${i}: missing required field nomAula`);
                 errorCount++;
                 continue;
               }
-              await storage.createAula(insertAulaSchema.parse(aulaData));
+              await storage.createAula(insertAulaSchema.parse(recordWithAcademicYear));
               break;
               
             case 'sortides':
-              const sortidaData = { ...record, anyAcademicId: parseInt(academicYearId) };
+              // Validate required fields for sortides
               if (!record.nomSortida || !record.dataInici) {
                 console.log(`Skipping row ${i}: missing required fields`);
                 errorCount++;
                 continue;
               }
-              await storage.createSortida(insertSortidaSchema.parse(sortidaData));
+              await storage.createSortida(insertSortidaSchema.parse(recordWithAcademicYear));
               break;
           }
           importedCount++;
