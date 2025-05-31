@@ -23,6 +23,7 @@ const scheduleSchema = z.object({
   horaInici: z.string().min(1, "L'hora d'inici és obligatòria"),
   horaFi: z.string().min(1, "L'hora de fi és obligatòria"),
   assignatura: z.string().optional(),
+  duracio: z.number().min(1).max(6).optional(), // Duració en hores (1-6)
 });
 
 type ScheduleFormData = z.infer<typeof scheduleSchema>;
@@ -139,6 +140,30 @@ export default function SchedulesNew() {
     },
   });
 
+  // Create multiple schedules mutation
+  const createMultipleSchedulesMutation = useMutation({
+    mutationFn: async (schedules: any[]) => {
+      const response = await apiRequest('POST', '/api/horaris/bulk', { schedules });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/horaris'] });
+      setIsCreateDialogOpen(false);
+      toast({
+        title: "Horaris creats",
+        description: `S'han creat ${data.count} horaris consecutius correctament.`,
+      });
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No s'han pogut crear els horaris.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const form = useForm<ScheduleFormData>({
     resolver: zodResolver(scheduleSchema),
     defaultValues: {
@@ -147,6 +172,32 @@ export default function SchedulesNew() {
       horaFi: "09:00",
     },
   });
+
+  // Function to create multiple schedules from a long class
+  const createMultipleSchedules = (data: ScheduleFormData, academicYearId: number) => {
+    const startTime = new Date(`2000-01-01T${data.horaInici}:00`);
+    const endTime = new Date(`2000-01-01T${data.horaFi}:00`);
+    const durationMs = endTime.getTime() - startTime.getTime();
+    const durationHours = Math.ceil(durationMs / (1000 * 60 * 60));
+
+    const schedules = [];
+    for (let i = 0; i < durationHours; i++) {
+      const slotStart = new Date(startTime.getTime() + (i * 60 * 60 * 1000));
+      const slotEnd = new Date(slotStart.getTime() + (60 * 60 * 1000));
+      
+      schedules.push({
+        professorId: data.professorId,
+        grupId: data.grupId,
+        aulaId: data.aulaId,
+        diaSetmana: data.diaSetmana,
+        horaInici: slotStart.toTimeString().substring(0, 5),
+        horaFi: slotEnd.toTimeString().substring(0, 5),
+        assignatura: data.assignatura || '',
+        anyAcademicId: academicYearId
+      });
+    }
+    return schedules;
+  };
 
   // Create schedule handler
   const onSubmit = (data: ScheduleFormData) => {
@@ -159,11 +210,24 @@ export default function SchedulesNew() {
       return;
     }
 
-    const horariData = {
-      ...data,
-      anyAcademicId: activeAcademicYear.id
-    };
-    createScheduleMutation.mutate(horariData);
+    // Check if it's a multi-hour class
+    const startTime = new Date(`2000-01-01T${data.horaInici}:00`);
+    const endTime = new Date(`2000-01-01T${data.horaFi}:00`);
+    const durationMs = endTime.getTime() - startTime.getTime();
+    const durationHours = Math.ceil(durationMs / (1000 * 60 * 60));
+
+    if (durationHours > 1) {
+      // Create multiple one-hour schedules
+      const schedules = createMultipleSchedules(data, activeAcademicYear.id);
+      createMultipleSchedulesMutation.mutate(schedules);
+    } else {
+      // Create single schedule
+      const horariData = {
+        ...data,
+        anyAcademicId: activeAcademicYear.id
+      };
+      createScheduleMutation.mutate(horariData);
+    }
   };
 
   // Edit schedule handler
@@ -456,6 +520,11 @@ export default function SchedulesNew() {
                       </FormItem>
                     )}
                   />
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
+                  <div className="font-medium mb-1">Classes de múltiples hores</div>
+                  <div>Si la classe dura més d'una hora, el sistema crearà automàticament horaris consecutius d'una hora cada un. Això és important per gestionar correctament les guardies dels professors.</div>
                 </div>
 
                 <FormField

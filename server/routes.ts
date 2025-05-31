@@ -313,6 +313,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create multiple schedules (for multi-hour classes)
+  app.post('/api/horaris/bulk', isAuthenticated, async (req, res) => {
+    try {
+      const { schedules } = req.body;
+      const createdSchedules = [];
+      
+      for (const scheduleData of schedules) {
+        const validatedData = insertHorariSchema.parse(scheduleData);
+        const horari = await storage.createHorari(validatedData);
+        createdSchedules.push(horari);
+      }
+      
+      res.json({ 
+        schedules: createdSchedules, 
+        count: createdSchedules.length,
+        message: `${createdSchedules.length} horaris creats correctament` 
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to create multiple schedules" });
+    }
+  });
+
   // Sortida routes
   app.get('/api/sortides', isAuthenticated, async (req, res) => {
     try {
