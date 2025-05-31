@@ -645,10 +645,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create metric
       await storage.createMetric({
+        anyAcademicId: comunicacio.anyAcademicId,
         timestamp: new Date(),
         usuariId: (req as any).user.claims.sub,
         accio: 'enviar_comunicacio',
         detalls: { comunicacioId: comunicacio.id },
+        entityType: 'comunicacio',
+        entityId: comunicacio.id
       });
       
       res.json(comunicacio);
@@ -850,7 +853,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateChatSession(sessionId, { missatges: messages });
       
       // Create metric
+      const activeYear = await storage.getAnysAcademics().then(years => 
+        years.find(y => y.actiu)?.id || 1
+      );
       await storage.createMetric({
+        anyAcademicId: activeYear,
         timestamp: new Date(),
         usuariId: userId,
         accio: 'chat_message',
@@ -1021,11 +1028,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       fs.unlinkSync(file.path);
       
       // Create metric
+      const activeYear = await storage.getAnysAcademics().then(years => 
+        years.find(y => y.actiu)?.id || 1
+      );
       await storage.createMetric({
+        anyAcademicId: activeYear,
         timestamp: new Date(),
         usuariId: (req as any).user.claims.sub,
         accio: 'import_csv',
         detalls: { entityType, importedCount, totalRows: lines.length - 1 },
+        entityType: 'csv_import',
+        entityId: null
       });
       
       res.json({ 
@@ -1305,36 +1318,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Creating professors...');
       
+      // Get active academic year for professors
+      const activeYear = await storage.getAnysAcademics().then(years => 
+        years.find(y => y.actiu)?.id || 1
+      );
+
       // Profesores del centro educativo
       const profesoresData = [
-        { nom: "Patricia", cognoms: "Fajardo", email: "patricia.fajardo@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Alba", cognoms: "Serqueda", email: "alba.serqueda@escola.cat", rol: "cap_departament", passwordHash: null },
-        { nom: "Marta", cognoms: "Fernàndez", email: "marta.fernandez@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Mar", cognoms: "Villar", email: "mar.villar@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Eva", cognoms: "Martin", email: "eva.martin@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Joan", cognoms: "Marí", email: "joan.mari@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Julia", cognoms: "Coll", email: "julia.coll@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Roger", cognoms: "Sabartes", email: "roger.sabartes@escola.cat", rol: "cap_departament", passwordHash: null },
-        { nom: "Maria", cognoms: "Creus", email: "maria.creus@escola.cat", rol: "tutor", passwordHash: null },
-        { nom: "Liliana", cognoms: "Perea", email: "liliana.perea@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "JC", cognoms: "Tinoco", email: "jc.tinoco@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Toni", cognoms: "Motos", email: "toni.motos@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Teresa", cognoms: "Caralto", email: "teresa.caralto@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Albert", cognoms: "Parrilla", email: "albert.parrilla@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Noe", cognoms: "Muñoz", email: "noe.munoz@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Albert", cognoms: "Freixenet", email: "albert.freixenet@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Itziar", cognoms: "Fuentes", email: "itziar.fuentes@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Berta", cognoms: "Riera", email: "berta.riera@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Laura", cognoms: "Manchado", email: "laura.manchado@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Luis", cognoms: "Cabrera", email: "luis.cabrera@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Benet", cognoms: "Andujar", email: "benet.andujar@escola.cat", rol: "cap_departament", passwordHash: null },
-        { nom: "Dani", cognoms: "Palau", email: "dani.palau@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Inmaculada", cognoms: "Murillo", email: "inmaculada.murillo@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Mireia", cognoms: "Vendrell", email: "mireia.vendrell@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Maria J.", cognoms: "Romero", email: "mariaj.romero@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Marta", cognoms: "Lopez", email: "marta.lopez@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Xavier", cognoms: "Reyes", email: "xavier.reyes@escola.cat", rol: "professor", passwordHash: null },
-        { nom: "Elvira", cognoms: "Parra", email: "elvira.parra@escola.cat", rol: "professor", passwordHash: null }
+        { anyAcademicId: activeYear, nom: "Patricia", cognoms: "Fajardo", email: "patricia.fajardo@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Alba", cognoms: "Serqueda", email: "alba.serqueda@escola.cat", rol: "cap_departament", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Marta", cognoms: "Fernàndez", email: "marta.fernandez@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Mar", cognoms: "Villar", email: "mar.villar@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Eva", cognoms: "Martin", email: "eva.martin@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Joan", cognoms: "Marí", email: "joan.mari@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Julia", cognoms: "Coll", email: "julia.coll@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Roger", cognoms: "Sabartes", email: "roger.sabartes@escola.cat", rol: "cap_departament", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Maria", cognoms: "Creus", email: "maria.creus@escola.cat", rol: "tutor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Liliana", cognoms: "Perea", email: "liliana.perea@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "JC", cognoms: "Tinoco", email: "jc.tinoco@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Toni", cognoms: "Motos", email: "toni.motos@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Teresa", cognoms: "Caralto", email: "teresa.caralto@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Albert", cognoms: "Parrilla", email: "albert.parrilla@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Noe", cognoms: "Muñoz", email: "noe.munoz@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Albert", cognoms: "Freixenet", email: "albert.freixenet@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Itziar", cognoms: "Fuentes", email: "itziar.fuentes@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Berta", cognoms: "Riera", email: "berta.riera@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Laura", cognoms: "Manchado", email: "laura.manchado@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Luis", cognoms: "Cabrera", email: "luis.cabrera@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Benet", cognoms: "Andujar", email: "benet.andujar@escola.cat", rol: "cap_departament", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Dani", cognoms: "Palau", email: "dani.palau@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Inmaculada", cognoms: "Murillo", email: "inmaculada.murillo@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Mireia", cognoms: "Vendrell", email: "mireia.vendrell@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Maria J.", cognoms: "Romero", email: "mariaj.romero@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Marta", cognoms: "Lopez", email: "marta.lopez@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Xavier", cognoms: "Reyes", email: "xavier.reyes@escola.cat", rol: "professor", passwordHash: null },
+        { anyAcademicId: activeYear, nom: "Elvira", cognoms: "Parra", email: "elvira.parra@escola.cat", rol: "professor", passwordHash: null }
       ];
 
       const profesoresCreados = [];
