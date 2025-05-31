@@ -93,6 +93,7 @@ export const aules = pgTable("aules", {
 
 export const horaris = pgTable("horaris", {
   id: serial("horari_id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   professorId: integer("professor_id").references(() => professors.id),
   grupId: integer("grup_id").references(() => grups.id),
   aulaId: integer("aula_id").references(() => aules.id),
@@ -118,6 +119,7 @@ export const sortides = pgTable("sortides", {
 
 export const guardies = pgTable("guardies", {
   id: serial("guardia_id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   data: date("data").notNull(),
   horaInici: time("hora_inici").notNull(),
   horaFi: time("hora_fi").notNull(),
@@ -130,6 +132,7 @@ export const guardies = pgTable("guardies", {
 
 export const assignacionsGuardia = pgTable("assignacions_guardia", {
   id: serial("assigna_id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   guardiaId: integer("guardia_id").references(() => guardies.id),
   professorId: integer("professor_id").references(() => professors.id),
   prioritat: smallint("prioritat").notNull(), // 1=highest priority
@@ -141,6 +144,7 @@ export const assignacionsGuardia = pgTable("assignacions_guardia", {
 
 export const tasques = pgTable("tasques", {
   id: serial("tasca_id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   assignaId: integer("assigna_id").references(() => assignacionsGuardia.id),
   descripcio: text("descripcio").notNull(),
   estat: varchar("estat").notNull().default("pendent"), // "pendent", "en_progress", "completada", "cancel·lada"
@@ -154,6 +158,7 @@ export const tasques = pgTable("tasques", {
 
 export const comunicacions = pgTable("comunicacions", {
   id: serial("com_id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   tipusDest: varchar("tipus_dest").notNull(), // "professor", "grup", "administracio"
   destinatariId: integer("destinatari_id"),
   missatge: text("missatge").notNull(),
@@ -168,6 +173,7 @@ export const comunicacions = pgTable("comunicacions", {
 // Analytics and metrics tables
 export const metrics = pgTable("metrics", {
   id: serial("metric_id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   timestamp: timestamp("timestamp").defaultNow(),
   usuariId: varchar("usuari_id").references(() => users.id),
   accio: varchar("accio").notNull(),
