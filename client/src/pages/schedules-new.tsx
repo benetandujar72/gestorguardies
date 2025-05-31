@@ -71,6 +71,7 @@ export default function SchedulesNew() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [showOnlyGuards, setShowOnlyGuards] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -113,6 +114,13 @@ export default function SchedulesNew() {
   const activeAcademicYear = academicYears?.length > 0 && activeAcademicYearData?.activeYearId 
     ? academicYears.find((year: any) => year.id === activeAcademicYearData.activeYearId)
     : null;
+
+  // Filter schedules based on guard filter
+  const filteredSchedules = showOnlyGuards 
+    ? schedules.filter((schedule: Schedule) => 
+        schedule.assignatura === "GUARDIA" || schedule.assignatura === "G"
+      )
+    : schedules;
 
 
 
@@ -385,6 +393,27 @@ export default function SchedulesNew() {
           <h1 className="text-2xl font-bold text-text-primary">Graella d'Horaris</h1>
           <p className="text-text-secondary">Visualització setmanal per franges horàries i grups</p>
         </div>
+        
+        {/* Guard Filter */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="guardFilter"
+              checked={showOnlyGuards}
+              onChange={(e) => setShowOnlyGuards(e.target.checked)}
+              className="rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <label 
+              htmlFor="guardFilter" 
+              className="text-sm font-medium text-text-secondary cursor-pointer"
+            >
+              Mostrar només guardies
+            </label>
+          </div>
+          
+        </div>
+        
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-primary hover:bg-blue-800">
