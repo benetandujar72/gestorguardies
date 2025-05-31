@@ -253,6 +253,7 @@ export default function ImportCSV() {
     { value: "grups", label: "Grups" },
     { value: "alumnes", label: "Alumnes" },
     { value: "aules", label: "Aules" },
+    { value: "materies", label: "Matèries" },
     { value: "horaris", label: "Horaris" },
     { value: "guardies", label: "Guàrdies" },
     { value: "sortides", label: "Sortides" },
@@ -264,6 +265,7 @@ export default function ImportCSV() {
     { value: "grups", label: "Grups" },
     { value: "alumnes", label: "Alumnes" },
     { value: "aules", label: "Aules" },
+    { value: "materies", label: "Matèries" },
     { value: "horaris", label: "Horaris" },
     { value: "guardies", label: "Guàrdies" },
   ];
@@ -284,6 +286,10 @@ export default function ImportCSV() {
     aules: {
       headers: ["nom", "planta", "capacitat", "tipus"],
       example: "Aula 101,1,30,Normal"
+    },
+    materies: {
+      headers: ["nom", "codi", "departament", "horesSetmanals", "tipus", "curs", "descripcio"],
+      example: "Matemàtiques,MAT001,Ciències,4,obligatoria,1r ESO,Matemàtiques de primer d'ESO"
     },
     horaris: {
       headers: ["professorId", "grupId", "aulaId", "diaSetmana", "horaInici", "horaFi", "assignatura"],
