@@ -68,6 +68,8 @@ const FRANGES_HORARIES = [
 
 export default function SchedulesNew() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -111,10 +113,7 @@ export default function SchedulesNew() {
     ? academicYears.find((year: any) => year.id === activeAcademicYearData.activeYearId)
     : null;
 
-  // Debug: Check API response
-  console.log("Active year API response:", activeAcademicYearData);
-  console.log("All academic years:", academicYears);
-  console.log("Found active year:", activeAcademicYear);
+
 
   // Create schedule mutation
   const createScheduleMutation = useMutation({
@@ -149,6 +148,7 @@ export default function SchedulesNew() {
     },
   });
 
+  // Create schedule handler
   const onSubmit = (data: ScheduleFormData) => {
     if (!activeAcademicYear) {
       toast({
@@ -166,25 +166,60 @@ export default function SchedulesNew() {
     createScheduleMutation.mutate(horariData);
   };
 
-  // Function to sort groups by level and letter
-  const sortGroups = (groups: any[]) => {
-    return groups.sort((a, b) => {
-      const parseGroup = (nomGrup: string) => {
-        const match = nomGrup.match(/(\d+).*?([A-Z])$/);
-        if (match) {
-          return { level: parseInt(match[1]), letter: match[2] };
-        }
-        return { level: 999, letter: 'Z' };
-      };
+  // Edit schedule handler
+  const handleEditSchedule = (schedule: Schedule) => {
+    setEditingSchedule(schedule);
+    setIsEditDialogOpen(true);
+  };
 
-      const groupA = parseGroup(a.nomGrup);
-      const groupB = parseGroup(b.nomGrup);
+  // Update schedule mutation
+  const updateScheduleMutation = useMutation({
+    mutationFn: async (data: { id: number } & ScheduleFormData) => {
+      const { id, ...updateData } = data;
+      return await apiRequest(`/api/horaris/${id}`, 'PATCH', updateData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/horaris'] });
+      setIsEditDialogOpen(false);
+      setEditingSchedule(null);
+      toast({
+        title: "Èxit",
+        description: "Horari actualitzat correctament.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error?.message || "No s'ha pogut actualitzar l'horari.",
+        variant: "destructive",
+      });
+    },
+  });
 
-      if (groupA.level !== groupB.level) {
-        return groupA.level - groupB.level;
+  // Function to group and sort groups by educational level
+  const groupByLevel = (groups: any[]) => {
+    const grouped = groups.reduce((acc, group) => {
+      // Extract level from group name (e.g., "1rESO A" -> "1rESO")
+      const levelMatch = group.nomGrup.match(/^(\d+r?\w+)/);
+      const level = levelMatch ? levelMatch[1] : 'Altres';
+      
+      if (!acc[level]) {
+        acc[level] = [];
       }
-      return groupA.letter.localeCompare(groupB.letter);
+      acc[level].push(group);
+      return acc;
+    }, {});
+
+    // Sort groups within each level by letter
+    Object.keys(grouped).forEach(level => {
+      grouped[level].sort((a: any, b: any) => {
+        const aLetter = a.nomGrup.match(/([A-Z])$/)?.[1] || '';
+        const bLetter = b.nomGrup.match(/([A-Z])$/)?.[1] || '';
+        return aLetter.localeCompare(bLetter);
+      });
     });
+
+    return grouped;
   };
 
   // Function to check if a schedule fits in a time slot
@@ -470,90 +505,116 @@ export default function SchedulesNew() {
           ))}
         </TabsList>
 
-        {DIES_SETMANA.map((dia) => (
-          <TabsContent key={dia.value} value={dia.value.toString()} className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  Horari de {dia.label}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse border border-gray-300">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="border border-gray-300 px-4 py-3 text-left font-medium">
-                          Franja Horària
-                        </th>
-                        <th className="border border-gray-300 px-4 py-3 text-left font-medium">
-                          Classes Programades
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {FRANGES_HORARIES.map((franja) => {
-                        const schedulesInSlot = getSchedulesForSlot(dia.value, franja);
+        {DIES_SETMANA.map((dia) => {
+          const groupedData = groupByLevel(groups || []);
+          const levelOrder = ['1rESO', '2nESO', '3rESO', '4tESO', '1rBATX', '2nBATX'];
+          const sortedLevels = Object.keys(groupedData).sort((a, b) => {
+            const aIndex = levelOrder.indexOf(a);
+            const bIndex = levelOrder.indexOf(b);
+            if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+            if (aIndex === -1) return 1;
+            if (bIndex === -1) return -1;
+            return aIndex - bIndex;
+          });
 
-                        return (
-                          <tr key={`${dia.value}-${franja.start}`} className="hover:bg-gray-50">
-                            <td className={`border border-gray-300 px-4 py-3 font-medium ${franja.isPati ? 'bg-orange-50' : ''}`}>
-                              {franja.label}
-                            </td>
-                            <td className="border border-gray-300 px-4 py-3">
-                              {schedulesInSlot.length === 0 ? (
-                                <div className="flex items-center justify-between">
-                                  <span className="text-gray-500 italic">
-                                    {franja.isPati ? 'Pati / Esplai' : 'Sense classes programades'}
-                                  </span>
-                                  {!franja.isPati && (
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline"
-                                      onClick={() => setIsCreateDialogOpen(true)}
-                                      className="ml-2"
-                                    >
-                                      <Plus className="w-4 h-4 mr-1" />
-                                      Afegir
-                                    </Button>
-                                  )}
-                                </div>
-                              ) : (
-                                <div className="space-y-2">
-                                  {schedulesInSlot.map((schedule, index) => (
-                                    <div 
-                                      key={schedule.id} 
-                                      className={`p-3 rounded-lg ${getConflictColor(index)}`}
-                                    >
-                                      <div className="font-medium text-sm">
-                                        {schedule.grup?.nomGrup || 'Grup no assignat'}
-                                      </div>
-                                      <div className="text-xs text-gray-600 mt-1 space-y-1">
-                                        <div><strong>Matèria:</strong> {schedule.assignatura || 'No especificada'}</div>
-                                        <div><strong>Aula:</strong> {schedule.aula?.nomAula || 'No assignada'}</div>
-                                        <div><strong>Professor:</strong> {schedule.professor ? `${schedule.professor.nom} ${schedule.professor.cognoms}` : 'No assignat'}</div>
-                                      </div>
+          return (
+            <TabsContent key={dia.value} value={dia.value.toString()} className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5" />
+                      Horari de {dia.label}
+                    </div>
+                    <Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
+                      <Plus className="w-4 h-4 mr-1" />
+                      Afegir Classe
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {FRANGES_HORARIES.map((franja) => (
+                      <div key={`${dia.value}-${franja.start}`} className="border rounded-lg overflow-hidden">
+                        <div className={`px-4 py-2 font-medium text-sm ${franja.isPati ? 'bg-orange-100 text-orange-800' : 'bg-gray-100'}`}>
+                          {franja.label}
+                        </div>
+                        <div className="p-4">
+                          {sortedLevels.length === 0 ? (
+                            <div className="text-center text-gray-500 py-8">
+                              No hi ha grups definits
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              {sortedLevels.map(level => {
+                                const levelGroups = groupedData[level];
+                                const levelSchedules = levelGroups.map(group => {
+                                  const groupSchedules = getSchedulesForSlot(dia.value, franja).filter(
+                                    s => s.grupId === group.id
+                                  );
+                                  return { group, schedules: groupSchedules };
+                                }).filter(item => item.schedules.length > 0);
+
+                                if (levelSchedules.length === 0) return null;
+
+                                return (
+                                  <div key={level} className="border rounded-md p-3 bg-gray-50">
+                                    <h4 className="font-medium text-sm text-gray-700 mb-2">{level}</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                                      {levelSchedules.map(({ group, schedules }) => (
+                                        schedules.map((schedule, index) => (
+                                          <div 
+                                            key={schedule.id}
+                                            onClick={() => handleEditSchedule(schedule)}
+                                            className="bg-white border rounded p-2 cursor-pointer hover:shadow-md transition-shadow text-xs"
+                                          >
+                                            <div className="font-medium text-blue-700">
+                                              {schedule.grup?.nomGrup}
+                                            </div>
+                                            <div className="text-gray-600 mt-1">
+                                              <div className="font-medium">{schedule.assignatura || 'Matèria no especificada'}</div>
+                                              <div>{schedule.aula?.nomAula || 'Aula no assignada'}</div>
+                                              <div className="text-gray-500">
+                                                {schedule.professor ? `${schedule.professor.nom} ${schedule.professor.cognoms}` : 'Professor no assignat'}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ))
+                                      ))}
                                     </div>
-                                  ))}
-                                  {schedulesInSlot.length > 1 && (
-                                    <div className="text-xs text-orange-600 font-medium">
-                                      ⚠️ Múltiples classes a la mateixa franja
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        ))}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                          
+                          {franja.isPati ? (
+                            <div className="text-center text-orange-600 text-sm mt-2">
+                              Hora del pati - No es programen classes
+                            </div>
+                          ) : (
+                            getSchedulesForSlot(dia.value, franja).length === 0 && (
+                              <div className="text-center text-gray-500 py-4">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => setIsCreateDialogOpen(true)}
+                                >
+                                  <Plus className="w-4 h-4 mr-1" />
+                                  Afegir classe a aquesta franja
+                                </Button>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          );
+        })}
       </Tabs>
     </div>
   );
