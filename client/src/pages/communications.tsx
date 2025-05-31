@@ -58,10 +58,10 @@ export default function Communications() {
 
   // Filter communications
   const filteredCommunications = communications.filter(comm => {
-    if (typeFilter && comm.tipus !== typeFilter) return false;
+    if (typeFilter && typeFilter !== "tots" && comm.tipus !== typeFilter) return false;
     if (statusFilter === "llegit" && !comm.llegit) return false;
     if (statusFilter === "no_llegit" && comm.llegit) return false;
-    if (recipientFilter && comm.tipusDest !== recipientFilter) return false;
+    if (recipientFilter && recipientFilter !== "tots" && comm.tipusDest !== recipientFilter) return false;
     return true;
   });
 

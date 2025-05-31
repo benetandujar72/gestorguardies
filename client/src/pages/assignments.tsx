@@ -46,7 +46,7 @@ interface Assignment {
 
 export default function Assignments() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState('2025-05-30');
   const [selectedGuardId, setSelectedGuardId] = useState<number | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
