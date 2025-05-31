@@ -75,7 +75,8 @@ export class GuardAssignmentEngine {
           professorId: prof.professorId,
           prioritat: prof.priority, // Afegim la prioritat calculada
           estat: "assignada",
-          motiu: `Assignació automàtica - ${prof.reason}`
+          motiu: `Assignació automàtica - ${prof.reason}`,
+          anyAcademicId: guardia.anyAcademicId // Afegim l'any acadèmic de la guàrdia
         });
         assignments.push(assignment);
         console.log(`Assignació creada amb ID ${assignment.id}`);

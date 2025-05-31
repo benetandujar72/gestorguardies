@@ -423,19 +423,19 @@ export default function ImportCSV() {
                       </>
                     ) : (
                       <>
-                        <strong>Error d'importació.</strong> S'han trobat {result.errors.length} errors.
+                        <strong>Error d'importació.</strong> S'han trobat {result.errors?.length || 0} errors.
                       </>
                     )}
                   </AlertDescription>
                 </div>
-                {result.errors.length > 0 && (
+                {result.errors && result.errors.length > 0 && (
                   <div className="mt-2">
                     <p className="text-sm font-medium">Errors trobats:</p>
                     <ul className="text-sm text-red-600 list-disc list-inside">
                       {result.errors.slice(0, 5).map((error, index) => (
                         <li key={index}>{error}</li>
                       ))}
-                      {result.errors.length > 5 && (
+                      {result.errors && result.errors.length > 5 && (
                         <li>... i {result.errors.length - 5} errors més</li>
                       )}
                     </ul>
