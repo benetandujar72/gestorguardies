@@ -775,7 +775,7 @@ export default function SchedulesNew() {
                         <FormLabel>Professor</FormLabel>
                         <Select 
                           onValueChange={(value) => field.onChange(parseInt(value))}
-                          value={field.value?.toString()}
+                          value={field.value && field.value > 0 ? field.value.toString() : ""}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -803,7 +803,7 @@ export default function SchedulesNew() {
                         <FormLabel>Grup</FormLabel>
                         <Select 
                           onValueChange={(value) => field.onChange(parseInt(value))}
-                          value={field.value?.toString()}
+                          value={field.value && field.value > 0 ? field.value.toString() : ""}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -831,7 +831,7 @@ export default function SchedulesNew() {
                         <FormLabel>Aula</FormLabel>
                         <Select 
                           onValueChange={(value) => field.onChange(parseInt(value))}
-                          value={field.value?.toString()}
+                          value={field.value && field.value > 0 ? field.value.toString() : ""}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -874,7 +874,7 @@ export default function SchedulesNew() {
                           <FormLabel>Dia</FormLabel>
                           <Select 
                             onValueChange={(value) => field.onChange(parseInt(value))}
-                            value={field.value?.toString()}
+                            value={field.value ? field.value.toString() : ""}
                           >
                             <FormControl>
                               <SelectTrigger>
