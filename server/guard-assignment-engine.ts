@@ -161,10 +161,11 @@ export class GuardAssignmentEngine {
       reason = `Liberado por sortida: ${isFreedByOuting.sortidaName}`;
     }
     
-    // CRITERIO 2: Profesores de guardia asignada
-    else if (await this.hasDutyAssignment(professor, context)) {
-      priority = 10;
-      reason = "Guardia asignada en horario";
+    // CRITERIO 2: Profesores con materia "G" asignada
+    else if (await this.hasGuardSubjectInSchedule(professor, context)) {
+      const guardRatio = await this.calculateGuardRatio(professor);
+      priority = 10 + Math.floor(guardRatio.ratio * 10); // Menor ratio = mayor prioridad
+      reason = `Matèria G al horari (${guardRatio.performed}/${guardRatio.available} = ${guardRatio.ratio.toFixed(2)})`;
     }
     
     // CRITERIO 3: Reuniones o horas de cargos
@@ -231,7 +232,26 @@ export class GuardAssignmentEngine {
   }
 
   /**
-   * Verifica si un profesor tiene guardia asignada en su horario
+   * Verifica si un profesor tiene materia "G" asignada en su horario
+   */
+  private async hasGuardSubjectInSchedule(professor: any, context: GuardAssignmentContext): Promise<boolean> {
+    const guardiaDate = context.guardia.data;
+    const guardiaStart = context.guardia.horaInici;
+    const guardiaEnd = context.guardia.horaFi;
+
+    // Buscar materia "G" en horarios para esta franja
+    const hasGuardSubject = context.horaris.some(horari => {
+      return horari.professorId === professor.id &&
+             horari.materia?.nom === "G" &&
+             this.isDayOfWeek(guardiaDate, horari.diaSetmana) &&
+             this.timeOverlaps(guardiaStart, guardiaEnd, horari.horaInici, horari.horaFi);
+    });
+
+    return hasGuardSubject;
+  }
+
+  /**
+   * Verifica si un profesor tiene guardia asignada en su horario (función legacy)
    */
   private async hasDutyAssignment(professor: any, context: GuardAssignmentContext): Promise<boolean> {
     // Buscar en horarios si tiene "GUARDIA" asignada en este momento
@@ -262,6 +282,44 @@ export class GuardAssignmentEngine {
     ];
 
     return administrativeRoles.includes(professor.rol);
+  }
+
+  /**
+   * Calcula el ràtio de guardies fetes vs disponibles per un professor
+   */
+  private async calculateGuardRatio(professor: any): Promise<{performed: number, available: number, ratio: number}> {
+    try {
+      // Obtenir guardies disponibles (matèria "G" al horari setmanal)
+      const horaris = await storage.getHoraris();
+      const guardSubjectHours = horaris.filter(h => 
+        h.professorId === professor.id && 
+        h.materia?.nom === "G"
+      );
+      const available = guardSubjectHours.length;
+
+      // Obtenir guardies fetes (últimes 4 setmanes)
+      const fourWeeksAgo = new Date();
+      fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+      
+      const assignacions = await db
+        .select()
+        .from(schema.assignacionsGuardia)
+        .innerJoin(schema.guardies, eq(schema.assignacionsGuardia.guardiaId, schema.guardies.id))
+        .where(
+          and(
+            eq(schema.assignacionsGuardia.professorId, professor.id),
+            sql`${schema.guardies.data} >= ${fourWeeksAgo.toISOString().split('T')[0]}`
+          )
+        );
+      
+      const performed = assignacions.length;
+      const ratio = available > 0 ? performed / available : 0;
+
+      return { performed, available, ratio };
+    } catch (error) {
+      console.error("Error calculant guard ratio:", error);
+      return { performed: 0, available: 0, ratio: 0 };
+    }
   }
 
   /**

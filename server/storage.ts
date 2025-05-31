@@ -413,6 +413,8 @@ export class DatabaseStorage implements IStorage {
         horaFi: horaris.horaFi,
         assignatura: horaris.assignatura,
         createdAt: horaris.createdAt,
+        anyAcademicId: horaris.anyAcademicId,
+        materiaId: horaris.materiaId,
         professor: {
           id: professors.id,
           nom: professors.nom,
@@ -426,11 +428,17 @@ export class DatabaseStorage implements IStorage {
           id: aules.id,
           nomAula: aules.nomAula,
         },
+        materia: {
+          id: materies.id,
+          nom: materies.nom,
+          codi: materies.codi,
+        },
       })
       .from(horaris)
       .leftJoin(professors, eq(horaris.professorId, professors.id))
       .leftJoin(grups, eq(horaris.grupId, grups.id))
       .leftJoin(aules, eq(horaris.aulaId, aules.id))
+      .leftJoin(materies, eq(horaris.materiaId, materies.id))
       .orderBy(horaris.diaSetmana, horaris.horaInici);
   }
 
