@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,14 @@ export default function ImportCSV() {
   });
 
   // Encontrar el año académico activo
-  const activeAcademicYear = academicYears?.find((year: any) => year.actiu === true);
+  const activeAcademicYear = academicYears?.find((year: any) => year.estat === "actiu");
+
+  // Auto-seleccionar el curso académico activo al cargar
+  useEffect(() => {
+    if (activeAcademicYear && !academicYearId) {
+      setAcademicYearId(String(activeAcademicYear.id));
+    }
+  }, [activeAcademicYear, academicYearId]);
 
   const importMutation = useMutation({
     mutationFn: async ({ file, entityType, academicYearId }: { file: File; entityType: string; academicYearId: string }) => {
@@ -387,7 +394,7 @@ export default function ImportCSV() {
                 <SelectContent>
                   {academicYears?.map((year: any) => (
                     <SelectItem key={year.id} value={String(year.id)}>
-                      {year.nom} {year.actiu && "(Actiu)"}
+                      {year.nom} {year.estat === "actiu" && "(Actiu)"}
                     </SelectItem>
                   )) || []}
                 </SelectContent>
