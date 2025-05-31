@@ -18,6 +18,10 @@ export default function TopNavigation() {
 
   // Trobar l'any acadèmic actiu
   const activeAcademicYear = academicYears?.find((year: any) => year.actiu === true);
+  
+  // Debug: verificar les dades
+  console.log('Academic Years Data:', academicYears);
+  console.log('Active Academic Year:', activeAcademicYear);
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
