@@ -81,10 +81,21 @@ export default function Guards() {
   // Filter guards by selected date
   const filteredGuards = guards.filter(guard => guard.data === selectedDate);
 
+  // Fetch academic years to get active year
+  const { data: academicYears = [] } = useQuery({
+    queryKey: ['/api/anys-academics'],
+  });
+
+  const activeAcademicYear = academicYears.find((year: any) => year.estat === 'actiu') || academicYears[0];
+
   // Create guard mutation
   const createGuardMutation = useMutation({
     mutationFn: async (data: GuardFormData) => {
-      const response = await apiRequest('POST', '/api/guardies', data);
+      const guardData = {
+        ...data,
+        anyAcademicId: activeAcademicYear?.id || 1
+      };
+      const response = await apiRequest('POST', '/api/guardies', guardData);
       return response.json();
     },
     onSuccess: () => {
