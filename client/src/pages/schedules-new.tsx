@@ -725,7 +725,7 @@ export default function SchedulesNew() {
                   />
 
                   <FormField
-                    control={form.control}
+                    control={editForm.control}
                     name="grupId"
                     render={({ field }) => (
                       <FormItem>
@@ -753,7 +753,7 @@ export default function SchedulesNew() {
                   />
 
                   <FormField
-                    control={form.control}
+                    control={editForm.control}
                     name="aulaId"
                     render={({ field }) => (
                       <FormItem>
@@ -781,7 +781,7 @@ export default function SchedulesNew() {
                   />
 
                   <FormField
-                    control={form.control}
+                    control={editForm.control}
                     name="assignatura"
                     render={({ field }) => (
                       <FormItem>
@@ -796,7 +796,7 @@ export default function SchedulesNew() {
 
                   <div className="grid grid-cols-3 gap-4">
                     <FormField
-                      control={form.control}
+                      control={editForm.control}
                       name="diaSetmana"
                       render={({ field }) => (
                         <FormItem>
@@ -824,7 +824,7 @@ export default function SchedulesNew() {
                     />
 
                     <FormField
-                      control={form.control}
+                      control={editForm.control}
                       name="horaInici"
                       render={({ field }) => (
                         <FormItem>
@@ -838,7 +838,7 @@ export default function SchedulesNew() {
                     />
 
                     <FormField
-                      control={form.control}
+                      control={editForm.control}
                       name="horaFi"
                       render={({ field }) => (
                         <FormItem>
