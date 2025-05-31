@@ -358,7 +358,7 @@ export default function SchedulesNew() {
 
   // Function to get schedules for a specific day and time slot
   const getSchedulesForSlot = (day: number, timeSlot: any) => {
-    return (schedules as Schedule[]).filter(schedule => 
+    return (filteredSchedules as Schedule[]).filter(schedule => 
       schedule.diaSetmana === day && scheduleInTimeSlot(schedule, timeSlot)
     );
   };
