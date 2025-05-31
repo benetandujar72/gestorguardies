@@ -834,7 +834,9 @@ export class DatabaseStorage implements IStorage {
 
   // Chat sessions
   async createChatSession(userId: string): Promise<ChatSession> {
+    const activeYear = await this.getActiveAcademicYear();
     const [session] = await db.insert(chatSessions).values({
+      anyAcademicId: activeYear,
       usuariId: userId,
       missatges: [],
     }).returning();
