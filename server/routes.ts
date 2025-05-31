@@ -769,6 +769,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get active academic year ID
+  app.get('/api/anys-academics/active/id', isAuthenticated, async (req, res) => {
+    try {
+      const activeYearId = await storage.getActiveAcademicYear();
+      res.json({ activeYearId });
+    } catch (error: any) {
+      res.status(500).json({ message: "No active academic year found" });
+    }
+  });
+
   // Activate academic year (sets it as active and finalizes the previous one)
   app.post('/api/anys-academics/:id/activate', isAuthenticated, async (req, res) => {
     try {

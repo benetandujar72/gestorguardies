@@ -97,12 +97,24 @@ export default function SchedulesNew() {
     enabled: isCreateDialogOpen,
   });
 
-  // Fetch active academic year
+  // Fetch active academic year directly from backend
+  const { data: activeAcademicYearData } = useQuery({
+    queryKey: ['/api/anys-academics/active/id'],
+  });
+
+  // Fetch all academic years for reference
   const { data: academicYears = [] } = useQuery({
     queryKey: ['/api/anys-academics'],
   });
 
-  const activeAcademicYear = academicYears.find((year: any) => year.estat === 'actiu');
+  const activeAcademicYear = academicYears?.length > 0 && activeAcademicYearData?.activeYearId 
+    ? academicYears.find((year: any) => year.id === activeAcademicYearData.activeYearId)
+    : null;
+
+  // Debug: Check API response
+  console.log("Active year API response:", activeAcademicYearData);
+  console.log("All academic years:", academicYears);
+  console.log("Found active year:", activeAcademicYear);
 
   // Create schedule mutation
   const createScheduleMutation = useMutation({
@@ -141,7 +153,7 @@ export default function SchedulesNew() {
     if (!activeAcademicYear) {
       toast({
         title: "Error",
-        description: "No hi ha cap any acadèmic actiu.",
+        description: "No hi ha cap any acadèmic actiu. Si us plau, activa un any acadèmic primer.",
         variant: "destructive",
       });
       return;
@@ -483,20 +495,7 @@ export default function SchedulesNew() {
                     <tbody>
                       {FRANGES_HORARIES.map((franja) => {
                         const schedulesInSlot = getSchedulesForSlot(dia.value, franja);
-                        // Debug: log schedules to see what we're getting
-                        if (dia.value === 3 && franja.start === "08:00") {
-                          console.log("Debug - All schedules:", schedules);
-                          console.log("Debug - Active academic year:", activeAcademicYear);
-                          console.log(`Debug - Day ${dia.value} (Dimecres), slot ${franja.start}-${franja.end}:`, schedulesInSlot);
-                          console.log("Time comparison:", {
-                            schedule: schedules[0] ? {
-                              start: schedules[0].horaInici,
-                              end: schedules[0].horaFi,
-                              day: schedules[0].diaSetmana
-                            } : 'No schedules',
-                            slot: { start: franja.start, end: franja.end, day: dia.value }
-                          });
-                        }
+
                         return (
                           <tr key={`${dia.value}-${franja.start}`} className="hover:bg-gray-50">
                             <td className={`border border-gray-300 px-4 py-3 font-medium ${franja.isPati ? 'bg-orange-50' : ''}`}>
