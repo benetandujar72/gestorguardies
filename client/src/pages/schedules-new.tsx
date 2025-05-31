@@ -242,24 +242,31 @@ export default function SchedulesNew() {
   // Edit schedule handler
   const handleEditSchedule = (schedule: Schedule) => {
     setEditingSchedule(schedule);
-    
-    // Pre-fill edit form with existing data
-    const formData = {
-      professorId: schedule.professor?.id || 0,
-      grupId: schedule.grup?.id || 0,
-      aulaId: schedule.aula?.id || 0,
-      diaSetmana: schedule.diaSetmana,
-      horaInici: schedule.horaInici?.substring(0, 5) || '', // Remove seconds if present
-      horaFi: schedule.horaFi?.substring(0, 5) || '',
-      assignatura: schedule.assignatura || '',
-    };
-    
-    // Wait a bit to ensure the dialog is open before resetting the form
-    setTimeout(() => {
-      editForm.reset(formData);
-    }, 100);
-    
     setIsEditDialogOpen(true);
+    
+    // Pre-fill edit form with existing data - use setTimeout to ensure dialog is rendered
+    setTimeout(() => {
+      const formData = {
+        professorId: schedule.professor?.id || 0,
+        grupId: schedule.grup?.id || 0,
+        aulaId: schedule.aula?.id || 0,
+        diaSetmana: schedule.diaSetmana,
+        horaInici: schedule.horaInici?.substring(0, 5) || '', // Remove seconds if present
+        horaFi: schedule.horaFi?.substring(0, 5) || '',
+        assignatura: schedule.assignatura || '',
+      };
+      
+      editForm.reset(formData);
+      
+      // Force form to rerender with values
+      editForm.setValue('professorId', formData.professorId);
+      editForm.setValue('grupId', formData.grupId);
+      editForm.setValue('aulaId', formData.aulaId);
+      editForm.setValue('diaSetmana', formData.diaSetmana);
+      editForm.setValue('horaInici', formData.horaInici);
+      editForm.setValue('horaFi', formData.horaFi);
+      editForm.setValue('assignatura', formData.assignatura);
+    }, 200);
   };
 
   // Update schedule mutation
