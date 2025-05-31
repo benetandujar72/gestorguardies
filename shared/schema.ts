@@ -185,6 +185,7 @@ export const metrics = pgTable("metrics", {
 
 export const predictions = pgTable("predictions", {
   id: serial("prediction_id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   data: date("data").notNull(),
   context: jsonb("context").notNull(),
   resultat: jsonb("resultat").notNull(),
@@ -197,6 +198,7 @@ export const predictions = pgTable("predictions", {
 // Chat sessions for AI bot
 export const chatSessions = pgTable("chat_sessions", {
   id: serial("session_id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   usuariId: varchar("usuari_id").references(() => users.id),
   inici: timestamp("inici").defaultNow(),
   missatges: jsonb("missatges").notNull().default([]),
@@ -208,6 +210,7 @@ export const chatSessions = pgTable("chat_sessions", {
 // File attachments
 export const attachments = pgTable("attachments", {
   id: serial("attachment_id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   tascaId: integer("tasca_id").references(() => tasques.id),
   nomFitxer: varchar("nom_fitxer").notNull(),
   urlAlmacenament: varchar("url_almacenament").notNull(),
