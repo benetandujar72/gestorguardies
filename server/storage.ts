@@ -160,6 +160,21 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Helper method to get active academic year
+  private async getActiveAcademicYear(): Promise<number> {
+    const [activeYear] = await db
+      .select({ id: anysAcademics.id })
+      .from(anysAcademics)
+      .where(eq(anysAcademics.estat, 'actiu'))
+      .limit(1);
+    
+    if (!activeYear) {
+      throw new Error('No active academic year found');
+    }
+    
+    return activeYear.id;
+  }
+
   // User operations (mandatory for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -183,7 +198,10 @@ export class DatabaseStorage implements IStorage {
 
   // Professor operations
   async getProfessors(): Promise<Professor[]> {
-    return await db.select().from(professors).orderBy(professors.cognoms, professors.nom);
+    const activeYear = await this.getActiveAcademicYear();
+    return await db.select().from(professors)
+      .where(eq(professors.anyAcademicId, activeYear))
+      .orderBy(professors.cognoms, professors.nom);
   }
 
   async getProfessor(id: number): Promise<Professor | undefined> {
@@ -248,7 +266,10 @@ export class DatabaseStorage implements IStorage {
 
   // Grup operations
   async getGrups(): Promise<Grup[]> {
-    return await db.select().from(grups).orderBy(grups.nivell, grups.nomGrup);
+    const activeYear = await this.getActiveAcademicYear();
+    return await db.select().from(grups)
+      .where(eq(grups.anyAcademicId, activeYear))
+      .orderBy(grups.nivell, grups.nomGrup);
   }
 
   async getGrup(id: number): Promise<Grup | undefined> {
@@ -276,7 +297,10 @@ export class DatabaseStorage implements IStorage {
 
   // Alumne operations
   async getAlumnes(): Promise<Alumne[]> {
-    return await db.select().from(alumnes).orderBy(alumnes.cognoms, alumnes.nom);
+    const activeYear = await this.getActiveAcademicYear();
+    return await db.select().from(alumnes)
+      .where(eq(alumnes.anyAcademicId, activeYear))
+      .orderBy(alumnes.cognoms, alumnes.nom);
   }
 
   async getAlumnesByGrup(grupId: number): Promise<Alumne[]> {
@@ -303,7 +327,10 @@ export class DatabaseStorage implements IStorage {
 
   // Aula operations
   async getAules(): Promise<Aula[]> {
-    return await db.select().from(aules).orderBy(aules.nomAula);
+    const activeYear = await this.getActiveAcademicYear();
+    return await db.select().from(aules)
+      .where(eq(aules.anyAcademicId, activeYear))
+      .orderBy(aules.nomAula);
   }
 
   async getAula(id: number): Promise<Aula | undefined> {
@@ -492,6 +519,7 @@ export class DatabaseStorage implements IStorage {
 
   // Guardia operations
   async getGuardies(): Promise<Guardia[]> {
+    const activeYear = await this.getActiveAcademicYear();
     const guardiasWithAssignments = await db.select({
       id: guardies.id,
       data: guardies.data,
@@ -502,6 +530,7 @@ export class DatabaseStorage implements IStorage {
       lloc: guardies.lloc,
       observacions: guardies.observacions,
       createdAt: guardies.createdAt,
+      anyAcademicId: guardies.anyAcademicId,
       // Include assignment data
       assignacions: sql`
         COALESCE(
@@ -525,6 +554,7 @@ export class DatabaseStorage implements IStorage {
     .from(guardies)
     .leftJoin(assignacionsGuardia, eq(guardies.id, assignacionsGuardia.guardiaId))
     .leftJoin(professors, eq(assignacionsGuardia.professorId, professors.id))
+    .where(eq(guardies.anyAcademicId, activeYear))
     .groupBy(guardies.id)
     .orderBy(desc(guardies.data), guardies.horaInici);
 
