@@ -862,56 +862,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Academic year ID is required" });
       }
       
-      // Process CSV file (simplified implementation)
+      // Process CSV file with improved parsing
       const csvData = fs.readFileSync(file.path, 'utf8');
-      const lines = csvData.split('\n');
-      const headers = lines[0].split(',');
+      const lines = csvData.split('\n').filter(line => line.trim().length > 0); // Filter empty lines
+      const headers = lines[0].split(',').map(h => h.trim());
       
       let importedCount = 0;
+      let errorCount = 0;
       
       for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split(',');
-        if (values.length === headers.length) {
-          const record: any = {};
-          headers.forEach((header, index) => {
-            record[header.trim()] = values[index].trim();
-          });
+        
+        // Skip lines that don't have the right number of columns
+        if (values.length !== headers.length) {
+          console.log(`Skipping row ${i}: expected ${headers.length} columns, got ${values.length}`);
+          continue;
+        }
+        
+        const record: any = {};
+        headers.forEach((header, index) => {
+          let value = values[index] ? values[index].trim() : '';
           
-          try {
-            switch (entityType) {
-              case 'professors':
-                const professorData = { ...record, anyAcademicId: parseInt(academicYearId) };
-                // Intentar buscar profesor existente por email
-                const existingProfessor = await storage.getProfessorByEmail(record.email);
-                if (existingProfessor) {
-                  // Actualizar profesor existente
-                  await storage.updateProfessor(existingProfessor.id, professorData);
-                } else {
-                  // Crear nuevo profesor
-                  await storage.createProfessor(insertProfessorSchema.parse(professorData));
-                }
-                break;
-              case 'grups':
-                const grupData = { ...record, anyAcademicId: parseInt(academicYearId) };
-                await storage.createGrup(insertGrupSchema.parse(grupData));
-                break;
-              case 'alumnes':
-                const alumneData = { ...record, anyAcademicId: parseInt(academicYearId) };
-                await storage.createAlumne(insertAlumneSchema.parse(alumneData));
-                break;
-              case 'aules':
-                const aulaData = { ...record, anyAcademicId: parseInt(academicYearId) };
-                await storage.createAula(insertAulaSchema.parse(aulaData));
-                break;
-              case 'sortides':
-                const sortidaData = { ...record, anyAcademicId: parseInt(academicYearId) };
-                await storage.createSortida(insertSortidaSchema.parse(sortidaData));
-                break;
-            }
-            importedCount++;
-          } catch (parseError) {
-            console.error(`Error importing row ${i}:`, parseError);
+          // Convert numeric fields
+          if ((header === 'grupId' || header === 'professorId' || header === 'aulaId' || header === 'responsableId') && value) {
+            value = parseInt(value) as any;
           }
+          
+          // Only set non-empty values to avoid undefined issues
+          if (value !== '') {
+            record[header] = value;
+          }
+        });
+          
+        // Skip empty records
+        if (Object.keys(record).length === 0) {
+          continue;
+        }
+        
+        try {
+          switch (entityType) {
+            case 'professors':
+              const professorData = { ...record, anyAcademicId: parseInt(academicYearId) };
+              
+              // Validate required fields
+              if (!record.nom || !record.email) {
+                console.log(`Skipping row ${i}: missing required fields (nom or email)`);
+                errorCount++;
+                continue;
+              }
+              
+              // Check if professor exists by email
+              const existingProfessor = await storage.getProfessorByEmail(record.email);
+              if (existingProfessor) {
+                await storage.updateProfessor(existingProfessor.id, professorData);
+              } else {
+                await storage.createProfessor(insertProfessorSchema.parse(professorData));
+              }
+              break;
+              
+            case 'grups':
+              const grupData = { ...record, anyAcademicId: parseInt(academicYearId) };
+              if (!record.nomGrup) {
+                console.log(`Skipping row ${i}: missing required field nomGrup`);
+                errorCount++;
+                continue;
+              }
+              await storage.createGrup(insertGrupSchema.parse(grupData));
+              break;
+              
+            case 'alumnes':
+              const alumneData = { ...record, anyAcademicId: parseInt(academicYearId) };
+              if (!record.nom || !record.grupId) {
+                console.log(`Skipping row ${i}: missing required fields (nom or grupId)`);
+                errorCount++;
+                continue;
+              }
+              await storage.createAlumne(insertAlumneSchema.parse(alumneData));
+              break;
+              
+            case 'aules':
+              const aulaData = { ...record, anyAcademicId: parseInt(academicYearId) };
+              if (!record.nomAula) {
+                console.log(`Skipping row ${i}: missing required field nomAula`);
+                errorCount++;
+                continue;
+              }
+              await storage.createAula(insertAulaSchema.parse(aulaData));
+              break;
+              
+            case 'sortides':
+              const sortidaData = { ...record, anyAcademicId: parseInt(academicYearId) };
+              if (!record.nomSortida || !record.dataInici) {
+                console.log(`Skipping row ${i}: missing required fields`);
+                errorCount++;
+                continue;
+              }
+              await storage.createSortida(insertSortidaSchema.parse(sortidaData));
+              break;
+          }
+          importedCount++;
+        } catch (parseError) {
+          console.error(`Error importing row ${i}:`, parseError);
+          errorCount++;
         }
       }
       
