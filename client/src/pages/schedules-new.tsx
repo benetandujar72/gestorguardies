@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -19,7 +19,7 @@ const scheduleSchema = z.object({
   professorId: z.number().min(1, "Selecciona un professor"),
   grupId: z.number().min(1, "Selecciona un grup"),
   aulaId: z.number().min(1, "Selecciona una aula"),
-  diaSetmana: z.number().min(1).max(7),
+  diaSetmana: z.number().min(1).max(5, "Només es permeten dies laborables"),
   horaInici: z.string().min(1, "L'hora d'inici és obligatòria"),
   horaFi: z.string().min(1, "L'hora de fi és obligatòria"),
   assignatura: z.string().optional(),
@@ -60,42 +60,38 @@ const FRANGES_HORARIES = [
   { start: "08:00", end: "09:00", label: "8:00 - 9:00" },
   { start: "09:00", end: "10:00", label: "9:00 - 10:00" },
   { start: "10:00", end: "11:00", label: "10:00 - 11:00" },
-  { start: "11:00", end: "11:30", label: "11:00 - 11:30 (Pati)" },
+  { start: "11:00", end: "11:30", label: "11:00 - 11:30 (Pati)", isPati: true },
   { start: "11:30", end: "12:30", label: "11:30 - 12:30" },
   { start: "12:30", end: "13:30", label: "12:30 - 13:30" },
   { start: "13:30", end: "14:30", label: "13:30 - 14:30" },
 ];
 
-export default function Schedules() {
+export default function SchedulesNew() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<number>(1);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch schedules
-  const { data: schedules = [], isLoading } = useQuery({
+  const { data: schedules = [] } = useQuery({
     queryKey: ['/api/horaris'],
   });
 
-  // Fetch professors for selection
+  // Fetch data for form
   const { data: professors = [] } = useQuery({
     queryKey: ['/api/professors'],
     enabled: isCreateDialogOpen,
   });
 
-  // Fetch groups for selection
   const { data: groups = [] } = useQuery({
     queryKey: ['/api/grups'],
     enabled: isCreateDialogOpen,
   });
 
-  // Fetch classrooms for selection
   const { data: classrooms = [] } = useQuery({
     queryKey: ['/api/aules'],
     enabled: isCreateDialogOpen,
   });
 
-  // Fetch subjects for selection
   const { data: subjects = [] } = useQuery({
     queryKey: ['/api/materies'],
     enabled: isCreateDialogOpen,
@@ -107,16 +103,6 @@ export default function Schedules() {
   });
 
   const activeAcademicYear = academicYears.find((year: any) => year.estat === 'actiu');
-
-  // Filter schedules by selected day
-  const filteredSchedules = schedules.filter((schedule: Schedule) => 
-    schedule.diaSetmana === selectedDay
-  );
-
-  // Sort schedules by time
-  const sortedSchedules = filteredSchedules.sort((a: Schedule, b: Schedule) => {
-    return a.horaInici.localeCompare(b.horaInici);
-  });
 
   // Create schedule mutation
   const createScheduleMutation = useMutation({
@@ -161,7 +147,6 @@ export default function Schedules() {
       return;
     }
 
-    // Add anyAcademicId automatically using the active academic year
     const horariData = {
       ...data,
       anyAcademicId: activeAcademicYear.id
@@ -169,20 +154,15 @@ export default function Schedules() {
     createScheduleMutation.mutate(horariData);
   };
 
-  const getDayName = (day: number) => {
-    return DIES_SETMANA.find(d => d.value === day)?.label || "";
-  };
-
   // Function to sort groups by level and letter
   const sortGroups = (groups: any[]) => {
     return groups.sort((a, b) => {
-      // Extract level and letter from group name (e.g., "1r ESO A" -> level: 1, letter: A)
       const parseGroup = (nomGrup: string) => {
         const match = nomGrup.match(/(\d+).*?([A-Z])$/);
         if (match) {
           return { level: parseInt(match[1]), letter: match[2] };
         }
-        return { level: 999, letter: 'Z' }; // fallback for unrecognized format
+        return { level: 999, letter: 'Z' };
       };
 
       const groupA = parseGroup(a.nomGrup);
@@ -219,15 +199,7 @@ export default function Schedules() {
     return colors[index % colors.length];
   };
 
-  const getTimeSlotColor = (horaInici: string) => {
-    const hour = parseInt(horaInici.split(':')[0]);
-    if (hour < 10) return 'bg-blue-100 text-blue-800';
-    if (hour < 14) return 'bg-green-100 text-green-800';
-    if (hour < 17) return 'bg-orange-100 text-orange-800';
-    return 'bg-purple-100 text-purple-800';
-  };
-
-  if (isLoading) {
+  if (!schedules) {
     return (
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
@@ -242,8 +214,8 @@ export default function Schedules() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Gestió d'Horaris</h1>
-          <p className="text-text-secondary">Organitza els horaris de professors, grups i aules</p>
+          <h1 className="text-2xl font-bold text-text-primary">Graella d'Horaris</h1>
+          <p className="text-text-secondary">Visualització setmanal per franges horàries i grups</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -300,7 +272,7 @@ export default function Schedules() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {groups.map((group: any) => (
+                            {sortGroups(groups).map((group: any) => (
                               <SelectItem key={group.id} value={group.id.toString()}>
                                 {group.nomGrup}
                               </SelectItem>
@@ -372,9 +344,20 @@ export default function Schedules() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Hora d'Inici</FormLabel>
-                        <FormControl>
-                          <Input type="time" {...field} />
-                        </FormControl>
+                        <Select onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona hora" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {FRANGES_HORARIES.map((franja) => (
+                              <SelectItem key={franja.start} value={franja.start}>
+                                {franja.start}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -386,9 +369,20 @@ export default function Schedules() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Hora de Fi</FormLabel>
-                        <FormControl>
-                          <Input type="time" {...field} />
-                        </FormControl>
+                        <Select onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona hora" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {FRANGES_HORARIES.map((franja) => (
+                              <SelectItem key={franja.end} value={franja.end}>
+                                {franja.end}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -442,101 +436,100 @@ export default function Schedules() {
         </Dialog>
       </div>
 
-      {/* Day Filter */}
-      <div className="mb-6">
-        <div className="flex items-center space-x-4">
-          <Calendar className="w-5 h-5 text-text-secondary" />
-          <Select value={selectedDay.toString()} onValueChange={(value) => setSelectedDay(Number(value))}>
-            <SelectTrigger className="w-auto">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DIES_SETMANA.map((dia) => (
-                <SelectItem key={dia.value} value={dia.value.toString()}>
-                  {dia.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <span className="text-sm text-text-secondary">
-            {sortedSchedules.length} sessions programades
-          </span>
-        </div>
-      </div>
+      {/* Schedule Grid with Tabs for Days */}
+      <Tabs defaultValue="1" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          {DIES_SETMANA.map((dia) => (
+            <TabsTrigger key={dia.value} value={dia.value.toString()}>
+              {dia.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-      {/* Schedule Timeline */}
-      <div className="space-y-4">
-        {sortedSchedules.length === 0 ? (
-          <div className="text-center py-12">
-            <Clock className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No hi ha horaris programats
-            </h3>
-            <p className="text-gray-500 mb-4">
-              Per {getDayName(selectedDay).toLowerCase()} no s'han programat sessions encara.
-            </p>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              Programar Primera Sessió
-            </Button>
-          </div>
-        ) : (
-          sortedSchedules.map((schedule: Schedule) => (
-            <Card key={schedule.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <Badge className={getTimeSlotColor(schedule.horaInici)}>
-                      {schedule.horaInici} - {schedule.horaFi}
-                    </Badge>
-                    <div>
-                      <h3 className="font-medium text-text-primary">
-                        {schedule.assignatura || "Sessió de Classe"}
-                      </h3>
-                      <div className="flex items-center space-x-4 text-sm text-text-secondary mt-1">
-                        <span className="flex items-center space-x-1">
-                          <Users className="w-3 h-3" />
-                          <span>
-                            {schedule.professor ? 
-                              `${schedule.professor.nom} ${schedule.professor.cognoms}` : 
-                              'Professor no assignat'
-                            }
-                          </span>
-                        </span>
-                        <span className="flex items-center space-x-1">
-                          <BookOpen className="w-3 h-3" />
-                          <span>
-                            {schedule.grup ? 
-                              schedule.grup.nomGrup : 
-                              schedule.assignatura === 'G' ? 'Guàrdia' : 'Grup no assignat'
-                            }
-                          </span>
-                        </span>
-                        <span className="flex items-center space-x-1">
-                          <DoorOpen className="w-3 h-3" />
-                          <span>
-                            {schedule.aula ? 
-                              schedule.aula.nomAula : 
-                              schedule.assignatura === 'G' ? 'Pati/Vigilància' : 'Aula no assignada'
-                            }
-                          </span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button size="sm" variant="outline">
-                      Editar
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      Eliminar
-                    </Button>
-                  </div>
+        {DIES_SETMANA.map((dia) => (
+          <TabsContent key={dia.value} value={dia.value.toString()} className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Horari de {dia.label}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-gray-300">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="border border-gray-300 px-4 py-3 text-left font-medium">
+                          Franja Horària
+                        </th>
+                        <th className="border border-gray-300 px-4 py-3 text-left font-medium">
+                          Classes Programades
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {FRANGES_HORARIES.map((franja) => {
+                        const schedulesInSlot = getSchedulesForSlot(dia.value, franja);
+                        return (
+                          <tr key={`${dia.value}-${franja.start}`} className="hover:bg-gray-50">
+                            <td className={`border border-gray-300 px-4 py-3 font-medium ${franja.isPati ? 'bg-orange-50' : ''}`}>
+                              {franja.label}
+                            </td>
+                            <td className="border border-gray-300 px-4 py-3">
+                              {schedulesInSlot.length === 0 ? (
+                                <div className="flex items-center justify-between">
+                                  <span className="text-gray-500 italic">
+                                    {franja.isPati ? 'Pati / Esplai' : 'Sense classes programades'}
+                                  </span>
+                                  {!franja.isPati && (
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => setIsCreateDialogOpen(true)}
+                                      className="ml-2"
+                                    >
+                                      <Plus className="w-4 h-4 mr-1" />
+                                      Afegir
+                                    </Button>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  {schedulesInSlot.map((schedule, index) => (
+                                    <div 
+                                      key={schedule.id} 
+                                      className={`p-3 rounded-lg ${getConflictColor(index)}`}
+                                    >
+                                      <div className="font-medium text-sm">
+                                        {schedule.grup?.nomGrup || 'Grup no assignat'}
+                                      </div>
+                                      <div className="text-xs text-gray-600 mt-1 space-y-1">
+                                        <div><strong>Matèria:</strong> {schedule.assignatura || 'No especificada'}</div>
+                                        <div><strong>Aula:</strong> {schedule.aula?.nomAula || 'No assignada'}</div>
+                                        <div><strong>Professor:</strong> {schedule.professor ? `${schedule.professor.nom} ${schedule.professor.cognoms}` : 'No assignat'}</div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {schedulesInSlot.length > 1 && (
+                                    <div className="text-xs text-orange-600 font-medium">
+                                      ⚠️ Múltiples classes a la mateixa franja
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 }

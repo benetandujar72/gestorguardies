@@ -12,7 +12,7 @@ import AssignedGuards from "@/pages/assigned-guards";
 import Communications from "@/pages/communications";
 import AcademicYears from "@/pages/academic-years";
 import GuardCalendarResponsive from "@/pages/guard-calendar-responsive";
-import Schedules from "@/pages/schedules";
+import Schedules from "@/pages/schedules-new";
 import OutingsEnhanced from "@/pages/outings-enhanced";
 import Tasks from "@/pages/tasks";
 import Professors from "@/pages/professors";
