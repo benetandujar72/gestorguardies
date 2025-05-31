@@ -177,7 +177,7 @@ export default function SchedulesNew() {
 
   // Function to check if a schedule fits in a time slot
   const scheduleInTimeSlot = (schedule: Schedule, timeSlot: any) => {
-    // Normalize time format (handle both HH:mm and H:mm)
+    // Normalize time format (handle both HH:mm:ss and HH:mm)
     const normalizeTime = (time: string) => {
       if (!time) return '';
       const parts = time.split(':');
@@ -483,10 +483,19 @@ export default function SchedulesNew() {
                     <tbody>
                       {FRANGES_HORARIES.map((franja) => {
                         const schedulesInSlot = getSchedulesForSlot(dia.value, franja);
-                        // Debug: log schedules for first day to see what we're getting
-                        if (dia.value === 1 && franja.start === "08:00") {
+                        // Debug: log schedules to see what we're getting
+                        if (dia.value === 3 && franja.start === "08:00") {
                           console.log("Debug - All schedules:", schedules);
-                          console.log(`Debug - Day ${dia.value}, slot ${franja.start}-${franja.end}:`, schedulesInSlot);
+                          console.log("Debug - Active academic year:", activeAcademicYear);
+                          console.log(`Debug - Day ${dia.value} (Dimecres), slot ${franja.start}-${franja.end}:`, schedulesInSlot);
+                          console.log("Time comparison:", {
+                            schedule: schedules[0] ? {
+                              start: schedules[0].horaInici,
+                              end: schedules[0].horaFi,
+                              day: schedules[0].diaSetmana
+                            } : 'No schedules',
+                            slot: { start: franja.start, end: franja.end, day: dia.value }
+                          });
                         }
                         return (
                           <tr key={`${dia.value}-${franja.start}`} className="hover:bg-gray-50">
