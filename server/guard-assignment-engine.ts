@@ -289,10 +289,14 @@ export class GuardAssignmentEngine {
    */
   private async calculateGuardRatio(professor: any): Promise<{performed: number, available: number, ratio: number}> {
     try {
-      // Obtenir guardies disponibles (matèria "G" al horari setmanal)
+      // Obtenir el curs acadèmic actual
+      const activeYear = await storage.getActiveAcademicYear();
+      
+      // Obtenir guardies disponibles (matèria "G" al horari setmanal del curs actual)
       const horaris = await storage.getHoraris();
       const guardSubjectHours = horaris.filter(h => 
         h.professorId === professor.id && 
+        h.anyAcademicId === activeYear &&
         h.materia?.nom === "G"
       );
       const available = guardSubjectHours.length;

@@ -30,6 +30,7 @@ import {
   type InsertMateria,
   type Horari,
   type InsertHorari,
+  type HorariWithRelations,
   type Sortida,
   type InsertSortida,
   type Guardia,
@@ -104,7 +105,7 @@ export interface IStorage {
   deleteMateria(id: number): Promise<void>;
 
   // Horari operations
-  getHoraris(): Promise<Horari[]>;
+  getHoraris(): Promise<HorariWithRelations[]>;
   getHorarisByProfessor(professorId: number): Promise<Horari[]>;
   getHorarisByGrup(grupId: number): Promise<Horari[]>;
   createHorari(horari: InsertHorari): Promise<Horari>;
@@ -401,7 +402,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Horari operations
-  async getHoraris(): Promise<Horari[]> {
+  async getHoraris(): Promise<HorariWithRelations[]> {
+    const activeYear = await this.getActiveAcademicYear();
     return await db
       .select({
         id: horaris.id,
@@ -439,6 +441,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(grups, eq(horaris.grupId, grups.id))
       .leftJoin(aules, eq(horaris.aulaId, aules.id))
       .leftJoin(materies, eq(horaris.materiaId, materies.id))
+      .where(eq(horaris.anyAcademicId, activeYear))
       .orderBy(horaris.diaSetmana, horaris.horaInici);
   }
 

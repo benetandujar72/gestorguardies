@@ -492,3 +492,35 @@ export type AssignacioGuardiaWithProfessor = {
     fullName: string;
   };
 };
+
+export type HorariWithRelations = {
+  id: number;
+  professorId: number | null;
+  grupId: number | null;
+  aulaId: number | null;
+  materiaId: number | null;
+  diaSetmana: number;
+  horaInici: string;
+  horaFi: string;
+  assignatura: string | null;
+  createdAt: Date | null;
+  anyAcademicId: number;
+  professor?: {
+    id: number;
+    nom: string;
+    cognoms: string;
+  } | null;
+  grup?: {
+    id: number;
+    nomGrup: string;
+  } | null;
+  aula?: {
+    id: number;
+    nomAula: string;
+  } | null;
+  materia?: {
+    id: number;
+    nom: string;
+    codi: string;
+  } | null;
+};
