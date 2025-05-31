@@ -418,6 +418,7 @@ export class DatabaseStorage implements IStorage {
 
   // Sortida operations
   async getSortides(): Promise<SortidaWithRelations[]> {
+    const activeYear = await this.getActiveAcademicYear();
     const rawResults = await db.select({
       id: sortides.id,
       nomSortida: sortides.nomSortida,
@@ -434,6 +435,7 @@ export class DatabaseStorage implements IStorage {
     }).from(sortides)
       .leftJoin(grups, eq(sortides.grupId, grups.id))
       .leftJoin(professors, eq(sortides.responsableId, professors.id))
+      .where(eq(sortides.anyAcademicId, activeYear))
       .orderBy(desc(sortides.dataInici));
 
     return rawResults.map(result => ({
@@ -663,7 +665,10 @@ export class DatabaseStorage implements IStorage {
 
   // Tasca operations
   async getTasques(): Promise<Tasca[]> {
-    return await db.select().from(tasques).orderBy(desc(tasques.dataCreacio));
+    const activeYear = await this.getActiveAcademicYear();
+    return await db.select().from(tasques)
+      .where(eq(tasques.anyAcademicId, activeYear))
+      .orderBy(desc(tasques.dataCreacio));
   }
 
   async getTasquesByAssignacio(assignacioId: number): Promise<Tasca[]> {
@@ -694,7 +699,10 @@ export class DatabaseStorage implements IStorage {
 
   // Comunicacio operations
   async getComunicacions(): Promise<Comunicacio[]> {
-    return await db.select().from(comunicacions).orderBy(desc(comunicacions.dataEnviament));
+    const activeYear = await this.getActiveAcademicYear();
+    return await db.select().from(comunicacions)
+      .where(eq(comunicacions.anyAcademicId, activeYear))
+      .orderBy(desc(comunicacions.dataEnviament));
   }
 
   async getComunicacionsNoLlegides(userId: string): Promise<Comunicacio[]> {

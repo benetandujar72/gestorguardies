@@ -121,10 +121,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create metric
       await storage.createMetric({
+        anyAcademicId: professor.anyAcademicId,
         timestamp: new Date(),
         usuariId: (req as any).user.claims.sub,
         accio: 'crear_professor',
         detalls: { professorId: professor.id },
+        entityType: 'professor',
+        entityId: professor.id
       });
       
       res.json(professor);

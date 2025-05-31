@@ -344,6 +344,7 @@ Si us plau, confirmeu la vostra disponibilitat.`;
 
         // Crear comunicació per al professor assignat
         await storage.createComunicacio({
+          anyAcademicId: guardia.anyAcademicId,
           tipusDest: 'Professor',
           destinatariId: professor.id,
           missatge: missatge,
@@ -365,6 +366,7 @@ Si us plau, confirmeu la vostra disponibilitat.`;
 Detalls: ${assignments.map(a => `Professor ID ${a.professorId}`).join(', ')}`;
 
       await storage.createComunicacio({
+        anyAcademicId: guardia.anyAcademicId,
         tipusDest: 'Coordinador',
         destinatariId: 1, // Coordinador principal
         missatge: coordinadorMessage,
@@ -388,6 +390,7 @@ Detalls: ${assignments.map(a => `Professor ID ${a.professorId}`).join(', ')}`;
     try {
       for (const assignment of assignments) {
         await storage.createMetric({
+          anyAcademicId: guardia.anyAcademicId,
           timestamp: new Date(),
           usuariId: "sistema",
           accio: "guard_auto_assignment",
