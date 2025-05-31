@@ -2,6 +2,7 @@ import { db } from "./db";
 import { storage } from "./storage";
 import { eq, and, sql } from "drizzle-orm";
 import * as schema from "@shared/schema";
+import type { HorariWithRelations } from "@shared/schema";
 
 interface AssignmentPriority {
   professorId: number;
@@ -15,7 +16,7 @@ interface GuardAssignmentContext {
   professors: any[];
   sortides: any[];
   currentAssignments: any[];
-  horaris: any[];
+  horaris: HorariWithRelations[];
 }
 
 export class GuardAssignmentEngine {
