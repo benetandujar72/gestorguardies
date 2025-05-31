@@ -335,8 +335,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       await storage.deleteSortida(id);
       
-      // Create metric for deleted outing
+      // Create metric for deleted outing - use current academic year
+      const activeYear = await storage.getAnysAcademics().then(years => 
+        years.find(y => y.actiu)?.id || 1
+      );
       await storage.createMetric({
+        anyAcademicId: activeYear,
         timestamp: new Date(),
         usuariId: (req as any).user.claims.sub,
         accio: 'eliminar_sortida',
@@ -400,6 +404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create metric
       await storage.createMetric({
+        anyAcademicId: guardia.anyAcademicId,
         timestamp: new Date(),
         usuariId: (req as any).user.claims.sub,
         accio: 'crear_guardia',
@@ -441,6 +446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create metric
       await storage.createMetric({
+        anyAcademicId: assignacio.anyAcademicId,
         timestamp: new Date(),
         usuariId: (req as any).user.claims.sub,
         accio: 'assignar_guardia',
@@ -481,7 +487,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const assignacions = await engine.assignGuardAutomatically(guardiaId);
       
       // Log the assignment action
+      const activeYear = await storage.getAnysAcademics().then(years => 
+        years.find(y => y.actiu)?.id || 1
+      );
       await storage.createMetric({
+        anyAcademicId: activeYear,
         timestamp: new Date(),
         usuariId: (req.user as any)?.claims?.sub || 'sistema',
         accio: 'auto_assign_guard',
@@ -540,10 +550,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create metric
       await storage.createMetric({
+        anyAcademicId: tasca.anyAcademicId,
         timestamp: new Date(),
         usuariId: (req as any).user.claims.sub,
         accio: 'crear_tasca',
         detalls: { tascaId: tasca.id },
+        entityType: 'tasca',
+        entityId: tasca.id
       });
       
       res.json(tasca);
@@ -571,7 +584,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const attachments = [];
       for (const file of files) {
+        // Get active academic year for attachment
+        const activeYear = await storage.getAnysAcademics().then(years => 
+          years.find(y => y.actiu)?.id || 1
+        );
         const attachment = await storage.createAttachment({
+          anyAcademicId: activeYear,
           tascaId,
           nomFitxer: file.originalname,
           urlAlmacenament: `/uploads/${file.filename}`,
