@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Upload, FileText, CheckCircle, AlertCircle, Download, Info, FileDown, AlertTriangle, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +28,7 @@ export default function ImportCSV() {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<ImportResult | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Obtener años académicos
   const { data: academicYears } = useQuery({
@@ -59,10 +60,27 @@ export default function ImportCSV() {
     onSuccess: (data) => {
       setResult(data);
       setProgress(100);
+      
+      // Invalidar totes les caches rellevants per actualitzar les dades
+      queryClient.invalidateQueries({ queryKey: ['/api/materies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/professors'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/grups'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/alumnes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/aules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/horaris'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/guardies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sortides'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/anys-academics'] });
+      
       toast({
         title: "Importació completada",
         description: `S'han importat ${data.importedCount} de ${data.totalRows} registres.`,
       });
+      
+      // Auto-reset després de 3 segons per preparar per una nova importació
+      setTimeout(() => {
+        handleRefresh();
+      }, 3000);
     },
     onError: (error) => {
       toast({
@@ -315,6 +333,14 @@ export default function ImportCSV() {
     // Reset academic year to active one if exists
     if (activeAcademicYear) {
       setAcademicYearId(String(activeAcademicYear.id));
+    } else {
+      setAcademicYearId("");
+    }
+    
+    // Reset file input
+    const fileInput = document.getElementById('file') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
     }
     
     toast({
