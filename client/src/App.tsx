@@ -18,6 +18,8 @@ import Tasks from "@/pages/tasks";
 import Professors from "@/pages/professors";
 import Groups from "@/pages/groups";
 import Classrooms from "@/pages/classrooms";
+import Students from "@/pages/students";
+import Subjects from "@/pages/subjects";
 import Analytics from "@/pages/analytics";
 import SimpleChat from "@/pages/simple-chat";
 import ImportCSV from "@/pages/import-csv";
@@ -70,6 +72,8 @@ function Router() {
             <Route path="/professors" component={Professors} />
             <Route path="/grups" component={Groups} />
             <Route path="/aules" component={Classrooms} />
+            <Route path="/alumnes" component={Students} />
+            <Route path="/materies" component={Subjects} />
             <Route path="/analytics" component={Analytics} />
             <Route path="/chat-bot" component={SimpleChat} />
             <Route path="/import" component={ImportCSV} />

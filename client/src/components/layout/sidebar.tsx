@@ -88,6 +88,16 @@ const administrationItems = [
     label: "Aules",
     icon: DoorOpen,
   },
+  {
+    href: "/alumnes",
+    label: "Alumnes",
+    icon: Users,
+  },
+  {
+    href: "/materies",
+    label: "Matèries",
+    icon: School,
+  },
 ];
 
 const toolsItems = [
