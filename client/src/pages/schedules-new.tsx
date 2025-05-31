@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, Plus, Users, DoorOpen, BookOpen } from "lucide-react";
+import { Calendar, Clock, Plus, Users, DoorOpen, BookOpen, Edit, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -169,6 +169,16 @@ export default function SchedulesNew() {
   // Edit schedule handler
   const handleEditSchedule = (schedule: Schedule) => {
     setEditingSchedule(schedule);
+    // Pre-fill form with existing data
+    form.reset({
+      professorId: schedule.professorId,
+      grupId: schedule.grupId,
+      aulaId: schedule.aulaId,
+      diaSetmana: schedule.diaSetmana,
+      horaInici: schedule.horaInici.substring(0, 5), // Remove seconds if present
+      horaFi: schedule.horaFi.substring(0, 5),
+      assignatura: schedule.assignatura || '',
+    });
     setIsEditDialogOpen(true);
   };
 
@@ -506,7 +516,8 @@ export default function SchedulesNew() {
         </TabsList>
 
         {DIES_SETMANA.map((dia) => {
-          const groupedData = groupByLevel(groups || []);
+          const groupsArray = Array.isArray(groups) ? groups : [];
+          const groupedData = groupByLevel(groupsArray);
           const levelOrder = ['1rESO', '2nESO', '3rESO', '4tESO', '1rBATX', '2nBATX'];
           const sortedLevels = Object.keys(groupedData).sort((a, b) => {
             const aIndex = levelOrder.indexOf(a);
@@ -548,12 +559,12 @@ export default function SchedulesNew() {
                             <div className="space-y-4">
                               {sortedLevels.map(level => {
                                 const levelGroups = groupedData[level];
-                                const levelSchedules = levelGroups.map(group => {
+                                const levelSchedules = levelGroups.map((group: any) => {
                                   const groupSchedules = getSchedulesForSlot(dia.value, franja).filter(
-                                    s => s.grupId === group.id
+                                    (s: any) => s.grupId === group.id
                                   );
                                   return { group, schedules: groupSchedules };
-                                }).filter(item => item.schedules.length > 0);
+                                }).filter((item: any) => item.schedules.length > 0);
 
                                 if (levelSchedules.length === 0) return null;
 
@@ -561,8 +572,8 @@ export default function SchedulesNew() {
                                   <div key={level} className="border rounded-md p-3 bg-gray-50">
                                     <h4 className="font-medium text-sm text-gray-700 mb-2">{level}</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-                                      {levelSchedules.map(({ group, schedules }) => (
-                                        schedules.map((schedule, index) => (
+                                      {levelSchedules.map(({ group, schedules }: any, groupIndex: number) => (
+                                        schedules.map((schedule: any, index: number) => (
                                           <div 
                                             key={schedule.id}
                                             onClick={() => handleEditSchedule(schedule)}
@@ -616,6 +627,199 @@ export default function SchedulesNew() {
           );
         })}
       </Tabs>
+
+      {/* Edit Schedule Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Horari</DialogTitle>
+          </DialogHeader>
+          {editingSchedule && (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit((data) => {
+                if (editingSchedule) {
+                  updateScheduleMutation.mutate({ id: editingSchedule.id, ...data });
+                }
+              })}>
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="professorId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Professor</FormLabel>
+                        <Select 
+                          onValueChange={(value) => field.onChange(parseInt(value))}
+                          value={field.value?.toString()}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona un professor" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Array.isArray(professors) && professors.map((professor: any) => (
+                              <SelectItem key={professor.id} value={professor.id.toString()}>
+                                {professor.nom} {professor.cognoms}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="grupId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Grup</FormLabel>
+                        <Select 
+                          onValueChange={(value) => field.onChange(parseInt(value))}
+                          value={field.value?.toString()}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona un grup" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Array.isArray(groups) && groups.map((group: any) => (
+                              <SelectItem key={group.id} value={group.id.toString()}>
+                                {group.nomGrup}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="aulaId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Aula</FormLabel>
+                        <Select 
+                          onValueChange={(value) => field.onChange(parseInt(value))}
+                          value={field.value?.toString()}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona una aula" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Array.isArray(classrooms) && classrooms.map((classroom: any) => (
+                              <SelectItem key={classroom.id} value={classroom.id.toString()}>
+                                {classroom.nomAula}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="assignatura"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Assignatura</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Nom de l'assignatura" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="diaSetmana"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Dia</FormLabel>
+                          <Select 
+                            onValueChange={(value) => field.onChange(parseInt(value))}
+                            value={field.value?.toString()}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {DIES_SETMANA.map((dia) => (
+                                <SelectItem key={dia.value} value={dia.value.toString()}>
+                                  {dia.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="horaInici"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Hora Inici</FormLabel>
+                          <FormControl>
+                            <Input type="time" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="horaFi"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Hora Fi</FormLabel>
+                          <FormControl>
+                            <Input type="time" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsEditDialogOpen(false)}
+                  >
+                    Cancel·lar
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={updateScheduleMutation.isPending}
+                    className="bg-primary hover:bg-blue-800"
+                  >
+                    {updateScheduleMutation.isPending ? "Actualitzant..." : "Actualitzar"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
