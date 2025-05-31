@@ -171,9 +171,9 @@ export default function SchedulesNew() {
     setEditingSchedule(schedule);
     // Pre-fill form with existing data
     form.reset({
-      professorId: schedule.professorId,
-      grupId: schedule.grupId,
-      aulaId: schedule.aulaId,
+      professorId: schedule.professor?.id || 0,
+      grupId: schedule.grup?.id || 0,
+      aulaId: schedule.aula?.id || 0,
       diaSetmana: schedule.diaSetmana,
       horaInici: schedule.horaInici.substring(0, 5), // Remove seconds if present
       horaFi: schedule.horaFi.substring(0, 5),
@@ -341,7 +341,7 @@ export default function SchedulesNew() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {sortGroups(groups).map((group: any) => (
+                            {Array.isArray(groups) && groups.map((group: any) => (
                               <SelectItem key={group.id} value={group.id.toString()}>
                                 {group.nomGrup}
                               </SelectItem>
@@ -561,7 +561,7 @@ export default function SchedulesNew() {
                                 const levelGroups = groupedData[level];
                                 const levelSchedules = levelGroups.map((group: any) => {
                                   const groupSchedules = getSchedulesForSlot(dia.value, franja).filter(
-                                    (s: any) => s.grupId === group.id
+                                    (s: any) => s.grup?.id === group.id
                                   );
                                   return { group, schedules: groupSchedules };
                                 }).filter((item: any) => item.schedules.length > 0);
