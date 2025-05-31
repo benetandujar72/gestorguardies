@@ -117,10 +117,17 @@ export default function SchedulesNew() {
 
   // Filter schedules based on guard filter
   const filteredSchedules = showOnlyGuards 
-    ? schedules.filter((schedule: Schedule) => 
-        schedule.assignatura === "GUARDIA" || schedule.assignatura === "G"
-      )
+    ? schedules.filter((schedule: Schedule) => {
+        const isGuard = schedule.assignatura === "GUARDIA" || schedule.assignatura === "G";
+        return isGuard;
+      })
     : schedules;
+
+  // Debug information
+  console.log('Total schedules:', schedules.length);
+  console.log('Guard schedules found:', schedules.filter((s: Schedule) => s.assignatura === "G" || s.assignatura === "GUARDIA").length);
+  console.log('Show only guards:', showOnlyGuards);
+  console.log('Filtered schedules:', filteredSchedules.length);
 
 
 
