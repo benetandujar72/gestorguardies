@@ -1167,6 +1167,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
               await storage.createSortida(insertSortidaSchema.parse(recordWithAcademicYear));
               break;
+              
+            case 'guardies':
+              // Processar guardies com a horaris especials
+              // Validar camps requerits per guardies
+              if (!record.diaSemana || !record.horaInici || !record.horaFi || !record.professorId) {
+                console.log(`Skipping row ${i}: missing required fields for guardia (diaSemana, horaInici, horaFi, professorId)`);
+                errorCount++;
+                continue;
+              }
+              
+              // Convertir dia de la setmana a número si és text
+              let diaSetmana = record.diaSemana;
+              if (typeof diaSetmana === 'string') {
+                const diesSetmana = {
+                  'dilluns': 1, 'dimarts': 2, 'dimecres': 3, 'dijous': 4, 'divendres': 5,
+                  'lunes': 1, 'martes': 2, 'miércoles': 3, 'jueves': 4, 'viernes': 5
+                };
+                diaSetmana = diesSetmana[diaSetmana.toLowerCase()] || parseInt(diaSetmana);
+              }
+              
+              // Crear horari especial per la guardia
+              const guardiaHorari = {
+                ...recordWithAcademicYear,
+                diaSetmana: diaSetmana,
+                assignatura: record.assignatura || 'G', // Usar 'G' per defecte per guardies
+                aulaId: record.aulaId || null, // Aula opcional per guardies
+                grupId: null // Les guardies no tenen grup assignat
+              };
+              
+              console.log('Creating guardia as horari with data:', guardiaHorari);
+              await storage.createHorari(insertHorariSchema.parse(guardiaHorari));
+              break;
+              
+            case 'horaris':
+              // Validate required fields for horaris
+              if (!record.diaSemana || !record.horaInici || !record.horaFi || !record.professorId) {
+                console.log(`Skipping row ${i}: missing required fields for horari`);
+                errorCount++;
+                continue;
+              }
+              
+              // Convertir dia de la setmana a número si és text
+              let diaSetmanaHorari = record.diaSemana;
+              if (typeof diaSetmanaHorari === 'string') {
+                const diesSetmana = {
+                  'dilluns': 1, 'dimarts': 2, 'dimecres': 3, 'dijous': 4, 'divendres': 5,
+                  'lunes': 1, 'martes': 2, 'miércoles': 3, 'jueves': 4, 'viernes': 5
+                };
+                diaSetmanaHorari = diesSetmana[diaSetmanaHorari.toLowerCase()] || parseInt(diaSetmanaHorari);
+              }
+              
+              const horariData = {
+                ...recordWithAcademicYear,
+                diaSetmana: diaSetmanaHorari
+              };
+              
+              console.log('Creating horari with data:', horariData);
+              await storage.createHorari(insertHorariSchema.parse(horariData));
+              break;
           }
           importedCount++;
         } catch (parseError) {
@@ -1249,7 +1308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           filename = 'plantilla_horaris.csv';
           break;
         case 'guardies':
-          csvContent = 'data,horaInici,horaFi,tipusGuardia,lloc,estat,observacions\n2025-06-15,10:30,11:30,Pati,Pati principal,pendent,Vigilància general\n2025-06-15,12:00,13:00,Biblioteca,Biblioteca,pendent,Suport acadèmic';
+          csvContent = 'diaSemana,horaInici,horaFi,assignatura,professorId,aulaId,observacions\nDilluns,10:00,11:00,G,5,,Guardia de pati\nDimarts,09:00,10:00,G,3,,Guardia biblioteca\nDimecres,10:00,11:00,G,8,,Guardia passadís\nDijous,09:00,10:00,G,9,,Guardia entrada\nDivendres,10:00,11:00,G,10,,Guardia pati';
           filename = 'plantilla_guardies.csv';
           break;
         default:
@@ -1327,9 +1386,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           break;
         
         case 'guardies':
-          data = await storage.getGuardies();
+          // Exportar guardies com a horaris amb assignatura 'G'
+          const allHoraris = await storage.getHoraris();
+          data = allHoraris.filter(horari => horari.assignatura === 'G' || horari.assignatura === 'GUARDIA');
           filename = 'guardies.csv';
-          headers = ['ID', 'Data', 'Hora Inici', 'Hora Fi', 'Lloc', 'Tipus Guardia', 'Estat'];
+          headers = ['ID', 'Professor ID', 'Aula ID', 'Dia Setmana', 'Hora Inici', 'Hora Fi', 'Assignatura', 'Observacions'];
           break;
         
         default:
@@ -1424,14 +1485,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
           
           case 'guardies':
+            // Convertir dia de setmana de número a text
+            const diesSetmana = ['', 'Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres'];
+            const diaText = diesSetmana[item.diaSetmana] || item.diaSetmana;
+            
             row.push(
               String(item.id || ''),
-              item.data || '',
+              String(item.professorId || ''),
+              String(item.aulaId || ''),
+              `"${diaText}"`,
               item.horaInici || '',
               item.horaFi || '',
-              `"${item.lloc || ''}"`,
-              `"${item.tipusGuardia || ''}"`,
-              `"${item.estat || ''}"`,
+              `"${item.assignatura || ''}"`,
+              `"${item.observacions || ''}"`,
             );
             break;
         }
