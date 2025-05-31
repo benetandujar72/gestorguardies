@@ -335,6 +335,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/horaris/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const horariData = insertHorariSchema.partial().parse(req.body);
+      const horari = await storage.updateHorari(id, horariData);
+      res.json(horari);
+    } catch (error: any) {
+      console.error('Error updating horari:', error);
+      res.status(400).json({ message: "Failed to update schedule" });
+    }
+  });
+
+  app.delete('/api/horaris/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteHorari(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(400).json({ message: "Failed to delete schedule" });
+    }
+  });
+
   // Sortida routes
   app.get('/api/sortides', isAuthenticated, async (req, res) => {
     try {
