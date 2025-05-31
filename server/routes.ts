@@ -291,6 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create metric for new outing
       await storage.createMetric({
+        anyAcademicId: sortida.anyAcademicId,
         timestamp: new Date(),
         usuariId: (req as any).user.claims.sub,
         accio: 'crear_sortida',
@@ -313,6 +314,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create metric for updated outing
       await storage.createMetric({
+        anyAcademicId: sortida.anyAcademicId,
         timestamp: new Date(),
         usuariId: (req as any).user.claims.sub,
         accio: 'actualitzar_sortida',
