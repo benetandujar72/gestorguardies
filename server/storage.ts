@@ -403,7 +403,9 @@ export class DatabaseStorage implements IStorage {
 
   // Horari operations
   async getHoraris(): Promise<HorariWithRelations[]> {
-    const activeYear = await this.getActiveAcademicYear();
+    // TEMPORARY: Show all schedules regardless of academic year for testing
+    // TODO: Restore filtering by active academic year after data migration
+    // const activeYear = await this.getActiveAcademicYear();
     return await db
       .select({
         id: horaris.id,
@@ -441,7 +443,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(grups, eq(horaris.grupId, grups.id))
       .leftJoin(aules, eq(horaris.aulaId, aules.id))
       .leftJoin(materies, eq(horaris.materiaId, materies.id))
-      .where(eq(horaris.anyAcademicId, activeYear))
+      // .where(eq(horaris.anyAcademicId, activeYear)) // Temporarily disabled
       .orderBy(horaris.diaSetmana, horaris.horaInici);
   }
 
