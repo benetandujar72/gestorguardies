@@ -91,12 +91,27 @@ export const aules = pgTable("aules", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Taula de matèries/assignatures
+export const materies = pgTable("materies", {
+  id: serial("materia_id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
+  nom: varchar("nom").notNull(),
+  codi: varchar("codi").notNull(),
+  departament: varchar("departament"),
+  horesSetmanals: integer("hores_setmanals").default(0),
+  tipus: varchar("tipus").default("obligatoria"), // "obligatoria", "optativa", "extraescolar"
+  curs: varchar("curs"), // "1r ESO", "2n BAT", etc.
+  descripcio: text("descripcio"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const horaris = pgTable("horaris", {
   id: serial("horari_id").primaryKey(),
   anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   professorId: integer("professor_id").references(() => professors.id),
   grupId: integer("grup_id").references(() => grups.id),
   aulaId: integer("aula_id").references(() => aules.id),
+  materiaId: integer("materia_id").references(() => materies.id),
   diaSetmana: smallint("dia_setmana").notNull(), // 1-7 (Monday-Sunday)
   horaInici: time("hora_inici").notNull(),
   horaFi: time("hora_fi").notNull(),
@@ -388,6 +403,11 @@ export const insertAttachmentSchema = createInsertSchema(attachments).omit({
   pujatEl: true,
 });
 
+export const insertMateriaSchema = createInsertSchema(materies).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Type exports
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -413,6 +433,8 @@ export type Comunicacio = typeof comunicacions.$inferSelect;
 export type InsertComunicacio = z.infer<typeof insertComunicacioSchema>;
 export type Attachment = typeof attachments.$inferSelect;
 export type InsertAttachment = z.infer<typeof insertAttachmentSchema>;
+export type Materia = typeof materies.$inferSelect;
+export type InsertMateria = z.infer<typeof insertMateriaSchema>;
 export type Metric = typeof metrics.$inferSelect;
 export type Prediction = typeof predictions.$inferSelect;
 export type ChatSession = typeof chatSessions.$inferSelect;

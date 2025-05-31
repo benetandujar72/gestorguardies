@@ -645,11 +645,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get active academic year
       const activeAcademicYear = await storage.getActiveAcademicYear();
       
+      // Get professor ID for current user
+      const currentProfessor = await storage.getProfessorByUserId((req as any).user.claims.sub);
+      
       // Add required fields
       const comunicacioData = {
         ...req.body,
         anyAcademicId: activeAcademicYear,
-        emissorId: parseInt((req as any).user.claims.sub),
+        emissorId: currentProfessor?.id || null,
         destinatariId: parseInt(req.body.destinatariId)
       };
       

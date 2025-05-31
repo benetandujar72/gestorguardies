@@ -93,6 +93,13 @@ export interface IStorage {
   updateAula(id: number, aula: Partial<InsertAula>): Promise<Aula>;
   deleteAula(id: number): Promise<void>;
 
+  // Materia operations
+  getMateries(): Promise<Materia[]>;
+  getMateria(id: number): Promise<Materia | undefined>;
+  createMateria(materia: InsertMateria): Promise<Materia>;
+  updateMateria(id: number, materia: Partial<InsertMateria>): Promise<Materia>;
+  deleteMateria(id: number): Promise<void>;
+
   // Horari operations
   getHoraris(): Promise<Horari[]>;
   getHorarisByProfessor(professorId: number): Promise<Horari[]>;
@@ -355,6 +362,39 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAula(id: number): Promise<void> {
     await db.delete(aules).where(eq(aules.id, id));
+  }
+
+  // Materia operations
+  async getMateries(): Promise<Materia[]> {
+    const activeAcademicYear = await this.getActiveAcademicYear();
+    return await db.select().from(materies).where(eq(materies.anyAcademicId, activeAcademicYear));
+  }
+
+  async getMateria(id: number): Promise<Materia | undefined> {
+    const [materia] = await db.select().from(materies).where(eq(materies.id, id));
+    return materia;
+  }
+
+  async createMateria(materia: InsertMateria): Promise<Materia> {
+    const activeAcademicYear = await this.getActiveAcademicYear();
+    const [newMateria] = await db.insert(materies).values({
+      ...materia,
+      anyAcademicId: activeAcademicYear
+    }).returning();
+    return newMateria;
+  }
+
+  async updateMateria(id: number, materia: Partial<InsertMateria>): Promise<Materia> {
+    const [updatedMateria] = await db
+      .update(materies)
+      .set(materia)
+      .where(eq(materies.id, id))
+      .returning();
+    return updatedMateria;
+  }
+
+  async deleteMateria(id: number): Promise<void> {
+    await db.delete(materies).where(eq(materies.id, id));
   }
 
   // Horari operations
