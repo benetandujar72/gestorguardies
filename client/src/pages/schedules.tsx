@@ -90,6 +90,13 @@ export default function Schedules() {
     enabled: isCreateDialogOpen,
   });
 
+  // Fetch active academic year
+  const { data: academicYears = [] } = useQuery({
+    queryKey: ['/api/anys-academics'],
+  });
+
+  const activeAcademicYear = academicYears.find((year: any) => year.estat === 'actiu');
+
   // Filter schedules by selected day
   const filteredSchedules = schedules.filter((schedule: Schedule) => 
     schedule.diaSetmana === selectedDay
@@ -134,10 +141,19 @@ export default function Schedules() {
   });
 
   const onSubmit = (data: ScheduleFormData) => {
-    // Add anyAcademicId automatically (using current academic year ID 1 for 2024-25)
+    if (!activeAcademicYear) {
+      toast({
+        title: "Error",
+        description: "No hi ha cap any acadèmic actiu.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Add anyAcademicId automatically using the active academic year
     const horariData = {
       ...data,
-      anyAcademicId: 1
+      anyAcademicId: activeAcademicYear.id
     };
     createScheduleMutation.mutate(horariData);
   };

@@ -1,0 +1,66 @@
+Warning: Encountered two children with the same key, &#x60;ÀMBIT OPTATIU ROBÒTICA&#x60;. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at select
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=60c08ed1:79:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=60c08ed1:56:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=60c08ed1:42:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UPVX7IVH.js?v=60c08ed1:37:20
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=60c08ed1:1131:13
+    at Provider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=60c08ed1:38:15)
+    at Provider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=60c08ed1:38:15)
+    at Popper (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-4XNOAIBL.js?v=60c08ed1:1921:11)
+    at Select (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=60c08ed1:88:5)
+    at div
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/src/components/ui/form.tsx:72:6
+    at Controller (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-4BFJKWC4.js?v=60c08ed1:298:35)
+    at FormField (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/src/components/ui/form.tsx:33:6)
+    at form
+    at FormProvider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-4BFJKWC4.js?v=60c08ed1:102:11)
+    at div
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=60c08ed1:42:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AFLIZ4FI.js?v=60c08ed1:61:7
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=60c08ed1:79:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=60c08ed1:56:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=60c08ed1:42:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-HG7P5XMB.js?v=60c08ed1:29:5
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-V4SDQJCY.js?v=60c08ed1:235:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-V4SDQJCY.js?v=60c08ed1:158:58
+    at Presence (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LUE5KDWX.js?v=60c08ed1:24:11)
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-V4SDQJCY.js?v=60c08ed1:149:64
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=60c08ed1:79:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=60c08ed1:56:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=60c08ed1:42:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AFLIZ4FI.js?v=60c08ed1:260:22
+    at…
+Warning: Encountered two children with the same key, &#x60;ÀMBIT RELIGIÓ&#x60;. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at select
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=60c08ed1:79:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=60c08ed1:56:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=60c08ed1:42:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UPVX7IVH.js?v=60c08ed1:37:20
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=60c08ed1:1131:13
+    at Provider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=60c08ed1:38:15)
+    at Provider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=60c08ed1:38:15)
+    at Popper (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-4XNOAIBL.js?v=60c08ed1:1921:11)
+    at Select (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=60c08ed1:88:5)
+    at div
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/src/components/ui/form.tsx:72:6
+    at Controller (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-4BFJKWC4.js?v=60c08ed1:298:35)
+    at FormField (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/src/components/ui/form.tsx:33:6)
+    at form
+    at FormProvider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-4BFJKWC4.js?v=60c08ed1:102:11)
+    at div
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=60c08ed1:42:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AFLIZ4FI.js?v=60c08ed1:61:7
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=60c08ed1:79:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=60c08ed1:56:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=60c08ed1:42:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-HG7P5XMB.js?v=60c08ed1:29:5
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-V4SDQJCY.js?v=60c08ed1:235:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-V4SDQJCY.js?v=60c08ed1:158:58
+    at Presence (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LUE5KDWX.js?v=60c08ed1:24:11)
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-V4SDQJCY.js?v=60c08ed1:149:64
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=60c08ed1:79:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=60c08ed1:56:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=60c08ed1:42:13
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AFLIZ4FI.js?v=60c08ed1:260:22
+    at Presence…
