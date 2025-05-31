@@ -585,18 +585,6 @@ export default function SchedulesNew() {
         </TabsList>
 
         {DIES_SETMANA.map((dia) => {
-          const groupsArray = Array.isArray(groups) ? groups : [];
-          const groupedData = groupByLevel(groupsArray);
-          const levelOrder = ['1rESO', '2nESO', '3rESO', '4tESO', '1rBATX', '2nBATX'];
-          const sortedLevels = Object.keys(groupedData).sort((a, b) => {
-            const aIndex = levelOrder.indexOf(a);
-            const bIndex = levelOrder.indexOf(b);
-            if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
-            if (aIndex === -1) return 1;
-            if (bIndex === -1) return -1;
-            return aIndex - bIndex;
-          });
-
           return (
             <TabsContent key={dia.value} value={dia.value.toString()} className="mt-6">
               <Card>
@@ -614,81 +602,69 @@ export default function SchedulesNew() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
-                    {FRANGES_HORARIES.map((franja) => (
-                      <div key={`${dia.value}-${franja.start}`} className="border rounded-lg overflow-hidden">
-                        <div className={`px-4 py-2 font-medium text-sm ${franja.isPati ? 'bg-orange-100 text-orange-800' : 'bg-gray-100'}`}>
-                          {franja.label}
-                        </div>
-                        <div className="p-4">
-                          {sortedLevels.length === 0 ? (
-                            <div className="text-center text-gray-500 py-8">
-                              No hi ha grups definits
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              {sortedLevels.map(level => {
-                                const levelGroups = groupedData[level];
-                                const levelSchedules = levelGroups.map((group: any) => {
-                                  const groupSchedules = getSchedulesForSlot(dia.value, franja).filter(
-                                    (s: any) => s.grup?.id === group.id
-                                  );
-                                  return { group, schedules: groupSchedules };
-                                }).filter((item: any) => item.schedules.length > 0);
-
-                                if (levelSchedules.length === 0) return null;
-
-                                return (
-                                  <div key={level} className="border rounded-md p-3 bg-gray-50">
-                                    <h4 className="font-medium text-sm text-gray-700 mb-2">{level}</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-                                      {levelSchedules.map(({ group, schedules }: any, groupIndex: number) => (
-                                        schedules.map((schedule: any, index: number) => (
-                                          <div 
-                                            key={schedule.id}
-                                            onClick={() => handleEditSchedule(schedule)}
-                                            className="bg-white border rounded p-2 cursor-pointer hover:shadow-md transition-shadow text-xs"
-                                          >
-                                            <div className="font-medium text-blue-700">
-                                              {schedule.grup?.nomGrup}
-                                            </div>
-                                            <div className="text-gray-600 mt-1">
-                                              <div className="font-medium">{schedule.assignatura || 'Matèria no especificada'}</div>
-                                              <div>{schedule.aula?.nomAula || 'Aula no assignada'}</div>
-                                              <div className="text-gray-500">
-                                                {schedule.professor ? `${schedule.professor.nom} ${schedule.professor.cognoms}` : 'Professor no assignat'}
-                                              </div>
-                                            </div>
-                                          </div>
-                                        ))
-                                      ))}
+                    {FRANGES_HORARIES.map((franja) => {
+                      const schedulesInSlot = getSchedulesForSlot(dia.value, franja);
+                      
+                      return (
+                        <div key={`${dia.value}-${franja.start}`} className="border rounded-lg overflow-hidden">
+                          <div className={`px-4 py-2 font-medium text-sm ${franja.isPati ? 'bg-orange-100 text-orange-800' : 'bg-gray-100'}`}>
+                            {franja.label}
+                          </div>
+                          <div className="p-4">
+                            {schedulesInSlot.length === 0 ? (
+                              franja.isPati ? (
+                                <div className="text-center text-orange-600 text-sm">
+                                  Hora del pati - No es programen classes
+                                </div>
+                              ) : (
+                                <div className="text-center text-gray-500 py-4">
+                                  <span className="text-gray-400">Sense classes programades</span>
+                                  <br />
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => setIsCreateDialogOpen(true)}
+                                    className="mt-2"
+                                  >
+                                    <Plus className="w-4 h-4 mr-1" />
+                                    Afegir classe
+                                  </Button>
+                                </div>
+                              )
+                            ) : (
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                                {schedulesInSlot.map((schedule: any) => (
+                                  <div 
+                                    key={schedule.id}
+                                    onClick={() => handleEditSchedule(schedule)}
+                                    className="bg-white border rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow"
+                                  >
+                                    <div className="font-medium text-blue-700 text-sm mb-2">
+                                      {schedule.grup?.nomGrup || 'Grup no assignat'}
+                                    </div>
+                                    <div className="text-gray-600 text-xs space-y-1">
+                                      <div className="font-medium">{schedule.assignatura || 'Matèria no especificada'}</div>
+                                      <div className="flex items-center gap-1">
+                                        <DoorOpen className="w-3 h-3" />
+                                        {schedule.aula?.nomAula || 'Aula no assignada'}
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <Users className="w-3 h-3" />
+                                        {schedule.professor ? `${schedule.professor.nom} ${schedule.professor.cognoms}` : 'Professor no assignat'}
+                                      </div>
+                                      <div className="flex items-center gap-1 text-gray-400">
+                                        <Clock className="w-3 h-3" />
+                                        {schedule.horaInici?.substring(0, 5)} - {schedule.horaFi?.substring(0, 5)}
+                                      </div>
                                     </div>
                                   </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                          
-                          {franja.isPati ? (
-                            <div className="text-center text-orange-600 text-sm mt-2">
-                              Hora del pati - No es programen classes
-                            </div>
-                          ) : (
-                            getSchedulesForSlot(dia.value, franja).length === 0 && (
-                              <div className="text-center text-gray-500 py-4">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => setIsCreateDialogOpen(true)}
-                                >
-                                  <Plus className="w-4 h-4 mr-1" />
-                                  Afegir classe a aquesta franja
-                                </Button>
+                                ))}
                               </div>
-                            )
-                          )}
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
