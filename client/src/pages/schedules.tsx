@@ -134,7 +134,12 @@ export default function Schedules() {
   });
 
   const onSubmit = (data: ScheduleFormData) => {
-    createScheduleMutation.mutate(data);
+    // Add anyAcademicId automatically (using current academic year ID 1 for 2024-25)
+    const horariData = {
+      ...data,
+      anyAcademicId: 1
+    };
+    createScheduleMutation.mutate(horariData);
   };
 
   const getDayName = (day: number) => {
@@ -331,7 +336,7 @@ export default function Schedules() {
                         </FormControl>
                         <SelectContent>
                           {subjects.map((subject: any) => (
-                            <SelectItem key={subject.id} value={subject.nom}>
+                            <SelectItem key={`${subject.id}-${subject.nom}`} value={subject.nom}>
                               {subject.nom} - {subject.codi}
                             </SelectItem>
                           ))}
