@@ -173,6 +173,15 @@ export default function SchedulesNew() {
     },
   });
 
+  const editForm = useForm<ScheduleFormData>({
+    resolver: zodResolver(scheduleSchema),
+    defaultValues: {
+      diaSetmana: 1,
+      horaInici: "08:00",
+      horaFi: "09:00",
+    },
+  });
+
   // Function to create multiple schedules from a long class
   const createMultipleSchedules = (data: ScheduleFormData, academicYearId: number) => {
     const startTime = new Date(`2000-01-01T${data.horaInici}:00`);
@@ -233,8 +242,8 @@ export default function SchedulesNew() {
   // Edit schedule handler
   const handleEditSchedule = (schedule: Schedule) => {
     setEditingSchedule(schedule);
-    // Pre-fill form with existing data
-    form.reset({
+    // Pre-fill edit form with existing data
+    editForm.reset({
       professorId: schedule.professor?.id || 0,
       grupId: schedule.grup?.id || 0,
       aulaId: schedule.aula?.id || 0,
@@ -680,15 +689,15 @@ export default function SchedulesNew() {
             <DialogTitle>Editar Horari</DialogTitle>
           </DialogHeader>
           {editingSchedule && (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit((data) => {
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit((data) => {
                 if (editingSchedule) {
                   updateScheduleMutation.mutate({ id: editingSchedule.id, ...data });
                 }
               })}>
                 <div className="space-y-4">
                   <FormField
-                    control={form.control}
+                    control={editForm.control}
                     name="professorId"
                     render={({ field }) => (
                       <FormItem>
