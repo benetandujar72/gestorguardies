@@ -867,8 +867,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const lines = csvData.split('\n').filter(line => line.trim().length > 0); // Filter empty lines
       const headers = lines[0].split(',').map(h => h.trim());
       
+      // Map common header variations to standard field names
+      const headerMapping: { [key: string]: string } = {
+        'cognom': 'cognoms',
+        'cognoms': 'cognoms',
+        'grupI': 'grupId',
+        'grupId': 'grupId',
+        'nom': 'nom',
+        'email': 'email',
+        'telefon': 'telefon',
+        'professorId': 'professorId',
+        'aulaId': 'aulaId',
+        'responsableId': 'responsableId'
+      };
+      
       let importedCount = 0;
       let errorCount = 0;
+      
+      console.log('CSV Headers found:', headers);
+      console.log('Processing', lines.length - 1, 'rows for entity type:', entityType);
       
       for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split(',');
@@ -883,14 +900,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         headers.forEach((header, index) => {
           let value = values[index] ? values[index].trim() : '';
           
+          // Map header to standard field name
+          const standardFieldName = headerMapping[header] || header;
+          
           // Convert numeric fields
-          if ((header === 'grupId' || header === 'professorId' || header === 'aulaId' || header === 'responsableId') && value) {
+          if ((standardFieldName === 'grupId' || standardFieldName === 'professorId' || standardFieldName === 'aulaId' || standardFieldName === 'responsableId') && value) {
             value = parseInt(value) as any;
           }
           
           // Only set non-empty values to avoid undefined issues
           if (value !== '') {
-            record[header] = value;
+            record[standardFieldName] = value;
           }
         });
           
