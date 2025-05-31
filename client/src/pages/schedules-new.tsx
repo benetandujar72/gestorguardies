@@ -177,7 +177,19 @@ export default function SchedulesNew() {
 
   // Function to check if a schedule fits in a time slot
   const scheduleInTimeSlot = (schedule: Schedule, timeSlot: any) => {
-    return schedule.horaInici === timeSlot.start && schedule.horaFi === timeSlot.end;
+    // Normalize time format (handle both HH:mm and H:mm)
+    const normalizeTime = (time: string) => {
+      if (!time) return '';
+      const parts = time.split(':');
+      return `${parts[0].padStart(2, '0')}:${parts[1]}`;
+    };
+    
+    const scheduleStart = normalizeTime(schedule.horaInici);
+    const scheduleEnd = normalizeTime(schedule.horaFi);
+    const slotStart = normalizeTime(timeSlot.start);
+    const slotEnd = normalizeTime(timeSlot.end);
+    
+    return scheduleStart === slotStart && scheduleEnd === slotEnd;
   };
 
   // Function to get schedules for a specific day and time slot
@@ -471,6 +483,11 @@ export default function SchedulesNew() {
                     <tbody>
                       {FRANGES_HORARIES.map((franja) => {
                         const schedulesInSlot = getSchedulesForSlot(dia.value, franja);
+                        // Debug: log schedules for first day to see what we're getting
+                        if (dia.value === 1 && franja.start === "08:00") {
+                          console.log("Debug - All schedules:", schedules);
+                          console.log(`Debug - Day ${dia.value}, slot ${franja.start}-${franja.end}:`, schedulesInSlot);
+                        }
                         return (
                           <tr key={`${dia.value}-${franja.start}`} className="hover:bg-gray-50">
                             <td className={`border border-gray-300 px-4 py-3 font-medium ${franja.isPati ? 'bg-orange-50' : ''}`}>
