@@ -241,17 +241,22 @@ export default function SchedulesNew() {
 
   // Edit schedule handler
   const handleEditSchedule = (schedule: Schedule) => {
+    console.log('Editing schedule:', schedule);
     setEditingSchedule(schedule);
+    
     // Pre-fill edit form with existing data
-    editForm.reset({
+    const formData = {
       professorId: schedule.professor?.id || 0,
       grupId: schedule.grup?.id || 0,
       aulaId: schedule.aula?.id || 0,
       diaSetmana: schedule.diaSetmana,
-      horaInici: schedule.horaInici.substring(0, 5), // Remove seconds if present
-      horaFi: schedule.horaFi.substring(0, 5),
+      horaInici: schedule.horaInici?.substring(0, 5) || '', // Remove seconds if present
+      horaFi: schedule.horaFi?.substring(0, 5) || '',
       assignatura: schedule.assignatura || '',
-    });
+    };
+    
+    console.log('Form data for edit:', formData);
+    editForm.reset(formData);
     setIsEditDialogOpen(true);
   };
 
