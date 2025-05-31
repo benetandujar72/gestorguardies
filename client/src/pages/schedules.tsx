@@ -53,8 +53,6 @@ const DIES_SETMANA = [
   { value: 3, label: "Dimecres" },
   { value: 4, label: "Dijous" },
   { value: 5, label: "Divendres" },
-  { value: 6, label: "Dissabte" },
-  { value: 7, label: "Diumenge" },
 ];
 
 export default function Schedules() {
@@ -83,6 +81,12 @@ export default function Schedules() {
   // Fetch classrooms for selection
   const { data: classrooms = [] } = useQuery({
     queryKey: ['/api/aules'],
+    enabled: isCreateDialogOpen,
+  });
+
+  // Fetch subjects for selection
+  const { data: subjects = [] } = useQuery({
+    queryKey: ['/api/materies'],
     enabled: isCreateDialogOpen,
   });
 
@@ -318,10 +322,21 @@ export default function Schedules() {
                   name="assignatura"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assignatura (opcional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nom de l'assignatura..." {...field} />
-                      </FormControl>
+                      <FormLabel>Matèria (opcional)</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona una matèria" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {subjects.map((subject: any) => (
+                            <SelectItem key={subject.id} value={subject.nom}>
+                              {subject.nom} - {subject.codi}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -362,6 +362,8 @@ export const insertAulaSchema = createInsertSchema(aules).omit({
 export const insertHorariSchema = createInsertSchema(horaris).omit({
   id: true,
   createdAt: true,
+}).extend({
+  diaSetmana: z.number().min(1).max(5, "Només es permeten dies laborables (dilluns a divendres)"),
 });
 
 export const insertSortidaSchema = createInsertSchema(sortides).omit({
