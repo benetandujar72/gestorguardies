@@ -1019,7 +1019,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const standardFieldName = headerMapping[header] || header;
           
           // Convert numeric fields
-          if ((standardFieldName === 'grupId' || standardFieldName === 'professorId' || standardFieldName === 'aulaId' || standardFieldName === 'responsableId') && value) {
+          if ((standardFieldName === 'grupId' || standardFieldName === 'professorId' || standardFieldName === 'aulaId' || standardFieldName === 'responsableId' || standardFieldName === 'horesSetmanals') && value) {
             value = parseInt(value) as any;
           }
           
@@ -1100,18 +1100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 continue;
               }
               
-              // Convert horesSetmanals to number if present
-              if (record.horesSetmanals) {
-                record.horesSetmanals = parseInt(record.horesSetmanals) || 0;
-              }
-              
-              // Create record with academic year and converted values
-              const materiaRecord = {
-                ...recordWithAcademicYear,
-                horesSetmanals: record.horesSetmanals ? parseInt(record.horesSetmanals) || 0 : 0
-              };
-              
-              await storage.createMateria(insertMateriaSchema.parse(materiaRecord));
+              await storage.createMateria(insertMateriaSchema.parse(recordWithAcademicYear));
               break;
 
             case 'sortides':
