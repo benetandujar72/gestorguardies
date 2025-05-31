@@ -16,7 +16,8 @@ import {
   insertAssignacioGuardiaSchema,
   insertTascaSchema,
   insertComunicacioSchema,
-  insertAttachmentSchema
+  insertAttachmentSchema,
+  insertMateriaSchema
 } from "@shared/schema";
 import { GuardAssignmentEngine } from "./guard-assignment-engine";
 import { analyzeGuardAssignments, generateChatResponse } from "./openai";
@@ -238,6 +239,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(aula);
     } catch (error: any) {
       res.status(400).json({ message: "Invalid classroom data" });
+    }
+  });
+
+  // Materia routes
+  app.get('/api/materies', isAuthenticated, async (req, res) => {
+    try {
+      const materies = await storage.getMateries();
+      res.json(materies);
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch subjects" });
+    }
+  });
+
+  app.post('/api/materies', isAuthenticated, async (req, res) => {
+    try {
+      const materiaData = insertMateriaSchema.parse(req.body);
+      const materia = await storage.createMateria(materiaData);
+      res.json(materia);
+    } catch (error: any) {
+      res.status(400).json({ message: "Invalid subject data" });
+    }
+  });
+
+  app.put('/api/materies/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const materiaData = insertMateriaSchema.partial().parse(req.body);
+      const materia = await storage.updateMateria(id, materiaData);
+      res.json(materia);
+    } catch (error: any) {
+      res.status(400).json({ message: "Invalid subject data" });
+    }
+  });
+
+  app.delete('/api/materies/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteMateria(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to delete subject" });
     }
   });
 
@@ -1050,6 +1092,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
               await storage.createAula(insertAulaSchema.parse(recordWithAcademicYear));
               break;
               
+            case 'materies':
+              // Validate required fields for materies
+              if (!record.nom || !record.codi) {
+                console.log(`Skipping row ${i}: missing required fields (nom or codi)`);
+                errorCount++;
+                continue;
+              }
+              
+              // Convert hores_setmanals to number if present
+              if (record.horesSetmanals) {
+                record.horesSetmanals = parseInt(record.horesSetmanals);
+              }
+              
+              await storage.createMateria(insertMateriaSchema.parse(recordWithAcademicYear));
+              break;
+
             case 'sortides':
               // Validate required fields for sortides
               if (!record.nomSortida || !record.dataInici) {
