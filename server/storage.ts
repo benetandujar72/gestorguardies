@@ -60,6 +60,7 @@ export interface IStorage {
   createAnyAcademic(anyAcademic: any): Promise<any>;
   updateAnyAcademic(id: number, anyAcademic: any): Promise<any>;
   deleteAnyAcademic(id: number): Promise<void>;
+  getActiveAcademicYear(): Promise<number>;
 
   // Professor operations
   getProfessors(): Promise<Professor[]>;
@@ -161,7 +162,7 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   // Helper method to get active academic year
-  private async getActiveAcademicYear(): Promise<number> {
+  async getActiveAcademicYear(): Promise<number> {
     const [activeYear] = await db
       .select({ id: anysAcademics.id })
       .from(anysAcademics)

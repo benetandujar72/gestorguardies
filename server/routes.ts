@@ -640,8 +640,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/comunicacions', isAuthenticated, async (req, res) => {
     try {
-      const comunicacioData = insertComunicacioSchema.parse(req.body);
-      const comunicacio = await storage.createComunicacio(comunicacioData);
+      console.log("POST /api/comunicacions - Request body:", req.body);
+      
+      // Get active academic year
+      const activeAcademicYear = await storage.getActiveAcademicYear();
+      
+      // Add required fields
+      const comunicacioData = {
+        ...req.body,
+        anyAcademicId: activeAcademicYear,
+        emissorId: parseInt((req as any).user.claims.sub),
+        destinatariId: parseInt(req.body.destinatariId)
+      };
+      
+      console.log("Processed comunicacio data:", comunicacioData);
+      
+      const validatedData = insertComunicacioSchema.parse(comunicacioData);
+      const comunicacio = await storage.createComunicacio(validatedData);
       
       // Create metric
       await storage.createMetric({
