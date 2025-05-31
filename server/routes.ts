@@ -709,6 +709,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Activate academic year (sets it as active and finalizes the previous one)
+  app.post('/api/anys-academics/:id/activate', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get the academic year to activate
+      const yearToActivate = await storage.getAnyAcademic(id);
+      if (!yearToActivate) {
+        return res.status(404).json({ message: "Academic year not found" });
+      }
+
+      // Update to active status (this will automatically set previous active year to finalized)
+      const updatedYear = await storage.updateAnyAcademic(id, { estat: 'actiu' });
+      
+      res.json({
+        success: true,
+        message: `Any acadèmic "${updatedYear.nom}" activat correctament`,
+        academicYear: updatedYear
+      });
+    } catch (error: any) {
+      console.error("Error activating academic year:", error);
+      res.status(500).json({ message: "Failed to activate academic year" });
+    }
+  });
+
   // Analytics routes
   app.get('/api/analytics/guard-stats', isAuthenticated, async (req, res) => {
     try {

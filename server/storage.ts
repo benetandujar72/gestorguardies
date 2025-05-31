@@ -824,11 +824,35 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateAnyAcademic(id: number, anyAcademicData: any): Promise<any> {
+    // Si el nuevo estado es "actiu", primero cambiar el año académico activo anterior a "finalitzat"
+    if (anyAcademicData.estat === 'actiu') {
+      // Buscar el año académico actualmente activo (si existe)
+      const currentActiveYear = await db
+        .select()
+        .from(anysAcademics)
+        .where(eq(anysAcademics.estat, 'actiu'))
+        .limit(1);
+
+      // Si hay un año académico activo y no es el mismo que estamos actualizando
+      if (currentActiveYear.length > 0 && currentActiveYear[0].id !== id) {
+        // Cambiar el año académico anterior a "finalitzat"
+        await db
+          .update(anysAcademics)
+          .set({ estat: 'finalitzat' })
+          .where(eq(anysAcademics.id, currentActiveYear[0].id));
+        
+        console.log(`Any acadèmic ${currentActiveYear[0].nom} (ID: ${currentActiveYear[0].id}) canviat a "finalitzat"`);
+      }
+    }
+
+    // Actualizar el año académico solicitado
     const [updatedAnyAcademic] = await db
       .update(anysAcademics)
       .set(anyAcademicData)
       .where(eq(anysAcademics.id, id))
       .returning();
+    
+    console.log(`Any acadèmic ${updatedAnyAcademic.nom} (ID: ${id}) actualitzat a estat "${updatedAnyAcademic.estat}"`);
     return updatedAnyAcademic;
   }
 
