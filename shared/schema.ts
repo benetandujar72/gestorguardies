@@ -376,7 +376,7 @@ export const insertGuardiaSchema = createInsertSchema(guardies).omit({
   id: true,
   createdAt: true,
 }).extend({
-  data: z.coerce.date(),
+  data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format de data ha de ser YYYY-MM-DD"),
 });
 
 export const insertAssignacioGuardiaSchema = createInsertSchema(assignacionsGuardia).omit({

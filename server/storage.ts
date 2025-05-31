@@ -653,7 +653,7 @@ export class DatabaseStorage implements IStorage {
       .from(guardies)
       .leftJoin(assignacionsGuardia, eq(guardies.id, assignacionsGuardia.guardiaId))
       .leftJoin(professors, eq(assignacionsGuardia.professorId, professors.id))
-      .leftJoin(aules, eq(guardies.aulaId, aules.id))
+
       .where(gte(guardies.data, new Date().toISOString().split('T')[0]))
       .orderBy(guardies.data, guardies.horaInici);
   }

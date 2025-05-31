@@ -479,10 +479,25 @@ Detalls: ${assignments.map(a => `Professor ID ${a.professorId}`).join(', ')}`;
     return start1 < end2 && start2 < end1;
   }
 
-  private isDayOfWeek(date: string, dayName: string): boolean {
+  private isDayOfWeek(date: string | Date, dayName: string | number): boolean {
     const dayNames = ['Diumenge', 'Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres', 'Dissabte'];
-    const dateObj = new Date(date);
+    let dateStr: string;
+    
+    if (date instanceof Date) {
+      dateStr = date.toISOString().split('T')[0];
+    } else {
+      dateStr = date;
+    }
+    
+    const dateObj = new Date(dateStr);
     const dayIndex = dateObj.getDay();
+    
+    // Si dayName és un number, comparar directament amb l'índex
+    if (typeof dayName === 'number') {
+      return dayIndex === dayName;
+    }
+    
+    // Si és string, buscar a l'array de noms
     return dayNames[dayIndex] === dayName;
   }
 
