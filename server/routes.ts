@@ -1100,12 +1100,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 continue;
               }
               
-              // Convert hores_setmanals to number if present
+              // Convert horesSetmanals to number if present
               if (record.horesSetmanals) {
-                record.horesSetmanals = parseInt(record.horesSetmanals);
+                record.horesSetmanals = parseInt(record.horesSetmanals) || 0;
               }
               
-              await storage.createMateria(insertMateriaSchema.parse(recordWithAcademicYear));
+              // Create record with academic year and converted values
+              const materiaRecord = {
+                ...recordWithAcademicYear,
+                horesSetmanals: record.horesSetmanals ? parseInt(record.horesSetmanals) || 0 : 0
+              };
+              
+              await storage.createMateria(insertMateriaSchema.parse(materiaRecord));
               break;
 
             case 'sortides':

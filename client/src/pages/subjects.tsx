@@ -61,10 +61,15 @@ export default function Subjects() {
   // Create mutation
   const createMutation = useMutation({
     mutationFn: async (data: InsertMateria) => {
-      return await apiRequest('/api/materies', {
+      const response = await fetch('/api/materies', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(data),
       });
+      if (!response.ok) throw new Error('Failed to create materia');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/materies'] });
