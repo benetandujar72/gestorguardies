@@ -241,7 +241,6 @@ export default function SchedulesNew() {
 
   // Edit schedule handler
   const handleEditSchedule = (schedule: Schedule) => {
-    console.log('Editing schedule:', schedule);
     setEditingSchedule(schedule);
     
     // Pre-fill edit form with existing data
@@ -255,8 +254,11 @@ export default function SchedulesNew() {
       assignatura: schedule.assignatura || '',
     };
     
-    console.log('Form data for edit:', formData);
-    editForm.reset(formData);
+    // Wait a bit to ensure the dialog is open before resetting the form
+    setTimeout(() => {
+      editForm.reset(formData);
+    }, 100);
+    
     setIsEditDialogOpen(true);
   };
 
