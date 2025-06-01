@@ -23,6 +23,7 @@ import Subjects from "@/pages/subjects";
 import Analytics from "@/pages/analytics";
 import SimpleChat from "@/pages/simple-chat";
 import ImportCSV from "@/pages/import-csv";
+import SortidesSubstitucions from "@/pages/sortides-substitucions";
 import Setup from "@/pages/setup";
 import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/layout/sidebar";
@@ -68,6 +69,7 @@ function Router() {
             <Route path="/anys-academics" component={AcademicYears} />
             <Route path="/horaris" component={Schedules} />
             <Route path="/sortides" component={OutingsEnhanced} />
+            <Route path="/sortides-substitucions" component={SortidesSubstitucions} />
             <Route path="/tasques" component={Tasks} />
             <Route path="/professors" component={Professors} />
             <Route path="/grups" component={Groups} />
