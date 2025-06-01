@@ -13,6 +13,7 @@ import {
   Shield,
   ListTodo,
   Users,
+  UserCheck,
   Presentation,
   UsersIcon,
   MessageSquare,
