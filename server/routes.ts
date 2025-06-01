@@ -372,7 +372,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/sortides', isAuthenticated, async (req, res) => {
     try {
-      const sortidaData = insertSortidaSchema.parse(req.body);
+      console.log('Creating sortida with data:', req.body);
+      
+      // Add anyAcademicId to the request body if not present
+      const activeYear = await storage.getActiveAcademicYear();
+      const requestData = {
+        ...req.body,
+        anyAcademicId: req.body.anyAcademicId || activeYear
+      };
+      
+      console.log('Final sortida data:', requestData);
+      const sortidaData = insertSortidaSchema.parse(requestData);
       const sortida = await storage.createSortida(sortidaData);
       
       // Create metric for new outing
@@ -388,7 +398,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(sortida);
     } catch (error: any) {
-      res.status(400).json({ message: "Invalid outing data" });
+      console.error("Error creating sortida:", error);
+      res.status(400).json({ message: "Invalid outing data", details: error.message });
     }
   });
 
