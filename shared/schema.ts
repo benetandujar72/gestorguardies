@@ -445,8 +445,12 @@ export const insertSortidaSchema = createInsertSchema(sortides).omit({
   id: true,
   createdAt: true,
 }).extend({
-  dataInici: z.coerce.date(),
-  dataFi: z.coerce.date(),
+  dataInici: z.union([z.coerce.date(), z.string().datetime()]).transform(val => 
+    typeof val === 'string' ? new Date(val) : val
+  ),
+  dataFi: z.union([z.coerce.date(), z.string().datetime()]).transform(val => 
+    typeof val === 'string' ? new Date(val) : val
+  ),
 });
 
 export const insertGuardiaSchema = createInsertSchema(guardies).omit({
