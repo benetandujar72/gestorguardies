@@ -56,6 +56,7 @@ export const professors = pgTable("professors", {
   nom: varchar("nom").notNull(),
   cognoms: varchar("cognoms").notNull(),
   email: varchar("email").notNull().unique(),
+  codiProfessor: varchar("codi_professor"),
   passwordHash: varchar("password_hash"),
   rol: varchar("rol").notNull().default("professor"),
   userId: varchar("user_id").references(() => users.id),

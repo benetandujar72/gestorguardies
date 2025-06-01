@@ -1207,6 +1207,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 errorCount++;
                 continue;
               }
+
+              // Buscar professor per codi o crear-ne un de nou si és necessari
+              let professorId = null;
+              const professorCode = record.professorId.toString().trim();
+              
+              if (professorCode && professorCode !== '' && !isNaN(Number(professorCode))) {
+                // Si és un número, usar directament
+                professorId = parseInt(professorCode);
+              } else if (professorCode && professorCode !== '') {
+                // Si és un codi de text, buscar o crear professor
+                try {
+                  let professor = await storage.getProfessorByCode(professorCode);
+                  if (!professor) {
+                    // Crear professor nou amb el codi
+                    const newProfessor = {
+                      anyAcademicId: parseInt(academicYearId),
+                      nom: professorCode,
+                      cognoms: '',
+                      email: `${professorCode.toLowerCase()}@escola.temp`,
+                      codiProfessor: professorCode
+                    };
+                    professor = await storage.createProfessor(insertProfessorSchema.parse(newProfessor));
+                  }
+                  professorId = professor.id;
+                } catch (error) {
+                  console.log(`Error processing professor code ${professorCode}:`, error);
+                  errorCount++;
+                  continue;
+                }
+              }
+
+              if (!professorId) {
+                console.log(`Skipping row ${i}: invalid professorId: ${record.professorId}`);
+                errorCount++;
+                continue;
+              }
               
               // Convertir dia de la setmana a número si és text
               let diaSetmanaHorari = record.diaSemana;
@@ -1220,6 +1256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               const horariData = {
                 ...recordWithAcademicYear,
+                professorId: professorId,
                 diaSetmana: diaSetmanaHorari
               };
               

@@ -80,6 +80,7 @@ export interface IStorage {
   getProfessor(id: number): Promise<Professor | undefined>;
   getProfessorByUserId(userId: string): Promise<Professor | undefined>;
   getProfessorByEmail(email: string): Promise<Professor | undefined>;
+  getProfessorByCode(code: string): Promise<Professor | undefined>;
   createProfessor(professor: InsertProfessor): Promise<Professor>;
   updateProfessor(id: number, professor: Partial<InsertProfessor>): Promise<Professor>;
   deleteProfessor(id: number): Promise<void>;
@@ -237,6 +238,16 @@ export class DatabaseStorage implements IStorage {
 
   async getProfessorByEmail(email: string): Promise<Professor | undefined> {
     const [professor] = await db.select().from(professors).where(eq(professors.email, email));
+    return professor;
+  }
+
+  async getProfessorByCode(code: string): Promise<Professor | undefined> {
+    const [professor] = await db.select().from(professors).where(
+      or(
+        eq(professors.codiProfessor, code),
+        eq(professors.nom, code)
+      )
+    );
     return professor;
   }
 
