@@ -66,6 +66,11 @@ const navigationItems = [
     icon: Route,
   },
   {
+    href: "/sortides-substitucions",
+    label: "Substitucions de Sortides",
+    icon: UserCheck,
+  },
+  {
     href: "/tasques",
     label: "Tasques",
     icon: ListTodo,
