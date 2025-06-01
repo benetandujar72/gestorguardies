@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
+import DashboardGuardies from "@/pages/dashboard-guardies";
 import Guards from "@/pages/guards";
 import Assignments from "@/pages/assignments";
 import AssignedGuards from "@/pages/assigned-guards";
@@ -61,6 +62,7 @@ function Router() {
         <main className="flex-1 overflow-auto">
           <Switch>
             <Route path="/" component={Dashboard} />
+            <Route path="/dashboard-guardies" component={DashboardGuardies} />
             <Route path="/guardies" component={Guards} />
             <Route path="/calendari-guardies" component={GuardCalendarResponsive} />
             <Route path="/assignacions" component={Assignments} />

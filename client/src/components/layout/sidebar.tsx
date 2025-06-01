@@ -27,6 +27,11 @@ const navigationItems = [
     icon: BarChart3,
   },
   {
+    href: "/dashboard-guardies",
+    label: "Centre de Control",
+    icon: Shield,
+  },
+  {
     href: "/guardies",
     label: "Guardies",
     icon: Shield,
