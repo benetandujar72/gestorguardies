@@ -1072,9 +1072,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Map header to standard field name
           const standardFieldName = headerMapping[header] || header;
           
-          // Convert numeric fields
-          if ((standardFieldName === 'grupId' || standardFieldName === 'professorId' || standardFieldName === 'aulaId' || standardFieldName === 'responsableId' || standardFieldName === 'horesSetmanals') && value) {
+          // Convert numeric fields (except professorId which can be a code)
+          if ((standardFieldName === 'grupId' || standardFieldName === 'aulaId' || standardFieldName === 'responsableId' || standardFieldName === 'horesSetmanals') && value) {
             console.log(`Converting ${standardFieldName}: "${value}" (${typeof value}) -> ${parseInt(value)} (${typeof parseInt(value)})`);
+            value = parseInt(value);
+          }
+          
+          // For professorId, only convert if it's purely numeric
+          if (standardFieldName === 'professorId' && value && !isNaN(Number(value)) && Number.isInteger(Number(value))) {
+            console.log(`Converting professorId: "${value}" (${typeof value}) -> ${parseInt(value)} (${typeof parseInt(value)})`);
             value = parseInt(value);
           }
           
