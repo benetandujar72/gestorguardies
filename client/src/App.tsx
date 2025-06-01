@@ -80,7 +80,7 @@ function Router() {
             <Route path="/materies" component={Subjects} />
             <Route path="/analytics" component={Analytics} />
             <Route path="/chat-bot" component={SimpleChat} />
-            <Route path="/import" component={ImportCSV} />
+            <Route path="/import-csv" component={ImportCSV} />
             <Route component={NotFound} />
           </Switch>
         </main>
