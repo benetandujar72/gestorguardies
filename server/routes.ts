@@ -1624,6 +1624,231 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ENDPOINTS PER SUBSTITUCIONS DE SORTIDES
+
+  // Obtenir classes que cal substituir per una sortida
+  app.get('/api/sortides/:sortidaId/classes-substituir', isAuthenticated, async (req, res) => {
+    try {
+      const sortidaId = parseInt(req.params.sortidaId);
+      const activeYear = await storage.getAnysAcademics().then(years => 
+        years.find(y => y.actiu)
+      );
+      
+      if (!activeYear) {
+        return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });
+      }
+
+      const classesToSubstitute = await storage.getClassesToSubstitute(sortidaId, activeYear.id);
+      res.json(classesToSubstitute);
+    } catch (error: any) {
+      console.error("Error getting classes to substitute:", error);
+      res.status(500).json({ message: "Error obtenint classes a substituir" });
+    }
+  });
+
+  // Obtenir professors disponibles per substituir una classe específica
+  app.get('/api/horari/:horariId/professors-disponibles', isAuthenticated, async (req, res) => {
+    try {
+      const horariId = parseInt(req.params.horariId);
+      const activeYear = await storage.getAnysAcademics().then(years => 
+        years.find(y => y.actiu)
+      );
+      
+      if (!activeYear) {
+        return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });
+      }
+
+      const availableProfessors = await storage.getProfessorsAvailableForSubstitution(horariId, activeYear.id);
+      res.json(availableProfessors);
+    } catch (error: any) {
+      console.error("Error getting available professors:", error);
+      res.status(500).json({ message: "Error obtenint professors disponibles" });
+    }
+  });
+
+  // Assignar professors acompanyants a una sortida
+  app.post('/api/sortides/:sortidaId/professors', isAuthenticated, async (req, res) => {
+    try {
+      const sortidaId = parseInt(req.params.sortidaId);
+      const { professorIds } = req.body;
+      const activeYear = await storage.getAnysAcademics().then(years => 
+        years.find(y => y.actiu)
+      );
+      
+      if (!activeYear) {
+        return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });
+      }
+
+      const assignacions = [];
+      for (const professorId of professorIds) {
+        const assignacio = await storage.createSortidaProfessor({
+          anyAcademicId: activeYear.id,
+          sortidaId,
+          professorId,
+          tipus: 'acompanyant'
+        });
+        assignacions.push(assignacio);
+      }
+
+      res.json(assignacions);
+    } catch (error: any) {
+      console.error("Error assigning professors to sortida:", error);
+      res.status(500).json({ message: "Error assignant professors a la sortida" });
+    }
+  });
+
+  // Gestionar alumnes afectats per una sortida
+  app.post('/api/sortides/:sortidaId/alumnes', isAuthenticated, async (req, res) => {
+    try {
+      const sortidaId = parseInt(req.params.sortidaId);
+      const { alumneIds } = req.body;
+      const activeYear = await storage.getAnysAcademics().then(years => 
+        years.find(y => y.actiu)
+      );
+      
+      if (!activeYear) {
+        return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });
+      }
+
+      const assignacions = [];
+      for (const alumneId of alumneIds) {
+        const assignacio = await storage.createSortidaAlumne({
+          anyAcademicId: activeYear.id,
+          sortidaId,
+          alumneId,
+          confirmacio: 'confirmat'
+        });
+        assignacions.push(assignacio);
+      }
+
+      res.json(assignacions);
+    } catch (error: any) {
+      console.error("Error assigning alumnes to sortida:", error);
+      res.status(500).json({ message: "Error assignant alumnes a la sortida" });
+    }
+  });
+
+  // Crear substitució per una classe específica
+  app.post('/api/sortides/:sortidaId/substitucions', isAuthenticated, async (req, res) => {
+    try {
+      const sortidaId = parseInt(req.params.sortidaId);
+      const { horariOriginalId, professorOriginalId, professorSubstitutId, observacions } = req.body;
+      const activeYear = await storage.getAnysAcademics().then(years => 
+        years.find(y => y.actiu)
+      );
+      
+      if (!activeYear) {
+        return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });
+      }
+
+      const substitucio = await storage.createSortidaSubstitucio({
+        anyAcademicId: activeYear.id,
+        sortidaId,
+        horariOriginalId,
+        professorOriginalId,
+        professorSubstitutId,
+        estat: 'planificada',
+        observacions: observacions || '',
+        comunicacioEnviada: false
+      });
+
+      res.json(substitucio);
+    } catch (error: any) {
+      console.error("Error creating substitution:", error);
+      res.status(500).json({ message: "Error creant substitució" });
+    }
+  });
+
+  // Confirmar totes les substitucions d'una sortida i enviar comunicacions
+  app.post('/api/sortides/:sortidaId/confirmar-substitucions', isAuthenticated, async (req, res) => {
+    try {
+      const sortidaId = parseInt(req.params.sortidaId);
+      const activeYear = await storage.getAnysAcademics().then(years => 
+        years.find(y => y.actiu)
+      );
+      
+      if (!activeYear) {
+        return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });
+      }
+
+      // Obtenir totes les substitucions de la sortida
+      const substitucions = await storage.getSortidaSubstitucions(sortidaId);
+      
+      // Obtenir informació de la sortida
+      const sortida = await storage.getSortida(sortidaId);
+      if (!sortida) {
+        return res.status(404).json({ message: "Sortida no trobada" });
+      }
+
+      // Actualitzar estat de totes les substitucions
+      const confirmades = [];
+      for (const substitucio of substitucions) {
+        const updated = await storage.updateSortidaSubstitucio(substitucio.id, {
+          estat: 'confirmada',
+          comunicacioEnviada: true
+        });
+        confirmades.push(updated);
+
+        // Crear comunicació per al professor substitut
+        await storage.createComunicacio({
+          anyAcademicId: activeYear.id,
+          tipusDest: 'professor',
+          destinatariId: substitucio.professorSubstitutId,
+          missatge: `Has estat assignat com a professor substitut per la sortida "${sortida.nomSortida}" el ${sortida.dataInici}. ${substitucio.observacions || ''}`,
+          tipus: 'notificacio',
+          emissorId: (req.user as any)?.claims?.sub ? parseInt((req.user as any).claims.sub) : null
+        });
+
+        // Crear comunicació per al professor original
+        await storage.createComunicacio({
+          anyAcademicId: activeYear.id,
+          tipusDest: 'professor',
+          destinatariId: substitucio.professorOriginalId,
+          missatge: `La teva classe ha estat coberta per la sortida "${sortida.nomSortida}" el ${sortida.dataInici}. Professor substitut assignat.`,
+          tipus: 'informativa',
+          emissorId: (req.user as any)?.claims?.sub ? parseInt((req.user as any).claims.sub) : null
+        });
+      }
+
+      // Crear mètrica
+      await storage.createMetric({
+        anyAcademicId: activeYear.id,
+        timestamp: new Date(),
+        usuariId: (req.user as any)?.claims?.sub || 'sistema',
+        accio: 'confirmar_substitucions_sortida',
+        detalls: {
+          sortidaId,
+          substitucionsConfirmades: confirmades.length,
+          comunicacionsEnviades: confirmades.length * 2
+        },
+        entityType: 'sortida',
+        entityId: sortidaId
+      });
+
+      res.json({
+        success: true,
+        substitucionsConfirmades: confirmades.length,
+        comunicacionsEnviades: confirmades.length * 2,
+        message: `Confirmades ${confirmades.length} substitucions i enviades ${confirmades.length * 2} comunicacions`
+      });
+    } catch (error: any) {
+      console.error("Error confirming substitutions:", error);
+      res.status(500).json({ message: "Error confirmant substitucions" });
+    }
+  });
+
+  // Obtenir substitucions d'una sortida
+  app.get('/api/sortides/:sortidaId/substitucions', isAuthenticated, async (req, res) => {
+    try {
+      const sortidaId = parseInt(req.params.sortidaId);
+      const substitucions = await storage.getSortidaSubstitucions(sortidaId);
+      res.json(substitucions);
+    } catch (error: any) {
+      console.error("Error getting sortida substitutions:", error);
+      res.status(500).json({ message: "Error obtenint substitucions de la sortida" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -16,6 +16,9 @@ import {
   predictions,
   chatSessions,
   anysAcademics,
+  sortidaProfessors,
+  sortidaAlumnes,
+  sortidaSubstitucions,
   type User,
   type UpsertUser,
   type Professor,
@@ -48,6 +51,12 @@ import {
   type ChatSession,
   type SortidaWithRelations,
   type GuardiaWithRelations,
+  type SortidaProfessor,
+  type InsertSortidaProfessor,
+  type SortidaAlumne,
+  type InsertSortidaAlumne,
+  type SortidaSubstitucio,
+  type InsertSortidaSubstitucio,
   type AssignacioGuardiaWithProfessor,
 } from "@shared/schema";
 import { db } from "./db";
@@ -920,6 +929,223 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAnyAcademic(id: number): Promise<void> {
     await db.delete(anysAcademics).where(eq(anysAcademics.id, id));
+  }
+
+  // Mètodes per gestionar substitucions de sortides
+  async getSortidaProfessors(sortidaId: number): Promise<SortidaProfessor[]> {
+    return await db
+      .select()
+      .from(sortidaProfessors)
+      .where(eq(sortidaProfessors.sortidaId, sortidaId));
+  }
+
+  async createSortidaProfessor(data: InsertSortidaProfessor): Promise<SortidaProfessor> {
+    const [newRecord] = await db.insert(sortidaProfessors).values(data).returning();
+    return newRecord;
+  }
+
+  async getSortidaAlumnes(sortidaId: number): Promise<SortidaAlumne[]> {
+    return await db
+      .select()
+      .from(sortidaAlumnes)
+      .where(eq(sortidaAlumnes.sortidaId, sortidaId));
+  }
+
+  async createSortidaAlumne(data: InsertSortidaAlumne): Promise<SortidaAlumne> {
+    const [newRecord] = await db.insert(sortidaAlumnes).values(data).returning();
+    return newRecord;
+  }
+
+  async getSortidaSubstitucions(sortidaId: number): Promise<SortidaSubstitucio[]> {
+    return await db
+      .select()
+      .from(sortidaSubstitucions)
+      .where(eq(sortidaSubstitucions.sortidaId, sortidaId));
+  }
+
+  async createSortidaSubstitucio(data: InsertSortidaSubstitucio): Promise<SortidaSubstitucio> {
+    const [newRecord] = await db.insert(sortidaSubstitucions).values(data).returning();
+    return newRecord;
+  }
+
+  async updateSortidaSubstitucio(id: number, data: Partial<InsertSortidaSubstitucio>): Promise<SortidaSubstitucio> {
+    const [updated] = await db
+      .update(sortidaSubstitucions)
+      .set(data)
+      .where(eq(sortidaSubstitucions.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Mètode per obtenir classes que cal substituir per una sortida
+  async getClassesToSubstitute(sortidaId: number, anyAcademicId: number) {
+    // Obtenir professors acompanyants de la sortida
+    const professorsAcompanyants = await db
+      .select({
+        professorId: sortidaProfessors.professorId,
+        professor: {
+          id: professors.id,
+          nom: professors.nom,
+          cognoms: professors.cognoms,
+        }
+      })
+      .from(sortidaProfessors)
+      .leftJoin(professors, eq(sortidaProfessors.professorId, professors.id))
+      .where(
+        and(
+          eq(sortidaProfessors.sortidaId, sortidaId),
+          eq(sortidaProfessors.anyAcademicId, anyAcademicId)
+        )
+      );
+
+    if (professorsAcompanyants.length === 0) {
+      return [];
+    }
+
+    // Obtenir la sortida per conèixer les dates
+    const [sortida] = await db.select().from(sortides).where(eq(sortides.id, sortidaId));
+    if (!sortida) {
+      return [];
+    }
+
+    // Obtenir grups afectats per la sortida
+    const grupsAfectats = await db
+      .select({ grupId: sortides.grupId })
+      .from(sortides)
+      .where(eq(sortides.id, sortidaId));
+
+    const professorIds = professorsAcompanyants.map(p => p.professorId);
+
+    // Obtenir horaris dels professors acompanyants durant les dates de la sortida
+    const horarisAfectats = await db
+      .select({
+        id: horaris.id,
+        professorId: horaris.professorId,
+        grupId: horaris.grupId,
+        aulaId: horaris.aulaId,
+        diaSetmana: horaris.diaSetmana,
+        horaInici: horaris.horaInici,
+        horaFi: horaris.horaFi,
+        assignatura: horaris.assignatura,
+        professor: {
+          id: professors.id,
+          nom: professors.nom,
+          cognoms: professors.cognoms,
+        },
+        grup: {
+          id: grups.id,
+          nomGrup: grups.nomGrup,
+        },
+        aula: {
+          id: aules.id,
+          nomAula: aules.nomAula,
+        }
+      })
+      .from(horaris)
+      .leftJoin(professors, eq(horaris.professorId, professors.id))
+      .leftJoin(grups, eq(horaris.grupId, grups.id))
+      .leftJoin(aules, eq(horaris.aulaId, aules.id))
+      .where(
+        and(
+          eq(horaris.anyAcademicId, anyAcademicId),
+          sql`${horaris.professorId} = ANY(${professorIds})`,
+          // Excloure guardies (assignatura 'G')
+          sql`${horaris.assignatura} != 'G'`
+        )
+      );
+
+    // Filtrar classes que NO necessiten substitució
+    const classesASubstituir = horarisAfectats.filter(horari => {
+      // Si el professor té classe amb el grup de sortida, NO cal substitució
+      if (grupsAfectats.length > 0 && horari.grupId === grupsAfectats[0].grupId) {
+        return false;
+      }
+      
+      return true;
+    });
+
+    return classesASubstituir;
+  }
+
+  // Mètode per obtenir professors disponibles amb ranking de prioritat
+  async getProfessorsAvailableForSubstitution(horariId: number, anyAcademicId: number) {
+    // Obtenir informació del horari original
+    const horariOriginal = await db
+      .select()
+      .from(horaris)
+      .where(eq(horaris.id, horariId))
+      .limit(1);
+
+    if (horariOriginal.length === 0) {
+      return [];
+    }
+
+    const { diaSetmana, horaInici, horaFi } = horariOriginal[0];
+
+    // Obtenir tots els professors de l'any acadèmic
+    const allProfessors = await db
+      .select()
+      .from(professors)
+      .where(eq(professors.anyAcademicId, anyAcademicId));
+
+    // Obtenir horaris de tots els professors pel mateix dia i hora
+    const horarisConflicte = await db
+      .select()
+      .from(horaris)
+      .where(
+        and(
+          eq(horaris.anyAcademicId, anyAcademicId),
+          eq(horaris.diaSetmana, diaSetmana),
+          // Solapament d'horaris
+          sql`(
+            (${horaris.horaInici} < ${horaFi} AND ${horaris.horaFi} > ${horaInici})
+          )`
+        )
+      );
+
+    // Filtrar professors disponibles
+    const professorsOcupats = new Set(horarisConflicte.map(h => h.professorId));
+    const professorsDisponibles = allProfessors.filter((p: Professor) => !professorsOcupats.has(p.id));
+
+    // Calcular ranking de prioritat basat en el motor de guardies existent
+    const professorsAmbRanking = await Promise.all(
+      professorsDisponibles.map(async (professor) => {
+        // Obtenir estadístiques de guardies del professor
+        const statsGuardies = await db
+          .select({
+            totalGuardies: count()
+          })
+          .from(assignacionsGuardia)
+          .where(
+            and(
+              eq(assignacionsGuardia.professorId, professor.id),
+              eq(assignacionsGuardia.anyAcademicId, anyAcademicId)
+            )
+          );
+
+        const guardiesRealiitzades = statsGuardies[0]?.totalGuardies || 0;
+
+        // Prioritat més alta per professors amb menys guardies realitzades
+        const prioritat = 100 - guardiesRealiitzades;
+
+        return {
+          ...professor,
+          prioritat,
+          guardiesRealiitzades,
+          color: this.getPriorityColor(prioritat)
+        };
+      })
+    );
+
+    // Ordenar per prioritat (més alta primer)
+    return professorsAmbRanking.sort((a, b) => b.prioritat - a.prioritat);
+  }
+
+  private getPriorityColor(prioritat: number): string {
+    if (prioritat >= 80) return 'green'; // Alta prioritat (poques guardies)
+    if (prioritat >= 60) return 'yellow'; // Mitjana prioritat
+    if (prioritat >= 40) return 'orange'; // Baixa prioritat
+    return 'red'; // Molt baixa prioritat (moltes guardies)
   }
 }
 
