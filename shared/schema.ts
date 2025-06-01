@@ -236,6 +236,40 @@ export const attachments = pgTable("attachments", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Taula per gestionar professors acompanyants de sortides
+export const sortidaProfessors = pgTable("sortida_professors", {
+  id: serial("id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
+  sortidaId: integer("sortida_id").references(() => sortides.id).notNull(),
+  professorId: integer("professor_id").references(() => professors.id).notNull(),
+  tipus: varchar("tipus").notNull().default("acompanyant"), // "responsable", "acompanyant"
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Taula per gestionar alumnes afectats per sortides
+export const sortidaAlumnes = pgTable("sortida_alumnes", {
+  id: serial("id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
+  sortidaId: integer("sortida_id").references(() => sortides.id).notNull(),
+  alumneId: integer("alumne_id").references(() => alumnes.id).notNull(),
+  confirmacio: varchar("confirmacio").default("pendent"), // "pendent", "confirmat", "declinat"
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Taula per gestionar substitucions generades per sortides
+export const sortidaSubstitucions = pgTable("sortida_substitucions", {
+  id: serial("id").primaryKey(),
+  anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
+  sortidaId: integer("sortida_id").references(() => sortides.id).notNull(),
+  horariOriginalId: integer("horari_original_id").references(() => horaris.id).notNull(),
+  professorOriginalId: integer("professor_original_id").references(() => professors.id).notNull(),
+  professorSubstitutId: integer("professor_substitut_id").references(() => professors.id).notNull(),
+  estat: varchar("estat").notNull().default("planificada"), // "planificada", "confirmada", "executada", "cancel·lada"
+  observacions: text("observacions"),
+  comunicacioEnviada: boolean("comunicacio_enviada").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const professorsRelations = relations(professors, ({ many, one }) => ({
   horaris: many(horaris),
@@ -333,6 +367,47 @@ export const attachmentsRelations = relations(attachments, ({ one }) => ({
   }),
 }));
 
+export const sortidaProfessorsRelations = relations(sortidaProfessors, ({ one }) => ({
+  sortida: one(sortides, {
+    fields: [sortidaProfessors.sortidaId],
+    references: [sortides.id],
+  }),
+  professor: one(professors, {
+    fields: [sortidaProfessors.professorId],
+    references: [professors.id],
+  }),
+}));
+
+export const sortidaAlumnesRelations = relations(sortidaAlumnes, ({ one }) => ({
+  sortida: one(sortides, {
+    fields: [sortidaAlumnes.sortidaId],
+    references: [sortides.id],
+  }),
+  alumne: one(alumnes, {
+    fields: [sortidaAlumnes.alumneId],
+    references: [alumnes.id],
+  }),
+}));
+
+export const sortidaSubstitucionsRelations = relations(sortidaSubstitucions, ({ one }) => ({
+  sortida: one(sortides, {
+    fields: [sortidaSubstitucions.sortidaId],
+    references: [sortides.id],
+  }),
+  horariOriginal: one(horaris, {
+    fields: [sortidaSubstitucions.horariOriginalId],
+    references: [horaris.id],
+  }),
+  professorOriginal: one(professors, {
+    fields: [sortidaSubstitucions.professorOriginalId],
+    references: [professors.id],
+  }),
+  professorSubstitut: one(professors, {
+    fields: [sortidaSubstitucions.professorSubstitutId],
+    references: [professors.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
@@ -410,6 +485,21 @@ export const insertMateriaSchema = createInsertSchema(materies).omit({
   createdAt: true,
 });
 
+export const insertSortidaProfessorSchema = createInsertSchema(sortidaProfessors).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSortidaAlumneSchema = createInsertSchema(sortidaAlumnes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSortidaSubstitucioSchema = createInsertSchema(sortidaSubstitucions).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Type exports
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -440,6 +530,12 @@ export type InsertMateria = z.infer<typeof insertMateriaSchema>;
 export type Metric = typeof metrics.$inferSelect;
 export type Prediction = typeof predictions.$inferSelect;
 export type ChatSession = typeof chatSessions.$inferSelect;
+export type SortidaProfessor = typeof sortidaProfessors.$inferSelect;
+export type InsertSortidaProfessor = z.infer<typeof insertSortidaProfessorSchema>;
+export type SortidaAlumne = typeof sortidaAlumnes.$inferSelect;
+export type InsertSortidaAlumne = z.infer<typeof insertSortidaAlumneSchema>;
+export type SortidaSubstitucio = typeof sortidaSubstitucions.$inferSelect;
+export type InsertSortidaSubstitucio = z.infer<typeof insertSortidaSubstitucioSchema>;
 
 // Extended types for API responses with joined data
 export type SortidaWithRelations = {
