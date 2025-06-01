@@ -1180,7 +1180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Convertir dia de la setmana a número si és text
               let diaSetmana = record.diaSemana;
               if (typeof diaSetmana === 'string') {
-                const diesSetmana = {
+                const diesSetmana: { [key: string]: number } = {
                   'dilluns': 1, 'dimarts': 2, 'dimecres': 3, 'dijous': 4, 'divendres': 5,
                   'lunes': 1, 'martes': 2, 'miércoles': 3, 'jueves': 4, 'viernes': 5
                 };
@@ -1247,7 +1247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Convertir dia de la setmana a número si és text
               let diaSetmanaHorari = record.diaSemana;
               if (typeof diaSetmanaHorari === 'string') {
-                const diesSetmana = {
+                const diesSetmana: { [key: string]: number } = {
                   'dilluns': 1, 'dimarts': 2, 'dimecres': 3, 'dijous': 4, 'divendres': 5,
                   'lunes': 1, 'martes': 2, 'miércoles': 3, 'jueves': 4, 'viernes': 5
                 };
