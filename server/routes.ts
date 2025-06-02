@@ -1718,13 +1718,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const activeYear = await storage.getActiveAcademicYear();
       console.log('activeYear:', activeYear);
+      console.log('activeYear type:', typeof activeYear);
       
       if (!activeYear) {
         console.log('No hi ha any acadèmic actiu');
         return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });
       }
 
-      const availableProfessors = await storage.getProfessorsAvailableForSubstitution(horariId, activeYear.id);
+      // Si activeYear és només un número (ID), usar-lo directament
+      const anyAcademicId = typeof activeYear === 'number' ? activeYear : activeYear.id;
+      console.log('anyAcademicId final:', anyAcademicId);
+
+      const availableProfessors = await storage.getProfessorsAvailableForSubstitution(horariId, anyAcademicId);
       console.log(`Resultat professors disponibles: ${availableProfessors.length} professors`);
       res.json(availableProfessors);
     } catch (error: any) {
