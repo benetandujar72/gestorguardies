@@ -62,6 +62,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Verificar configuració d'email al iniciar
+  try {
+    const emailConfigValid = await verifyEmailConfiguration();
+    if (emailConfigValid) {
+      console.log('✅ Configuració d\'email Gmail verificada correctament');
+    } else {
+      console.log('⚠️  Error en la configuració d\'email - Les notificacions per email no funcionaran');
+    }
+  } catch (error) {
+    console.log('⚠️  No s\'ha pogut verificar la configuració d\'email');
+  }
+
   // Test endpoint for debugging (MUST BE FIRST)
   app.post('/api/chat/test', isAuthenticated, async (req, res) => {
     console.log("=== TEST ENDPOINT HIT ===");
