@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { sendSubstitutionEmails, verifyEmailConfiguration } from "./emailService";
 
 // Funció auxiliar per convertir dia de setmana
 function getDiaSemanaText(dia: number): string {
@@ -2156,6 +2157,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Assignació de guàrdia creada per substitució:', assignacioGuardia.id);
       } catch (error) {
         console.error('Error creant assignació de guàrdia:', error);
+      }
+
+      // Enviar emails de notificació si els professors tenen email
+      try {
+        if (professorOriginal?.email && professorAssignat?.email) {
+          // Obtenir informació de la sortida des de la descripció de la tasca
+          const sortidaNom = motiu.replace('Substitució per sortida: ', '');
+          
+          // Extreure informació de l'assignatura i grup des de la descripció
+          const assignaturaMatch = descripcio.match(/Cobrir classe de (.+?) - (.+?) de/);
+          const assignatura = assignaturaMatch ? assignaturaMatch[1] : 'Classe';
+          const grup = assignaturaMatch ? assignaturaMatch[2] : 'Grup';
+
+          await sendSubstitutionEmails({
+            professorOriginal: {
+              nom: professorOriginal.nom,
+              cognoms: professorOriginal.cognoms,
+              email: professorOriginal.email
+            },
+            professorSubstitut: {
+              nom: professorAssignat.nom,
+              cognoms: professorAssignat.cognoms,
+              email: professorAssignat.email
+            },
+            sortida: {
+              nom: sortidaNom,
+              data: new Date().toISOString().split('T')[0] // Data d'avui, millor seria obtenir la data real de la sortida
+            },
+            classe: {
+              assignatura,
+              grup,
+              horaInici,
+              horaFi,
+              aula: undefined // Es podria obtenir de la informació del horari
+            },
+            motiu
+          });
+
+          console.log('Emails de notificació enviats correctament');
+        } else {
+          console.log('No s\'han pogut enviar emails: algun professor no té email configurat');
+        }
+      } catch (emailError) {
+        console.error('Error enviant emails de notificació:', emailError);
+        // No bloquejar la creació de la tasca si falla l'email
       }
 
       res.json({
