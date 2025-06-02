@@ -656,7 +656,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/tasques', isAuthenticated, async (req, res) => {
+  // Ruta original per crear tasques generals (mantinguda per compatibilitat)
+  app.post('/api/tasques/general', isAuthenticated, async (req, res) => {
     try {
       const tascaData = insertTascaSchema.parse(req.body);
       const tasca = await storage.createTasca(tascaData);
