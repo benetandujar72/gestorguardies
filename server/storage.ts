@@ -60,7 +60,7 @@ import {
   type AssignacioGuardiaWithProfessor,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, or, sql, count, between, gte, lte } from "drizzle-orm";
+import { eq, desc, and, or, sql, count, between, gte, lte, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -315,55 +315,49 @@ export class DatabaseStorage implements IStorage {
       const guardDate = new Date(guardia.data);
       const dayOfWeek = guardDate.getDay() === 0 ? 7 : guardDate.getDay(); // Convert Sunday from 0 to 7
 
-      // Get horaris specifically for professors with "G" (guard duty) in the exact time slot
-      const guardHoraris = await db
+      // Get professors who have classes scheduled during the guard time
+      const busyProfessors = await db
         .select({
           professorId: horaris.professorId,
           assignatura: horaris.assignatura,
-          grupId: horaris.grupId,
-          horaInici: horaris.horaInici,
-          horaFi: horaris.horaFi
+          materiaId: horaris.materiaId
         })
         .from(horaris)
-        .leftJoin(grups, eq(horaris.grupId, grups.id))
-        .leftJoin(materies, eq(horaris.materiaId, materies.id))
         .where(
           and(
             eq(horaris.anyAcademicId, activeYear),
             eq(horaris.diaSetmana, dayOfWeek),
             eq(horaris.horaInici, guardia.horaInici),
             eq(horaris.horaFi, guardia.horaFi),
-            or(
-              eq(horaris.assignatura, "GUARDIA"),
-              eq(horaris.assignatura, "G"),
-              eq(materies.nom, "G")
-            )
+            sql`${horaris.materiaId} IS NOT NULL` // Has a subject assigned
           )
         );
 
-      // Only professors with guard duty scheduled in this exact time slot
-      const professorsWithGuardSchedule = guardHoraris.map(h => h.professorId);
+      const busyProfessorIds = busyProfessors.map(h => h.professorId);
       
       console.log(`Guard time: ${guardia.horaInici}-${guardia.horaFi}, Day: ${dayOfWeek}`);
-      console.log(`Found ${guardHoraris.length} professors with guard duty scheduled`);
-      console.log(`Professor IDs with guard schedule:`, professorsWithGuardSchedule);
-      
+      console.log(`Found ${busyProfessors.length} professors with classes scheduled`);
+      console.log(`Busy professor IDs:`, busyProfessorIds);
+
+      // Available professors are those who:
+      // 1. Are not already assigned to this guard
+      // 2. Don't have a class scheduled at this time
       const availableProfessors = allProfessors
         .filter(prof => 
           !assignedIds.includes(prof.id) && 
-          professorsWithGuardSchedule.includes(prof.id)
+          !busyProfessorIds.includes(prof.id)
         )
         .map(prof => {
           return {
             ...prof,
-            prioritat: 10, // High priority: has guard duty scheduled
-            motiu: "Guàrdia programada",
+            prioritat: 10, // Available for guard duty
+            motiu: "Disponible per guàrdia",
             grupObjectiu: "",
             badgeVariant: 'default' as const,
             prioritatColor: 'bg-green-100 text-green-800'
           };
         })
-        .sort((a, b) => a.prioritat - b.prioritat);
+        .sort((a, b) => `${a.cognoms} ${a.nom}`.localeCompare(`${b.cognoms} ${b.nom}`));
 
       console.log(`Found ${availableProfessors.length} available professors for guard ${guardiaId}`);
       return availableProfessors;

@@ -274,12 +274,11 @@ export default function Assignments() {
                         <FormLabel>Professor</FormLabel>
                         {selectedGuardId && (
                           <div className="text-sm text-muted-foreground mb-2 p-2 bg-blue-50 rounded">
-                            <p className="font-medium">Professors ordenats per prioritat:</p>
+                            <p className="font-medium">Professors disponibles per guàrdia:</p>
                             <ul className="text-xs mt-1 space-y-1">
-                              <li>• <span className="text-green-700 font-medium">Prioritat 1</span>: Guàrdia programada</li>
-                              <li>• <span className="text-blue-700 font-medium">Prioritat 2</span>: Té classe assignada</li>
-                              <li>• <span className="text-blue-600 font-medium">Prioritat 3</span>: Hora lliure</li>
-                              <li className="text-xs text-gray-600 mt-2">Només es mostren professors amb horari assignat</li>
+                              <li>• Professors sense classe assignada en aquesta franja</li>
+                              <li>• Exclou professors ja assignats a aquesta guàrdia</li>
+                              <li>• Ordenats alfabèticament per cognoms</li>
                             </ul>
                           </div>
                         )}
