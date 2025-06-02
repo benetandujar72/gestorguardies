@@ -1032,96 +1032,72 @@ export class DatabaseStorage implements IStorage {
 
   // Mètode per obtenir classes que cal substituir per una sortida
   async getClassesToSubstitute(sortidaId: number, anyAcademicId: number) {
-    // Obtenir professors acompanyants de la sortida
-    const professorsAcompanyants = await db
-      .select({
-        professorId: sortidaProfessors.professorId,
-        professor: {
-          id: professors.id,
-          nom: professors.nom,
-          cognoms: professors.cognoms,
-        }
-      })
-      .from(sortidaProfessors)
-      .leftJoin(professors, eq(sortidaProfessors.professorId, professors.id))
-      .where(
-        and(
-          eq(sortidaProfessors.sortidaId, sortidaId),
-          eq(sortidaProfessors.anyAcademicId, anyAcademicId)
-        )
-      );
-
-    if (professorsAcompanyants.length === 0) {
-      return [];
-    }
-
-    // Obtenir la sortida per conèixer les dates
-    const [sortida] = await db.select().from(sortides).where(eq(sortides.id, sortidaId));
-    if (!sortida) {
-      return [];
-    }
-
-    // Obtenir grups afectats per la sortida
-    const grupsAfectats = await db
-      .select({ grupId: sortides.grupId })
-      .from(sortides)
-      .where(eq(sortides.id, sortidaId));
-
-    const professorIds = professorsAcompanyants.map(p => p.professorId);
-
-    // Obtenir horaris dels professors acompanyants durant les dates de la sortida
-    const horarisAfectats = await db
-      .select({
-        id: horaris.id,
-        professorId: horaris.professorId,
-        grupId: horaris.grupId,
-        aulaId: horaris.aulaId,
-        diaSetmana: horaris.diaSetmana,
-        horaInici: horaris.horaInici,
-        horaFi: horaris.horaFi,
-        assignatura: horaris.assignatura,
-        professor: {
-          id: professors.id,
-          nom: professors.nom,
-          cognoms: professors.cognoms,
-        },
-        grup: {
-          id: grups.id,
-          nomGrup: grups.nomGrup,
-        },
-        aula: {
-          id: aules.id,
-          nomAula: aules.nomAula,
-        }
-      })
-      .from(horaris)
-      .leftJoin(professors, eq(horaris.professorId, professors.id))
-      .leftJoin(grups, eq(horaris.grupId, grups.id))
-      .leftJoin(aules, eq(horaris.aulaId, aules.id))
-      .where(
-        and(
-          eq(horaris.anyAcademicId, anyAcademicId),
-          sql`${horaris.professorId} = ANY(${professorIds})`,
-          // Incloure tots els horaris excepte guardies explícites
-          or(
-            sql`${horaris.assignatura} IS NULL`,
-            sql`${horaris.assignatura} = ''`,
-            sql`${horaris.assignatura} != 'G'`
-          )
-        )
-      );
-
-    // Filtrar classes que NO necessiten substitució
-    const classesASubstituir = horarisAfectats.filter(horari => {
-      // Si el professor té classe amb el grup de sortida, NO cal substitució
-      if (grupsAfectats.length > 0 && horari.grupId === grupsAfectats[0].grupId) {
-        return false;
-      }
+    try {
+      console.log(`Buscant substitucions per sortida ${sortidaId}, any acadèmic ${anyAcademicId}`);
       
-      return true;
-    });
+      // Utilitzar consulta SQL directa per evitar problemes de relacions Drizzle
+      const result = await db.execute(sql`
+        SELECT 
+          h.horari_id as id,
+          h.professor_id as "professorId",
+          h.grup_id as "grupId", 
+          h.aula_id as "aulaId",
+          h.dia_setmana as "diaSetmana",
+          h.hora_inici as "horaInici",
+          h.hora_fi as "horaFi",
+          h.assignatura,
+          p.professor_id as professor_id,
+          p.nom as professor_nom,
+          p.cognoms as professor_cognoms,
+          g.grup_id as grup_id,
+          g.nom_grup as grup_nom,
+          a.aula_id as aula_id,
+          a.nom_aula as aula_nom
+        FROM horaris h
+        LEFT JOIN professors p ON h.professor_id = p.professor_id
+        LEFT JOIN grups g ON h.grup_id = g.grup_id
+        LEFT JOIN aules a ON h.aula_id = a.aula_id
+        WHERE h.any_academic_id = ${anyAcademicId}
+          AND h.professor_id IN (
+            SELECT sp.professor_id 
+            FROM sortida_professors sp 
+            WHERE sp.sortida_id = ${sortidaId} 
+              AND sp.any_academic_id = ${anyAcademicId}
+          )
+          AND (h.assignatura IS NULL OR h.assignatura = '' OR h.assignatura != 'G')
+      `);
 
-    return classesASubstituir;
+      const classesASubstituir = result.rows.map((row: any) => ({
+        id: row.id,
+        professorId: row.professorId,
+        grupId: row.grupId,
+        aulaId: row.aulaId,
+        diaSetmana: row.diaSetmana,
+        horaInici: row.horaInici,
+        horaFi: row.horaFi,
+        assignatura: row.assignatura,
+        professor: {
+          id: row.professor_id,
+          nom: row.professor_nom,
+          cognoms: row.professor_cognoms,
+        },
+        grup: row.grup_id ? {
+          id: row.grup_id,
+          nomGrup: row.grup_nom,
+        } : null,
+        aula: row.aula_id ? {
+          id: row.aula_id,
+          nomAula: row.aula_nom,
+        } : null,
+      }));
+
+      console.log(`Trobades ${classesASubstituir.length} classes a substituir`);
+      return classesASubstituir;
+
+    } catch (error) {
+      console.error('Error en getClassesToSubstitute:', error);
+      return [];
+    }
   }
 
   // Mètode per obtenir professors disponibles amb ranking de prioritat
