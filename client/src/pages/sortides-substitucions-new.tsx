@@ -374,7 +374,7 @@ export default function SortidesSubstitucions() {
                                     {getDiaSetmanaNom(classe.diaSetmana)} {classe.horaInici}-{classe.horaFi}
                                   </h4>
                                   <p className="text-xs text-muted-foreground">
-                                    {classe.assignatura || 'Sense assignatura'} - {classe.grup.nomGrup}
+                                    {classe.assignatura || 'Sense assignatura'} - {classe.grup?.nomGrup || 'Sense grup'}
                                   </p>
                                   <p className="text-xs text-muted-foreground">
                                     {classe.aula?.nomAula || 'Sense aula'}
