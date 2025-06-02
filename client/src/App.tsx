@@ -24,7 +24,7 @@ import Subjects from "@/pages/subjects";
 import Analytics from "@/pages/analytics";
 import SimpleChat from "@/pages/simple-chat";
 import ImportCSV from "@/pages/import-csv";
-import SortidesSubstitucions from "@/pages/sortides-substitucions";
+import SortidesSubstitucions from "@/pages/sortides-substitucions-new";
 import Setup from "@/pages/setup";
 import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/layout/sidebar";

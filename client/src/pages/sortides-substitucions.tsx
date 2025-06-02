@@ -65,6 +65,7 @@ export default function SortidesSubstitucions() {
   const [professorPerClasse, setProfessorPerClasse] = useState<{ [key: number]: number }>({});
   const [observacionsPerClasse, setObservacionsPerClasse] = useState<{ [key: number]: string }>({});
   const [mostrarResum, setMostrarResum] = useState(false);
+  const [professorsSeleccionats, setProfessorsSeleccionats] = useState<{ [key: number]: any[] }>({});
 
   // Obtenir sortides planificades
   const { data: sortides, isLoading: loadingSortides, error: sortidsError } = useQuery({
