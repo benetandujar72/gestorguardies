@@ -1081,7 +1081,7 @@ export class DatabaseStorage implements IStorage {
         horaFi: horaris.horaFi,
         assignatura: horaris.assignatura,
         professor: {
-          id: professors.id,
+          id: professors.professorId,
           nom: professors.nom,
           cognoms: professors.cognoms,
         },
@@ -1095,7 +1095,7 @@ export class DatabaseStorage implements IStorage {
         }
       })
       .from(horaris)
-      .leftJoin(professors, eq(horaris.professorId, professors.id))
+      .leftJoin(professors, eq(horaris.professorId, professors.professorId))
       .leftJoin(grups, eq(horaris.grupId, grups.id))
       .leftJoin(aules, eq(horaris.aulaId, aules.id))
       .where(
