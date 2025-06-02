@@ -299,7 +299,7 @@ export default function SortidesSubstitucions() {
           <CardContent>
             {loadingClasses ? (
               <div className="text-center p-4">Analitzant horaris...</div>
-            ) : classesASubstituir.length === 0 ? (
+            ) : classesToUse.length === 0 ? (
               <Alert>
                 <CheckCircle2 className="h-4 w-4" />
                 <AlertDescription>
@@ -308,7 +308,7 @@ export default function SortidesSubstitucions() {
               </Alert>
             ) : (
               <div className="space-y-4">
-                {classesASubstituir.map((classe) => (
+                {classesToUse.map((classe) => (
                   <ClasseSubstitucio
                     key={classe.id}
                     classe={classe}
@@ -329,7 +329,7 @@ export default function SortidesSubstitucions() {
       )}
 
       {/* Botons d'acció */}
-      {classesASubstituir.length > 0 && (
+      {classesToUse.length > 0 && (
         <div className="flex gap-3">
           <Button
             onClick={() => setMostrarResum(true)}
@@ -453,7 +453,7 @@ function ClasseSubstitucio({
               {getDiaSetmanaNom(classe.diaSetmana)} {classe.horaInici}-{classe.horaFi}
             </h4>
             <p className="text-sm text-muted-foreground">
-              {classe.assignatura} - {classe.grup.nomGrup} - {classe.aula.nomAula}
+              {classe.assignatura || 'Sense assignatura'} - {classe.grup.nomGrup} - {classe.aula?.nomAula || 'Sense aula'}
             </p>
             <p className="text-sm">
               <strong>Professor:</strong> {classe.professor.nom} {classe.professor.cognoms}
