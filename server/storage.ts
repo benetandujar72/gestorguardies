@@ -1184,6 +1184,7 @@ export class DatabaseStorage implements IStorage {
       console.log(`Horari afectat: ${horaInici} - ${horaFi}`);
 
       // Buscar classes del professor responsable que coincideixin amb les dates/hores de la sortida
+      // EXCLOENT les que ja tenen substitut assignat
       const result = await db.execute(sql`
         SELECT 
           h.horari_id as id,
@@ -1214,6 +1215,12 @@ export class DatabaseStorage implements IStorage {
             OR (h.hora_inici <= ${horaInici} AND h.hora_fi >= ${horaFi})
           )
           AND (h.assignatura IS NULL OR h.assignatura = '' OR h.assignatura != 'G')
+          AND NOT EXISTS (
+            SELECT 1 FROM tasques t 
+            WHERE t.descripcio LIKE CONCAT('%', h.horari_id, '%')
+              AND t.estat IN ('pendent', 'en_curs')
+              AND t.data_creacio >= CURRENT_DATE - INTERVAL '7 days'
+          )
       `);
 
       console.log(`Consulta SQL executada per professor ${sortida.responsable_id}, dia ${diaSetmana}, ${horaInici}-${horaFi}`);
