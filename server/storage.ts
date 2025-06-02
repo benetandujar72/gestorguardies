@@ -1165,7 +1165,7 @@ export class DatabaseStorage implements IStorage {
             OR (h.hora_fi > ${horaInici} AND h.hora_fi <= ${horaFi})
             OR (h.hora_inici <= ${horaInici} AND h.hora_fi >= ${horaFi})
           )
-          AND (h.assignatura IS NOT NULL AND h.assignatura != '' AND h.assignatura != 'G')
+          AND (h.assignatura IS NULL OR h.assignatura = '' OR h.assignatura != 'G')
       `);
 
       console.log(`Consulta SQL executada per professor ${sortida.responsable_id}, dia ${diaSetmana}, ${horaInici}-${horaFi}`);
