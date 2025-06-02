@@ -1237,8 +1237,10 @@ export class DatabaseStorage implements IStorage {
 
       // 2. PRIORITAT 1: Professors amb GUÀRDIA programada en aquesta franja exacta
       console.log(`--- Cercant professors amb guàrdia programada ---`);
+      console.log(`Cercant guàrdies per: dia=${classe.dia_setmana}, hora=${classe.hora_inici}-${classe.hora_fi}, anyAcademic=${anyAcademicId}, professorOriginal=${classe.professor_original}`);
+      
       const professorsGuardiaResult = await db.execute(sql`
-        SELECT DISTINCT p.professor_id as id, p.nom, p.cognoms
+        SELECT DISTINCT p.professor_id as id, p.nom, p.cognoms, h.hora_inici, h.hora_fi, h.assignatura
         FROM professors p
         INNER JOIN horaris h ON p.professor_id = h.professor_id
         WHERE p.any_academic_id = ${anyAcademicId}
@@ -1249,6 +1251,8 @@ export class DatabaseStorage implements IStorage {
           AND p.professor_id != ${classe.professor_original}
           AND h.any_academic_id = ${anyAcademicId}
       `);
+      
+      console.log(`Professors amb guàrdia trobats:`, professorsGuardiaResult.rows);
 
       professorsGuardiaResult.rows.forEach((prof: any) => {
         candidats.push({
