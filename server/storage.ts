@@ -123,6 +123,7 @@ export interface IStorage {
   deleteHorari(id: number): Promise<void>;
 
   // Sortida operations
+  getSortida(id: number): Promise<SortidaWithRelations | undefined>;
   getSortides(): Promise<SortidaWithRelations[]>;
   getSortidesThisWeek(): Promise<SortidaWithRelations[]>;
   createSortida(sortida: InsertSortida): Promise<Sortida>;
@@ -497,6 +498,47 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Sortida operations
+  async getSortida(id: number): Promise<SortidaWithRelations | undefined> {
+    const activeYear = await this.getActiveAcademicYear();
+    const [result] = await db.select({
+      id: sortides.id,
+      nomSortida: sortides.nomSortida,
+      dataInici: sortides.dataInici,
+      dataFi: sortides.dataFi,
+      grupId: sortides.grupId,
+      descripcio: sortides.descripcio,
+      lloc: sortides.lloc,
+      responsableId: sortides.responsableId,
+      createdAt: sortides.createdAt,
+      grupNom: grups.nomGrup,
+      responsableNom: professors.nom,
+      responsableCognoms: professors.cognoms,
+    }).from(sortides)
+      .leftJoin(grups, eq(sortides.grupId, grups.id))
+      .leftJoin(professors, eq(sortides.responsableId, professors.id))
+      .where(and(eq(sortides.anyAcademicId, activeYear), eq(sortides.id, id)))
+      .limit(1);
+
+    if (!result) return undefined;
+
+    return {
+      ...result,
+      responsableFullName: result.responsableNom && result.responsableCognoms 
+        ? `${result.responsableNom} ${result.responsableCognoms}` 
+        : undefined,
+      grup: result.grupNom ? {
+        id: result.grupId!,
+        nomGrup: result.grupNom,
+      } : null,
+      responsable: result.responsableNom ? {
+        id: result.responsableId!,
+        nom: result.responsableNom,
+        cognoms: result.responsableCognoms!,
+        fullName: `${result.responsableNom} ${result.responsableCognoms}`,
+      } : null,
+    };
+  }
+
   async getSortides(): Promise<SortidaWithRelations[]> {
     const activeYear = await this.getActiveAcademicYear();
     const rawResults = await db.select({
