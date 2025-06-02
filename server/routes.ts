@@ -1151,14 +1151,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
               
               // Mapatge dels IDs del CSV als IDs reals de la base de dades
-              const GRUP_ID_MAPPING: { [key: number]: number } = {
-                1: 37, // 1r ESO A
-                2: 38, // 1r ESO B 
-                3: 39, // 1r ESO C
-                4: 40  // 2n ESO A
+              const GRUP_ID_MAPPING: { [key: string]: number } = {
+                '1A': 37, // 1r ESO A
+                '1B': 38, // 1r ESO B 
+                '1C': 39, // 1r ESO C
+                '2A': 40, // 2n ESO A
+                '2B': 41, // 2n ESO B
+                '2C': 42, // 2n ESO C
+                '3A': 43, // 3r ESO A
+                '3B': 44, // 3r ESO B
+                '3C': 45, // 3r ESO C
+                '4A': 46, // 4t ESO A
+                '4B': 47, // 4t ESO B
+                '4C': 48, // 4t ESO C
+                '4D': 49  // 4t ESO D
               };
               
-              const csvGrupId = parseInt(record.grupId);
+              const csvGrupId = record.grupId.toString().trim();
               const realGrupId = GRUP_ID_MAPPING[csvGrupId];
               
               if (!realGrupId) {
