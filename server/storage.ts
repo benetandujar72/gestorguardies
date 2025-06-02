@@ -1102,8 +1102,12 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(horaris.anyAcademicId, anyAcademicId),
           sql`${horaris.professorId} = ANY(${professorIds})`,
-          // Excloure guardies (assignatura 'G')
-          sql`${horaris.assignatura} != 'G'`
+          // Incloure tots els horaris excepte guardies explícites
+          or(
+            sql`${horaris.assignatura} IS NULL`,
+            sql`${horaris.assignatura} = ''`,
+            sql`${horaris.assignatura} != 'G'`
+          )
         )
       );
 
