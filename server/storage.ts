@@ -315,8 +315,8 @@ export class DatabaseStorage implements IStorage {
       const guardDate = new Date(guardia.data);
       const dayOfWeek = guardDate.getDay() === 0 ? 7 : guardDate.getDay(); // Convert Sunday from 0 to 7
 
-      // Get horaris for the guard time slot to check professor availability
-      const relevantHoraris = await db
+      // Get horaris specifically for professors with "G" (guard duty) in the exact time slot
+      const guardHoraris = await db
         .select({
           professorId: horaris.professorId,
           assignatura: horaris.assignatura,
@@ -326,52 +326,41 @@ export class DatabaseStorage implements IStorage {
         })
         .from(horaris)
         .leftJoin(grups, eq(horaris.grupId, grups.id))
+        .leftJoin(materies, eq(horaris.materiaId, materies.id))
         .where(
           and(
             eq(horaris.anyAcademicId, activeYear),
             eq(horaris.diaSetmana, dayOfWeek),
-            sql`${horaris.horaInici} <= ${guardia.horaInici} AND ${horaris.horaFi} >= ${guardia.horaFi}`
+            eq(horaris.horaInici, guardia.horaInici),
+            eq(horaris.horaFi, guardia.horaFi),
+            or(
+              eq(horaris.assignatura, "GUARDIA"),
+              eq(horaris.assignatura, "G"),
+              eq(materies.nom, "G")
+            )
           )
         );
 
-      // Only professors with scheduled activities (classes or guard duty) are available
-      const professorsWithSchedule = relevantHoraris.map(h => h.professorId);
+      // Only professors with guard duty scheduled in this exact time slot
+      const professorsWithGuardSchedule = guardHoraris.map(h => h.professorId);
+      
+      console.log(`Guard time: ${guardia.horaInici}-${guardia.horaFi}, Day: ${dayOfWeek}`);
+      console.log(`Found ${guardHoraris.length} professors with guard duty scheduled`);
+      console.log(`Professor IDs with guard schedule:`, professorsWithGuardSchedule);
       
       const availableProfessors = allProfessors
         .filter(prof => 
           !assignedIds.includes(prof.id) && 
-          professorsWithSchedule.includes(prof.id)
+          professorsWithGuardSchedule.includes(prof.id)
         )
         .map(prof => {
-          // Find the horari for this professor
-          const professorHorari = relevantHoraris.find(h => h.professorId === prof.id);
-          
-          let prioritat = 30; // Default
-          let motiu = "Disponible";
-          let grupObjectiu = "";
-
-          if (professorHorari) {
-            if (professorHorari.assignatura === "GUARDIA" || professorHorari.assignatura?.includes("G")) {
-              prioritat = 10; // High priority: scheduled guard duty
-              motiu = "Guàrdia programada";
-            } else if (professorHorari.assignatura && professorHorari.assignatura !== "LLIURE") {
-              prioritat = 20; // Medium priority: has class, can substitute
-              motiu = `Classe: ${professorHorari.assignatura}`;
-            } else {
-              prioritat = 25; // Low-medium priority: free period
-              motiu = "Hora lliure";
-            }
-          }
-
           return {
             ...prof,
-            prioritat,
-            motiu,
-            grupObjectiu,
-            badgeVariant: prioritat <= 15 ? 'default' : prioritat <= 25 ? 'secondary' : 'outline' as const,
-            prioritatColor: prioritat <= 15 ? 'bg-green-100 text-green-800' : 
-                           prioritat <= 25 ? 'bg-blue-100 text-blue-800' : 
-                           'bg-gray-100 text-gray-800'
+            prioritat: 10, // High priority: has guard duty scheduled
+            motiu: "Guàrdia programada",
+            grupObjectiu: "",
+            badgeVariant: 'default' as const,
+            prioritatColor: 'bg-green-100 text-green-800'
           };
         })
         .sort((a, b) => a.prioritat - b.prioritat);
