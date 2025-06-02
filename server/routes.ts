@@ -1683,16 +1683,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Obtenir classes que cal substituir per una sortida
   app.get('/api/sortides/:sortidaId/classes-substituir', isAuthenticated, async (req, res) => {
     try {
+      console.log('=== INICI RUTA CLASSES-SUBSTITUIR ===');
       const sortidaId = parseInt(req.params.sortidaId);
+      console.log('sortidaId:', sortidaId);
+      
       const activeYear = await storage.getAnysAcademics().then(years => 
         years.find(y => y.actiu)
       );
+      console.log('activeYear:', activeYear);
       
       if (!activeYear) {
+        console.log('ERROR: No hi ha any acadèmic actiu');
         return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });
       }
 
+      console.log('Cridant getClassesToSubstitute amb:', { sortidaId, anyAcademicId: activeYear.id });
       const classesToSubstitute = await storage.getClassesToSubstitute(sortidaId, activeYear.id);
+      console.log('Resultat getClassesToSubstitute:', classesToSubstitute);
+      
+      if (classesToSubstitute.length === 0) {
+        console.log('No classes trobades - retornant error 400');
+        return res.status(400).json({ message: "No hi ha cap classe que necessiti substitució per aquesta sortida" });
+      }
+      
       res.json(classesToSubstitute);
     } catch (error: any) {
       console.error("Error getting classes to substitute:", error);
