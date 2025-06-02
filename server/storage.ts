@@ -1224,9 +1224,30 @@ export class DatabaseStorage implements IStorage {
           LEFT JOIN professors p ON h.professor_id = p.professor_id
           WHERE h.horari_id = ${horariId}
         ),
+        professors_lliurats AS (
+          SELECT DISTINCT p.professor_id as id, p.nom, p.cognoms, 1 as prioritat, 'Lliurat' as motiu,
+                 '#10B981' as color, 'lliurat' as tipus
+          FROM professors p
+          INNER JOIN horaris h ON p.professor_id = h.professor_id
+          CROSS JOIN classe_info ci
+          WHERE p.any_academic_id = ${anyAcademicId}
+            AND h.dia_setmana = ci.dia_setmana
+            AND h.hora_inici = ci.hora_inici
+            AND h.hora_fi = ci.hora_fi
+            AND h.any_academic_id = ${anyAcademicId}
+            AND p.professor_id != ci.professor_original
+            AND h.grup_id IS NOT NULL
+            AND EXISTS (
+              SELECT 1 FROM sortides s
+              WHERE s.grup_id = h.grup_id
+                AND DATE(s.data_inici) = CURRENT_DATE
+                AND ci.hora_inici >= s.data_inici::time
+                AND ci.hora_fi <= s.data_fi::time
+            )
+        ),
         professors_guardia AS (
-          SELECT p.professor_id as id, p.nom, p.cognoms, 1 as prioritat, 'Guàrdia' as motiu,
-                 '#10B981' as color, 'guardia' as tipus
+          SELECT p.professor_id as id, p.nom, p.cognoms, 2 as prioritat, 'Guàrdia' as motiu,
+                 '#3B82F6' as color, 'guardia' as tipus
           FROM professors p
           INNER JOIN horaris h ON p.professor_id = h.professor_id
           CROSS JOIN classe_info ci
@@ -1237,14 +1258,16 @@ export class DatabaseStorage implements IStorage {
             AND h.assignatura = 'G'
             AND p.professor_id != ci.professor_original
             AND h.any_academic_id = ${anyAcademicId}
+            AND p.professor_id NOT IN (SELECT id FROM professors_lliurats)
         ),
         professors_lliures AS (
-          SELECT p.professor_id as id, p.nom, p.cognoms, 2 as prioritat, 'Lliure' as motiu,
-                 '#3B82F6' as color, 'lliure' as tipus
+          SELECT p.professor_id as id, p.nom, p.cognoms, 3 as prioritat, 'Lliure' as motiu,
+                 '#F59E0B' as color, 'lliure' as tipus
           FROM professors p
           CROSS JOIN classe_info ci
           WHERE p.any_academic_id = ${anyAcademicId}
             AND p.professor_id != ci.professor_original
+            AND p.professor_id NOT IN (SELECT id FROM professors_lliurats)
             AND p.professor_id NOT IN (SELECT id FROM professors_guardia)
             AND NOT EXISTS (
               SELECT 1 FROM horaris h
@@ -1256,8 +1279,8 @@ export class DatabaseStorage implements IStorage {
             )
         ),
         professors_reunions AS (
-          SELECT DISTINCT p.professor_id as id, p.nom, p.cognoms, 3 as prioritat, 'Altres' as motiu,
-                 '#F59E0B' as color, 'altres' as tipus
+          SELECT DISTINCT p.professor_id as id, p.nom, p.cognoms, 4 as prioritat, 'Altres' as motiu,
+                 '#EF4444' as color, 'altres' as tipus
           FROM professors p
           INNER JOIN horaris h ON p.professor_id = h.professor_id
           CROSS JOIN classe_info ci
@@ -1269,10 +1292,13 @@ export class DatabaseStorage implements IStorage {
             AND (h.assignatura ILIKE '%reunió%' OR h.assignatura ILIKE '%càrrec%' 
                  OR h.assignatura ILIKE '%coordinació%' OR h.assignatura ILIKE '%tutoria%')
             AND p.professor_id != ci.professor_original
+            AND p.professor_id NOT IN (SELECT id FROM professors_lliurats)
             AND p.professor_id NOT IN (SELECT id FROM professors_guardia)
             AND p.professor_id NOT IN (SELECT id FROM professors_lliures)
         ),
         tots_candidats AS (
+          SELECT * FROM professors_lliurats
+          UNION ALL
           SELECT * FROM professors_guardia
           UNION ALL
           SELECT * FROM professors_lliures  
