@@ -2040,19 +2040,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Professor Assignat:', professorAssignatId);
       console.log('Horari:', horariId, diaSetmana, horaInici, horaFi);
 
-      // Validar dades obligatòries
-      if (!professorOriginalId || !professorAssignatId || !diaSetmana || !horaInici || !horaFi || !descripcio) {
-        console.log('Dades obligatòries mancants');
-        return res.status(400).json({ 
-          message: "Dades obligatòries mancants",
-          missing: {
-            professorOriginalId: !professorOriginalId,
-            professorAssignatId: !professorAssignatId,
-            diaSetmana: !diaSetmana,
-            horaInici: !horaInici,
-            horaFi: !horaFi,
-            descripcio: !descripcio
+      // Detectar si és una tasca de substitució o una tasca general
+      const isSubstitutionTask = professorOriginalId && professorAssignatId && diaSetmana && horaInici && horaFi;
+      
+      if (!isSubstitutionTask) {
+        // Si no és una tasca de substitució, usar el schema general
+        console.log('Creant tasca general');
+        
+        // Assegurar que tenim un anyAcademicId per tasques generals
+        let anyAcademicId = req.body.anyAcademicId;
+        if (!anyAcademicId) {
+          const activeYear = await storage.getActiveAcademicYear();
+          if (activeYear) {
+            anyAcademicId = typeof activeYear === 'number' ? activeYear : activeYear.id;
           }
+        }
+        
+        const tascaDataGeneral = {
+          ...req.body,
+          anyAcademicId
+        };
+        
+        const tascaData = insertTascaSchema.parse(tascaDataGeneral);
+        const tasca = await storage.createTasca(tascaData);
+        
+        // Create metric
+        await storage.createMetric({
+          anyAcademicId: tasca.anyAcademicId,
+          timestamp: new Date(),
+          usuariId: (req as any).user.claims.sub,
+          accio: 'crear_tasca',
+          detalls: { tascaId: tasca.id },
+          entityType: 'tasca',
+          entityId: tasca.id
+        });
+        
+        return res.json(tasca);
+      }
+      
+      // Validar dades obligatòries per substitució
+      if (!descripcio) {
+        console.log('Descripció mancant per tasca de substitució');
+        return res.status(400).json({ 
+          message: "Descripció obligatòria per tasques de substitució"
         });
       }
 
@@ -2111,6 +2141,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log(`Creades ${comunicacions.length} comunicacions`);
+
+      // Crear assignació de guàrdia per la substitució
+      try {
+        const assignacioGuardia = await storage.createAssignacioGuardia({
+          anyAcademicId,
+          guardiaId: null, // Per substitucions no hi ha guàrdia específica
+          professorId: professorAssignatId,
+          prioritat: 1, // Alta prioritat per substitucions
+          estat: 'assignada',
+          motiu: 'substitucio'
+        });
+        
+        console.log('Assignació de guàrdia creada per substitució:', assignacioGuardia.id);
+      } catch (error) {
+        console.error('Error creant assignació de guàrdia:', error);
+      }
 
       res.json({
         tasca,

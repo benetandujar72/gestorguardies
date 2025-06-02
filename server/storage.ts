@@ -1317,6 +1317,12 @@ export class DatabaseStorage implements IStorage {
     const [professor] = await db.select().from(professors).where(eq(professors.id, id));
     return professor;
   }
+
+  // Crear assignació de guàrdia
+  async createAssignacioGuardia(assignacioData: any): Promise<any> {
+    const [newAssignacio] = await db.insert(assignacionsGuardia).values(assignacioData).returning();
+    return newAssignacio;
+  }
 }
 
 export const storage = new DatabaseStorage();
