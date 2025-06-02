@@ -74,6 +74,7 @@ export interface IStorage {
   updateAnyAcademic(id: number, anyAcademic: any): Promise<any>;
   deleteAnyAcademic(id: number): Promise<void>;
   getActiveAcademicYear(): Promise<number>;
+  getActiveAcademicYearFull(): Promise<any>;
 
   // Professor operations
   getProfessors(): Promise<Professor[]>;
@@ -196,6 +197,21 @@ export class DatabaseStorage implements IStorage {
     }
     
     return activeYear.id;
+  }
+
+  // Mètode auxiliar per obtenir l'any acadèmic actiu complet
+  async getActiveAcademicYearFull(): Promise<any> {
+    const [activeYear] = await db
+      .select()
+      .from(anysAcademics)
+      .where(eq(anysAcademics.estat, 'actiu'))
+      .limit(1);
+    
+    if (!activeYear) {
+      throw new Error('No active academic year found');
+    }
+    
+    return activeYear;
   }
 
   // User operations (mandatory for Replit Auth)

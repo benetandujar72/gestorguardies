@@ -1,0 +1,58 @@
+> rest-express@1.0.0 dev
+5:35:01 AM [express] serving on port 5000s
+Browserslist: browsers data (caniuse-lite) is 8 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+5:35:05 AM [express] GET /api/auth/user 401 in 4ms :: {"message":"Unauthorized"}
+5:35:11 AM [express] GET /api/auth/user 304 in 453ms :: {"id":"36895369","email":"benet.andujar@insb…
+5:35:11 AM [express] GET /api/anys-academics 304 in 187ms :: [{"id":3,"nom":"2026-2027","dataInici":…
+5:35:12 AM [express] GET /api/sortides 304 in 460ms :: [{"id":13,"nomSortida":"Visita a l'Institut T…
+=== INICI RUTA CLASSES-SUBSTITUIR ===
+sortidaId: 13
+activeYear: {
+  id: 2,
+  nom: '2025-2026',
+  dataInici: '2025-09-01',
+  dataFi: '2026-06-19',
+  estat: 'actiu',
+  observacions: 'Curs acadèmic 2025-2026\n',
+  createdAt: 2025-05-30T17:39:29.575Z
+}
+Cridant getClassesToSubstitute amb: { sortidaId: 13, anyAcademicId: 2 }
+Buscant substitucions per sortida 13, any acadèmic 2
+Trobades 2 classes a substituir
+Resultat getClassesToSubstitute: [
+  {
+    id: 23,
+    professorId: 11,
+    grupId: 37,
+    aulaId: 2,
+    diaSetmana: 3,
+    horaInici: '08:00:00',
+    horaFi: '09:00:00',
+    assignatura: 'ÀMBIT CIENTÍFICOTECNOLÒGIC TECNOLOGIA',
+    professor: { id: 11, nom: 'ANDUJAR', cognoms: 'ANDUJAR' },
+    grup: { id: 37, nomGrup: '1rESO A' },
+    aula: { id: 2, nomAula: 'A102' }
+  },
+  {
+    id: 22,
+    professorId: 11,
+    grupId: 37,
+    aulaId: 1,
+    diaSetmana: 1,
+    horaInici: '08:00:00',
+    horaFi: '09:00:00',
+    assignatura: 'ÀMBIT CIENTÍFICOTECNOLÒGIC MATEMÀTIQUES',
+    professor: { id: 11, nom: 'ANDUJAR', cognoms: 'ANDUJAR' },
+    grup: { id: 37, nomGrup: '1rESO A' },
+    aula: { id: 1, nomAula: 'A101' }
+  }
+]
+5:35:54 AM [express] GET /api/sortides/13/classes-substituir 200 in 849ms :: [{"id":23,"professorId"…
+5:36:09 AM [express] GET /api/auth/user 304 in 446ms :: {"id":"36895369","email":"benet.andujar@insb…
+Active academic year ID: 2
+5:36:11 AM [express] GET /api/anys-academics 304 in 372ms :: [{"id":3,"nom":"2026-2027","dataInici":…
+5:36:11 AM [express] GET /api/anys-academics/active/id 304 in 371ms :: {"activeYearId":2}
+Horaris found for active year: 1656
+5:36:11 AM [express] GET /api/horaris 304 in 503ms :: [{"id":2,"professorId":2,"grupId":2,"aulaId":2…
