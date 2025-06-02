@@ -46,7 +46,7 @@ interface Assignment {
 
 export default function Assignments() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState('2025-05-30');
+  const [selectedDate, setSelectedDate] = useState('2025-06-02');
   const [selectedGuardId, setSelectedGuardId] = useState<number | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -276,9 +276,10 @@ export default function Assignments() {
                           <div className="text-sm text-muted-foreground mb-2 p-2 bg-blue-50 rounded">
                             <p className="font-medium">Professors ordenats per prioritat:</p>
                             <ul className="text-xs mt-1 space-y-1">
-                              <li>• <span className="text-green-700 font-medium">Alta</span>: Guàrdia programada</li>
-                              <li>• <span className="text-blue-700 font-medium">Mitjana</span>: Té classe (pot substituir)</li>
-                              <li>• <span className="text-gray-700 font-medium">Baixa</span>: Disponible</li>
+                              <li>• <span className="text-green-700 font-medium">Prioritat 1</span>: Guàrdia programada</li>
+                              <li>• <span className="text-blue-700 font-medium">Prioritat 2</span>: Té classe assignada</li>
+                              <li>• <span className="text-blue-600 font-medium">Prioritat 3</span>: Hora lliure</li>
+                              <li className="text-xs text-gray-600 mt-2">Només es mostren professors amb horari assignat</li>
                             </ul>
                           </div>
                         )}
