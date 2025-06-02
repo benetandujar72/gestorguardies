@@ -87,10 +87,14 @@ export default function SortidesSubstitucions() {
   const { data: classesToSubstitute, isLoading: loadingClasses } = useQuery({
     queryKey: [`/api/sortides/${sortidaSeleccionada}/classes-substituir`],
     enabled: !!sortidaSeleccionada,
-    onSuccess: (data) => {
-      setClassesASubstituir(data || []);
-    }
   });
+
+  // Actualitzar l'estat quan arriben les dades
+  useEffect(() => {
+    if (classesToSubstitute) {
+      setClassesASubstituir(classesToSubstitute);
+    }
+  }, [classesToSubstitute]);
 
   // Mutació per confirmar substitucions
   const confirmSubstitucions = useMutation({

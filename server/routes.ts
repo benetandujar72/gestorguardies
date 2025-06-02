@@ -433,11 +433,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deleteSortida(id);
       
       // Create metric for deleted outing - use current academic year
-      const activeYear = await storage.getAnysAcademics().then(years => 
-        years.find(y => y.actiu)?.id || 1
-      );
+      const activeYearId = await storage.getActiveAcademicYear();
       await storage.createMetric({
-        anyAcademicId: activeYear,
+        anyAcademicId: activeYearId,
         timestamp: new Date(),
         usuariId: (req as any).user.claims.sub,
         accio: 'eliminar_sortida',
