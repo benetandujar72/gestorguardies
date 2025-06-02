@@ -1265,8 +1265,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
             case 'horaris':
               // Validate required fields for horaris
-              if (!record.diaSemana || !record.horaInici || !record.horaFi || !record.professorId) {
-                console.log(`Skipping row ${i}: missing required fields for horari`);
+              if (!record.diaSemana && !record.diaSetmana || !record.horaInici || !record.horaFi || !record.professorId) {
+                console.log(`Skipping row ${i}: missing required fields for horari (diaSemana: ${record.diaSemana || record.diaSetmana}, horaInici: ${record.horaInici}, horaFi: ${record.horaFi}, professorId: ${record.professorId})`);
                 errorCount++;
                 continue;
               }
@@ -1330,7 +1330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
               
               // Convertir dia de la setmana a número si és text
-              let diaSetmanaHorari = record.diaSemana;
+              let diaSetmanaHorari = record.diaSemana || record.diaSetmana;
               if (typeof diaSetmanaHorari === 'string') {
                 const diesSetmana: { [key: string]: number } = {
                   'dilluns': 1, 'dimarts': 2, 'dimecres': 3, 'dijous': 4, 'divendres': 5,
