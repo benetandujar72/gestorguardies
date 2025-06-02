@@ -1093,8 +1093,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Map header to standard field name
           const standardFieldName = headerMapping[header] || header;
           
-          // Convert numeric fields (except grupId and professorId which can be codes)
-          if ((standardFieldName === 'aulaId' || standardFieldName === 'responsableId' || standardFieldName === 'horesSetmanals') && value) {
+          // Convert numeric fields (except grupId, professorId and responsableId which can be codes)
+          if ((standardFieldName === 'aulaId' || standardFieldName === 'horesSetmanals') && value) {
             console.log(`Converting ${standardFieldName}: "${value}" (${typeof value}) -> ${parseInt(value)} (${typeof parseInt(value)})`);
             value = parseInt(value);
           }
