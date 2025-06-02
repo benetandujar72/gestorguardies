@@ -1075,7 +1075,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'horaInici': 'horaInici',
         'horaFi': 'horaFi',
         'materia': 'materia',
-        'assignatura': 'assignatura'
+        'assignatura': 'assignatura',
+        // Headers específics per matèries
+        'ID': 'id',
+        'Nom': 'nom',
+        'Codi': 'codi',
+        'Departament': 'departament',
+        'Hores Setmanals': 'horesSetmanals',
+        'Tipus': 'tipus',
+        'Curs': 'curs',
+        'Descripció': 'descripcio'
       };
       
       let importedCount = 0;
