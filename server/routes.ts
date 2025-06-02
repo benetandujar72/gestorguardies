@@ -1933,7 +1933,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           destinatariId: substitucio.professorSubstitutId,
           missatge: `Has estat assignat com a professor substitut per la sortida "${sortida.nomSortida}" el ${sortida.dataInici}. ${substitucio.observacions || ''}`,
           tipus: 'notificacio',
-          emissorId: (req.user as any)?.claims?.sub ? parseInt((req.user as any).claims.sub) : null
+          emissorId: null // Sistema automàtic
         });
 
         // Crear comunicació per al professor original
@@ -1943,7 +1943,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           destinatariId: substitucio.professorOriginalId,
           missatge: `La teva classe ha estat coberta per la sortida "${sortida.nomSortida}" el ${sortida.dataInici}. Professor substitut assignat.`,
           tipus: 'informativa',
-          emissorId: (req.user as any)?.claims?.sub ? parseInt((req.user as any).claims.sub) : null
+          emissorId: null // Sistema automàtic
         });
       }
 
