@@ -1106,7 +1106,36 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`Buscant substitucions per sortida ${sortidaId}, any acadèmic ${anyAcademicId}`);
       
-      // Utilitzar consulta SQL directa per evitar problemes de relacions Drizzle
+      // Primer obtenir la informació de la sortida
+      const sortidaResult = await db.execute(sql`
+        SELECT responsable_id, data_inici, data_fi, nom_sortida
+        FROM sortides 
+        WHERE sortida_id = ${sortidaId}
+      `);
+
+      if (sortidaResult.rows.length === 0) {
+        console.log('Sortida no trobada');
+        return [];
+      }
+
+      const sortida = sortidaResult.rows[0] as any;
+      console.log(`Sortida trobada: ${sortida.nom_sortida}, responsable: ${sortida.responsable_id}`);
+      console.log(`Dates: ${sortida.data_inici} - ${sortida.data_fi}`);
+
+      // Calcular els dies de la setmana afectats
+      const dataInici = new Date(sortida.data_inici);
+      const dataFi = new Date(sortida.data_fi);
+      
+      // Obtenir dia de la setmana (1=dilluns, 7=diumenge)
+      const diaSetmana = dataInici.getDay() === 0 ? 7 : dataInici.getDay();
+      console.log(`Dia de la setmana afectat: ${diaSetmana}`);
+      
+      // Obtenir hora d'inici i fi en format HH:MM:SS
+      const horaInici = dataInici.toISOString().split('T')[1].substring(0, 8);
+      const horaFi = dataFi.toISOString().split('T')[1].substring(0, 8);
+      console.log(`Horari afectat: ${horaInici} - ${horaFi}`);
+
+      // Buscar classes del professor responsable que coincideixin amb les dates/hores de la sortida
       const result = await db.execute(sql`
         SELECT 
           h.horari_id as id,
@@ -1129,14 +1158,17 @@ export class DatabaseStorage implements IStorage {
         LEFT JOIN grups g ON h.grup_id = g.grup_id
         LEFT JOIN aules a ON h.aula_id = a.aula_id
         WHERE h.any_academic_id = ${anyAcademicId}
-          AND h.professor_id IN (
-            SELECT sp.professor_id 
-            FROM sortida_professors sp 
-            WHERE sp.sortida_id = ${sortidaId} 
-              AND sp.any_academic_id = ${anyAcademicId}
+          AND h.professor_id = ${sortida.responsable_id}
+          AND h.dia_setmana = ${diaSetmana}
+          AND (
+            (h.hora_inici >= ${horaInici} AND h.hora_inici < ${horaFi})
+            OR (h.hora_fi > ${horaInici} AND h.hora_fi <= ${horaFi})
+            OR (h.hora_inici <= ${horaInici} AND h.hora_fi >= ${horaFi})
           )
-          AND (h.assignatura IS NULL OR h.assignatura = '' OR h.assignatura != 'G')
+          AND (h.assignatura IS NOT NULL AND h.assignatura != '' AND h.assignatura != 'G')
       `);
+
+      console.log(`Consulta SQL executada per professor ${sortida.responsable_id}, dia ${diaSetmana}, ${horaInici}-${horaFi}`);
 
       const classesASubstituir = result.rows.map((row: any) => ({
         id: row.id,
