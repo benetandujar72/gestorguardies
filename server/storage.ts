@@ -1256,9 +1256,10 @@ export class DatabaseStorage implements IStorage {
           nom: prof.nom,
           cognoms: prof.cognoms,
           prioritat: 1,
-          motiu: 'Té guàrdia programada en aquesta franja exacta',
+          motiu: 'Guàrdia',
           color: '#10B981',
-          guardiesRealiitzades: 0
+          guardiesRealiitzades: 0,
+          tipus: 'guardia'
         });
       });
       console.log(`Trobats ${professorsGuardiaResult.rows.length} professors amb guàrdia`);
@@ -1315,9 +1316,10 @@ export class DatabaseStorage implements IStorage {
           nom: prof.nom,
           cognoms: prof.cognoms,
           prioritat: 2,
-          motiu: 'Professor lliure en aquesta franja',
+          motiu: 'Lliure',
           color: '#3B82F6',
-          guardiesRealiitzades: 0
+          guardiesRealiitzades: 0,
+          tipus: 'lliure'
         });
       });
       console.log(`Trobats ${professorsLliuresResult.rows.length} professors lliures`);
@@ -1366,9 +1368,10 @@ export class DatabaseStorage implements IStorage {
           nom: prof.nom,
           cognoms: prof.cognoms,
           prioritat: 3,
-          motiu: 'Té reunió/càrrec però pot alliberar-se',
+          motiu: 'Altres',
           color: '#F59E0B',
-          guardiesRealiitzades: 0
+          guardiesRealiitzades: 0,
+          tipus: 'altres'
         });
       });
       console.log(`Trobats ${professorsReunionsResult.rows.length} professors amb reunions`);
