@@ -66,22 +66,23 @@ export default function SortidesSubstitucions() {
   const [mostrarResum, setMostrarResum] = useState(false);
 
   // Obtenir sortides planificades
-  const { data: sortides, isLoading: loadingSortides } = useQuery({
+  const { data: sortides, isLoading: loadingSortides, error: sortidsError } = useQuery({
     queryKey: ['/api/sortides'],
-    onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "Has estat desconnectat. Redirigint...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-    },
   });
+
+  // Manejar errors d'autorització
+  useEffect(() => {
+    if (sortidsError && isUnauthorizedError(sortidsError as Error)) {
+      toast({
+        title: "Unauthorized",
+        description: "Has estat desconnectat. Redirigint...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+    }
+  }, [sortidsError, toast]);
 
   // Obtenir classes a substituir quan se selecciona una sortida
   const { data: classesToSubstitute, isLoading: loadingClasses } = useQuery({
