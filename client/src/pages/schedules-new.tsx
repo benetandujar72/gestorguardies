@@ -80,25 +80,25 @@ export default function SchedulesNew() {
     queryKey: ['/api/horaris'],
   });
 
-  // Fetch data for form
+  // Fetch data for form (always enabled for editing)
   const { data: professors = [] } = useQuery({
     queryKey: ['/api/professors'],
-    enabled: isCreateDialogOpen,
+    enabled: isCreateDialogOpen || isEditDialogOpen,
   });
 
   const { data: groups = [] } = useQuery({
     queryKey: ['/api/grups'],
-    enabled: isCreateDialogOpen,
+    enabled: isCreateDialogOpen || isEditDialogOpen,
   });
 
   const { data: classrooms = [] } = useQuery({
     queryKey: ['/api/aules'],
-    enabled: isCreateDialogOpen,
+    enabled: isCreateDialogOpen || isEditDialogOpen,
   });
 
   const { data: subjects = [] } = useQuery({
     queryKey: ['/api/materies'],
-    enabled: isCreateDialogOpen,
+    enabled: isCreateDialogOpen || isEditDialogOpen,
   });
 
   // Fetch active academic year directly from backend
@@ -264,20 +264,9 @@ export default function SchedulesNew() {
 
   // Edit schedule handler
   const handleEditSchedule = (schedule: Schedule) => {
-    // Reset form to clean state first
-    editForm.reset({
-      professorId: 0,
-      grupId: 0,
-      aulaId: 0,
-      diaSetmana: 1,
-      horaInici: "08:00",
-      horaFi: "09:00",
-      assignatura: "",
-    });
-    
     setEditingSchedule(schedule);
     
-    // Immediately set the values
+    // Prepare form data with proper values
     const formData = {
       professorId: schedule.professor?.id || 0,
       grupId: schedule.grup?.id || 0,
@@ -288,10 +277,8 @@ export default function SchedulesNew() {
       assignatura: schedule.assignatura || '',
     };
     
-    // Use multiple approaches to ensure values are set
-    Object.keys(formData).forEach((key) => {
-      editForm.setValue(key as keyof ScheduleFormData, formData[key as keyof ScheduleFormData]);
-    });
+    // Reset with the actual values from the schedule
+    editForm.reset(formData);
     
     setIsEditDialogOpen(true);
   };
@@ -627,7 +614,10 @@ export default function SchedulesNew() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setIsCreateDialogOpen(false)}
+                    onClick={() => {
+                      setIsCreateDialogOpen(false);
+                      form.reset();
+                    }}
                   >
                     Cancel·lar
                   </Button>
@@ -900,9 +890,23 @@ export default function SchedulesNew() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Assignatura</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Nom de l'assignatura" />
-                        </FormControl>
+                        <Select 
+                          onValueChange={field.onChange}
+                          value={field.value || ""}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona una assignatura" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Array.isArray(subjects) && subjects.map((subject: any) => (
+                              <SelectItem key={subject.id} value={subject.nom}>
+                                {subject.nom}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -971,7 +975,11 @@ export default function SchedulesNew() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setIsEditDialogOpen(false)}
+                    onClick={() => {
+                      setIsEditDialogOpen(false);
+                      setEditingSchedule(null);
+                      editForm.reset();
+                    }}
                   >
                     Cancel·lar
                   </Button>
