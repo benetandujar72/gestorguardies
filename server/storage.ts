@@ -1203,118 +1203,156 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Mètode per obtenir professors disponibles amb ranking de prioritat
+  // Mètode per obtenir professors disponibles per substitució segons criteris correctes
   async getProfessorsAvailableForSubstitution(horariId: number, anyAcademicId: number) {
     try {
-      console.log(`Buscant professors disponibles per horari ${horariId}, any acadèmic ${anyAcademicId}`);
+      console.log(`=== BÚSQUEDA PROFESSORS SUBSTITUCIÓ ===`);
+      console.log(`Horari: ${horariId}, Any: ${anyAcademicId}`);
 
       if (!anyAcademicId) {
         console.log('Any acadèmic no definit');
         return [];
       }
 
-      // Primer obtenir informació del horari original amb una consulta simple
-      const horariResult = await db.execute(sql`
-        SELECT h.dia_setmana, h.hora_inici, h.hora_fi, h.grup_id, g.nom_grup
+      // 1. Obtenir informació de la classe que necessita substitució
+      const classeResult = await db.execute(sql`
+        SELECT h.dia_setmana, h.hora_inici, h.hora_fi, h.grup_id, h.professor_id as professor_original,
+               g.nom_grup, p.nom as professor_nom, p.cognoms as professor_cognoms
         FROM horaris h
         LEFT JOIN grups g ON h.grup_id = g.grup_id
+        LEFT JOIN professors p ON h.professor_id = p.professor_id
         WHERE h.horari_id = ${horariId}
       `);
 
-      if (horariResult.rows.length === 0) {
-        console.log('Horari no trobat');
+      if (classeResult.rows.length === 0) {
+        console.log('Classe no trobada');
         return [];
       }
 
-      const horari = horariResult.rows[0] as any;
-      console.log(`Horari trobat: ${horari.nom_grup}, dia ${horari.dia_setmana}, ${horari.hora_inici}-${horari.hora_fi}`);
+      const classe = classeResult.rows[0] as any;
+      console.log(`Classe: ${classe.nom_grup}, Professor: ${classe.professor_nom} ${classe.professor_cognoms}`);
+      console.log(`Dia: ${classe.dia_setmana}, Hora: ${classe.hora_inici}-${classe.hora_fi}`);
 
-      // Obtenir tots els professors de l'any acadèmic
-      const professorsResult = await db.execute(sql`
-        SELECT p.professor_id, p.nom, p.cognoms
+      const candidats: any[] = [];
+
+      // 2. PRIORITAT 1: Professors amb GUÀRDIA programada en aquesta franja exacta
+      console.log(`--- Cercant professors amb guàrdia programada ---`);
+      const professorsGuardiaResult = await db.execute(sql`
+        SELECT DISTINCT p.professor_id as id, p.nom, p.cognoms
         FROM professors p
+        INNER JOIN horaris h ON p.professor_id = h.professor_id
         WHERE p.any_academic_id = ${anyAcademicId}
+          AND h.dia_setmana = ${classe.dia_setmana}
+          AND h.hora_inici = ${classe.hora_inici}
+          AND h.hora_fi = ${classe.hora_fi}
+          AND h.assignatura = 'G'
+          AND p.professor_id != ${classe.professor_original}
+          AND h.any_academic_id = ${anyAcademicId}
       `);
 
-      console.log(`Trobats ${professorsResult.rows.length} professors total`);
+      professorsGuardiaResult.rows.forEach((prof: any) => {
+        candidats.push({
+          id: prof.id,
+          nom: prof.nom,
+          cognoms: prof.cognoms,
+          prioritat: 1,
+          motiu: 'Té guàrdia programada en aquesta franja exacta',
+          color: '#10B981',
+          guardiesRealiitzades: 0
+        });
+      });
+      console.log(`Trobats ${professorsGuardiaResult.rows.length} professors amb guàrdia`);
 
-      // Filtrar professors disponibles (que no tenen classe en aquest moment)
-      const disponiblesResult = await db.execute(sql`
-        SELECT p.professor_id, p.nom, p.cognoms,
-               -- Comprovar si té el mateix grup
-               CASE 
-                 WHEN EXISTS (
-                   SELECT 1 FROM horaris h2 
-                   WHERE h2.professor_id = p.professor_id 
-                     AND h2.grup_id = ${horari.grup_id}
-                     AND h2.any_academic_id = ${anyAcademicId}
-                 ) THEN 1
-                 -- Comprovar si té guàrdia programada en aquest slot
-                 WHEN EXISTS (
-                   SELECT 1 FROM horaris h3
-                   WHERE h3.professor_id = p.professor_id
-                     AND h3.dia_setmana = ${horari.dia_setmana}
-                     AND h3.hora_inici = ${horari.hora_inici}
-                     AND h3.hora_fi = ${horari.hora_fi}
-                     AND h3.assignatura = 'G'
-                     AND h3.any_academic_id = ${anyAcademicId}
-                 ) THEN 2
-                 ELSE 3
-               END as prioritat
+      // 3. PRIORITAT 2: Professors LLIURES (sense classe assignada) en aquesta franja
+      console.log(`--- Cercant professors lliures ---`);
+      const professorsLliuresResult = await db.execute(sql`
+        SELECT p.professor_id as id, p.nom, p.cognoms
         FROM professors p
         WHERE p.any_academic_id = ${anyAcademicId}
-          -- No té conflicte d'horari (no està ocupat en aquest moment)
+          AND p.professor_id != ${classe.professor_original}
+          AND p.professor_id NOT IN (${candidats.map(c => c.id).join(',') || '0'})
           AND NOT EXISTS (
-            SELECT 1 FROM horaris h4
-            WHERE h4.professor_id = p.professor_id
-              AND h4.dia_setmana = ${horari.dia_setmana}
-              AND h4.hora_inici <= ${horari.hora_inici}
-              AND h4.hora_fi >= ${horari.hora_fi}
-              AND h4.assignatura != 'G'
-              AND h4.any_academic_id = ${anyAcademicId}
+            SELECT 1 FROM horaris h
+            WHERE h.professor_id = p.professor_id
+              AND h.any_academic_id = ${anyAcademicId}
+              AND h.dia_setmana = ${classe.dia_setmana}
+              AND h.hora_inici = ${classe.hora_inici}
+              AND h.hora_fi = ${classe.hora_fi}
+              AND h.assignatura IS NOT NULL
+              AND h.assignatura != ''
+              AND h.assignatura != 'G'
           )
-        ORDER BY prioritat ASC
       `);
 
-      console.log(`Trobats ${disponiblesResult.rows.length} professors disponibles`);
+      professorsLliuresResult.rows.forEach((prof: any) => {
+        candidats.push({
+          id: prof.id,
+          nom: prof.nom,
+          cognoms: prof.cognoms,
+          prioritat: 2,
+          motiu: 'Professor lliure en aquesta franja',
+          color: '#3B82F6',
+          guardiesRealiitzades: 0
+        });
+      });
+      console.log(`Trobats ${professorsLliuresResult.rows.length} professors lliures`);
 
-      // Obtenir estadístiques de guardies per cada professor disponible
-      const professorsDisponibles = await Promise.all(
-        disponiblesResult.rows.map(async (prof: any) => {
-          const guardiesResult = await db.execute(sql`
-            SELECT COUNT(*) as total,
-                   COUNT(CASE WHEN estat = 'realitzada' THEN 1 END) as realitzades
-            FROM assignacions_guardia
-            WHERE professor_id = ${prof.professor_id}
-          `);
+      // 4. PRIORITAT 3: Professors amb REUNIONS/CÀRRECS (poden alliberar-se)
+      console.log(`--- Cercant professors amb reunions/càrrecs ---`);
+      const professorsReunionsResult = await db.execute(sql`
+        SELECT DISTINCT p.professor_id as id, p.nom, p.cognoms
+        FROM professors p
+        INNER JOIN horaris h ON p.professor_id = h.professor_id
+        WHERE p.any_academic_id = ${anyAcademicId}
+          AND h.dia_setmana = ${classe.dia_setmana}
+          AND h.hora_inici = ${classe.hora_inici}
+          AND h.hora_fi = ${classe.hora_fi}
+          AND h.any_academic_id = ${anyAcademicId}
+          AND (h.assignatura ILIKE '%reunió%' OR h.assignatura ILIKE '%càrrec%' 
+               OR h.assignatura ILIKE '%coordinació%' OR h.assignatura ILIKE '%tutoria%')
+          AND p.professor_id != ${classe.professor_original}
+          AND p.professor_id NOT IN (${candidats.map(c => c.id).join(',') || '0'})
+      `);
 
-          const stats = guardiesResult.rows[0] as any;
-          const total = parseInt(stats.total) || 0;
-          const realitzades = parseInt(stats.realitzades) || 0;
-          const percentatge = total > 0 ? (realitzades / total) * 100 : 0;
+      professorsReunionsResult.rows.forEach((prof: any) => {
+        candidats.push({
+          id: prof.id,
+          nom: prof.nom,
+          cognoms: prof.cognoms,
+          prioritat: 3,
+          motiu: 'Té reunió/càrrec però pot alliberar-se',
+          color: '#F59E0B',
+          guardiesRealiitzades: 0
+        });
+      });
+      console.log(`Trobats ${professorsReunionsResult.rows.length} professors amb reunions`);
 
-          return {
-            id: prof.professor_id,
-            nom: prof.nom,
-            cognoms: prof.cognoms,
-            prioritat: prof.prioritat,
-            grupObjectiu: horari.nom_grup,
-            guardiesAssignades: total,
-            guardiesRealitzades: realitzades,
-            percentatgeRealitzat: percentatge,
-            prioritatColor: this.getPriorityColor(percentatge),
-            prioritatText: prof.prioritat === 1 ? `Mateix grup (${horari.nom_grup})` : 
-                          prof.prioritat === 2 ? 'Guàrdia programada' : 
-                          'Disponible',
-            badgeVariant: prof.prioritat === 1 ? 'default' : 
-                         prof.prioritat === 2 ? 'secondary' : 
-                         'outline'
-          };
-        })
-      );
+      // 5. Calcular estadístiques reals de guardies per cada candidat
+      for (const candidat of candidats) {
+        const guardiesResult = await db.execute(sql`
+          SELECT COUNT(*) as total
+          FROM assignacions_guardia
+          WHERE professor_id = ${candidat.id}
+            AND any_academic_id = ${anyAcademicId}
+        `);
+        candidat.guardiesRealiitzades = Number(guardiesResult.rows[0]?.total || 0);
+      }
 
-      console.log(`Retornant ${professorsDisponibles.length} professors amb estadístiques`);
-      return professorsDisponibles;
+      // 6. Ordenar per prioritat i equilibri de guardies
+      candidats.sort((a, b) => {
+        if (a.prioritat !== b.prioritat) {
+          return a.prioritat - b.prioritat;
+        }
+        // A igual prioritat, menys guardies = més prioritat
+        return a.guardiesRealiitzades - b.guardiesRealiitzades;
+      });
+
+      console.log(`=== RESULTAT: ${candidats.length} candidats trobats ===`);
+      candidats.forEach(c => {
+        console.log(`- ${c.nom} ${c.cognoms} (P:${c.prioritat}, G:${c.guardiesRealiitzades}) - ${c.motiu}`);
+      });
+
+      return candidats;
 
     } catch (error) {
       console.error('Error en getProfessorsAvailableForSubstitution:', error);
