@@ -1874,9 +1874,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const sortidaId = parseInt(req.params.sortidaId);
       const { horariOriginalId, professorOriginalId, professorSubstitutId, observacions } = req.body;
-      const activeYear = await storage.getAnysAcademics().then(years => 
-        years.find(y => y.actiu)
-      );
+      const activeYear = await storage.getActiveAcademicYearFull();
       
       if (!activeYear) {
         return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });
@@ -1904,9 +1902,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/sortides/:sortidaId/confirmar-substitucions', isAuthenticated, async (req, res) => {
     try {
       const sortidaId = parseInt(req.params.sortidaId);
-      const activeYear = await storage.getAnysAcademics().then(years => 
-        years.find(y => y.actiu)
-      );
+      const activeYear = await storage.getActiveAcademicYearFull();
       
       if (!activeYear) {
         return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });

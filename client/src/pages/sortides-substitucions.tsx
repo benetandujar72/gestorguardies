@@ -364,24 +364,41 @@ export default function SortidesSubstitucions() {
 
             <div className="space-y-3">
               {substitucions.map((sub, index) => {
-                const classe = classesASubstituir.find(c => c.id === sub.horariId);
+                const classe = classesToUse.find(c => c.id === sub.horariId);
                 if (!classe) return null;
+
+                // Obtenir informació del professor substitut de la query
+                const { data: professorsDisponibles = [] } = useQuery({
+                  queryKey: [`/api/horari/${classe.id}/professors-disponibles`],
+                  enabled: false  // No executar automàticament
+                });
+
+                const professorSubstitut = Array.isArray(professorsDisponibles) 
+                  ? professorsDisponibles.find((p: any) => p.id === sub.professorSubstitutId)
+                  : null;
 
                 return (
                   <div key={index} className="border rounded p-3 bg-gray-50">
                     <div className="flex justify-between items-start">
-                      <div>
+                      <div className="space-y-1">
                         <p className="font-medium">
                           {getDiaSetmanaNom(classe.diaSetmana)} {classe.horaInici}-{classe.horaFi}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {classe.assignatura} - {classe.grup.nomGrup} - {classe.aula.nomAula}
+                          {classe.assignatura || 'Sense assignatura'} - {classe.grup.nomGrup} - {classe.aula?.nomAula || 'Sense aula'}
                         </p>
                         <p className="text-sm">
                           <strong>Professor original:</strong> {classe.professor.nom} {classe.professor.cognoms}
                         </p>
+                        <p className="text-sm text-green-700">
+                          <strong>Professor substitut:</strong> {
+                            professorSubstitut 
+                              ? `${professorSubstitut.nom} ${professorSubstitut.cognoms}`
+                              : `ID: ${sub.professorSubstitutId}`
+                          }
+                        </p>
                       </div>
-                      <Badge variant="outline">Planificada</Badge>
+                      <Badge variant="outline" className="bg-green-50 text-green-700">Assignada</Badge>
                     </div>
                     {sub.observacions && (
                       <p className="text-sm mt-2 text-muted-foreground">
@@ -499,9 +516,12 @@ function ClasseSubstitucio({
                     onClick={() => onAssignarProfessor(professor.id)}
                   >
                     <div className="flex items-center gap-3">
-                      <Checkbox 
+                      <input
+                        type="radio"
+                        name={`professor-${classe.id}`}
                         checked={professorAssignat === professor.id}
-                        onChange={() => {}}
+                        onChange={() => onAssignarProfessor(professor.id)}
+                        className="w-4 h-4"
                       />
                       <div>
                         <p className="font-medium">{professor.nom} {professor.cognoms}</p>
