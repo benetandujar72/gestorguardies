@@ -2062,14 +2062,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Crear comunicacions automàtiques
       const comunicacions = [];
 
+      // Crear comunicacions automàtiques
+      const dies = ['Diumenge', 'Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres', 'Dissabte'];
+      const diaText = dies[diaSetmana] || `Dia ${diaSetmana}`;
+
       // Comunicació al professor original
       if (professorOriginal) {
         const comunicacioOriginal = await storage.createComunicacio({
-          professorId: professorOriginalId,
           anyAcademicId,
+          tipusDest: 'professor',
+          destinatariId: professorOriginalId,
           tipus: 'substitucio',
-          titol: 'Substitució de classe assignada',
-          missatge: `La teva classe del ${getDiaSemanaText(diaSetmana)} de ${horaInici} a ${horaFi} serà coberta per ${professorAssignat?.nom} ${professorAssignat?.cognoms}. Motiu: ${motiu}`,
+          missatge: `La teva classe del ${diaText} de ${horaInici} a ${horaFi} serà coberta per ${professorAssignat?.nom} ${professorAssignat?.cognoms}. Motiu: ${motiu}`,
           llegit: false
         });
         comunicacions.push(comunicacioOriginal);
@@ -2078,11 +2082,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Comunicació al professor substitut
       if (professorAssignat) {
         const comunicacioSubstitut = await storage.createComunicacio({
-          professorId: professorAssignatId,
           anyAcademicId,
+          tipusDest: 'professor',
+          destinatariId: professorAssignatId,
           tipus: 'guardia',
-          titol: 'Nova tasca de substitució assignada',
-          missatge: `Se t'ha assignat una substitució del ${getDiaSemanaText(diaSetmana)} de ${horaInici} a ${horaFi} per ${professorOriginal?.nom} ${professorOriginal?.cognoms}. Tasca: ${descripcio}`,
+          missatge: `Se t'ha assignat una substitució del ${diaText} de ${horaInici} a ${horaFi} per ${professorOriginal?.nom} ${professorOriginal?.cognoms}. Tasca: ${descripcio}`,
           llegit: false
         });
         comunicacions.push(comunicacioSubstitut);

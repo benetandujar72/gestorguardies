@@ -1299,6 +1299,24 @@ export class DatabaseStorage implements IStorage {
     if (percentatgeRealitzat <= 95) return 'red';     // Crítica prioritat
     return 'slate'; // Sobrecàrregat (equivalent a negre)
   }
+
+  // Crear nova tasca
+  async createTasca(tascaData: any): Promise<any> {
+    const [newTasca] = await db.insert(tasques).values(tascaData).returning();
+    return newTasca;
+  }
+
+  // Crear nova comunicació
+  async createComunicacio(comunicacioData: any): Promise<any> {
+    const [newComunicacio] = await db.insert(comunicacions).values(comunicacioData).returning();
+    return newComunicacio;
+  }
+
+  // Obtenir professor per ID
+  async getProfessor(id: number): Promise<any | undefined> {
+    const [professor] = await db.select().from(professors).where(eq(professors.id, id));
+    return professor;
+  }
 }
 
 export const storage = new DatabaseStorage();
