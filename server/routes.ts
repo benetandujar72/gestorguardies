@@ -1226,7 +1226,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 errorCount++;
                 continue;
               }
-              await storage.createSortida(insertSortidaSchema.parse(recordWithAcademicYear));
+              
+              // Convert date format from DD/MM/YYYY to ISO timestamp
+              const convertDateToTimestamp = (dateStr: string) => {
+                if (!dateStr) return null;
+                
+                // Handle DD/MM/YYYY format
+                const dateParts = dateStr.split('/');
+                if (dateParts.length === 3) {
+                  const [day, month, year] = dateParts;
+                  return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T08:00:00`);
+                }
+                
+                // Try to parse as regular date
+                return new Date(dateStr);
+              };
+              
+              // Convert professor ID from text to number
+              const convertProfessorId = (professorIdStr: string | number) => {
+                if (typeof professorIdStr === 'number') return professorIdStr;
+                if (!professorIdStr) return null;
+                
+                const professorMapping: { [key: string]: number } = {
+                  'MCY': 149, 'CM': 150, 'JC': 151, 'AF': 152, 'LA': 153, 'MS': 154,
+                  'LM': 155, 'F': 156, 'R': 157, 'AP': 158, 'IZ': 159, 'IM': 160,
+                  'BR': 161, 'AN': 162, 'JM': 163, 'NM': 164, 'MV': 165, 'L': 166,
+                  'MÇ': 167, 'S': 168, 'PF': 169, 'A': 170, 'MA': 171, 'DP': 172,
+                  'JT': 173, 'LC': 174, 'MJ': 175, 'RY': 180, 'RM': 187, 'AS': 185, 
+                  'AD': 186, 'BA': 182
+                };
+                
+                return professorMapping[professorIdStr] || null;
+              };
+              
+              // Convert grup ID from text to number
+              const convertGrupId = (grupIdStr: string | number) => {
+                if (typeof grupIdStr === 'number') return grupIdStr;
+                if (!grupIdStr) return null;
+                
+                const grupMapping: { [key: string]: number } = {
+                  '1A': 37, '1B': 38, '1C': 39,
+                  '2A': 40, '2B': 41, '2C': 42, 
+                  '3A': 43, '3B': 44, '3C': 45,
+                  '4tA': 46, '4tB': 47, '4tC': 48,
+                  '1r ESO A': 37, '1r ESO B': 38, '1r ESO C': 39,
+                  '2n ESO A': 40, '2n ESO B': 41, '2n ESO C': 42,
+                  '3r ESO A': 43, '3r ESO B': 44, '3r ESO C': 45,
+                  '4t ESO A': 46, '4t ESO B': 47, '4t ESO C': 48,
+                  '3r ESO': 43 // Default si només diu "3r ESO"
+                };
+                
+                return grupMapping[grupIdStr] || null;
+              };
+              
+              console.log(`Converting responsableId: "${record.responsableId}" (${typeof record.responsableId}) -> ${convertProfessorId(record.responsableId)} (number)`);
+              
+              const sortidaData = {
+                ...recordWithAcademicYear,
+                dataInici: convertDateToTimestamp(record.dataInici),
+                dataFi: convertDateToTimestamp(record.dataFi || record.dataInici),
+                responsableId: convertProfessorId(record.responsableId),
+                grupId: convertGrupId(record.grupId)
+              };
+              
+              console.log(`Processing row ${i} for sortides:`, sortidaData);
+              
+              await storage.createSortida(insertSortidaSchema.parse(sortidaData));
               break;
               
             case 'guardies':
