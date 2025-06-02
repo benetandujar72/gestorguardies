@@ -446,12 +446,65 @@ export const insertSortidaSchema = createInsertSchema(sortides).omit({
   id: true,
   createdAt: true,
 }).extend({
-  dataInici: z.union([z.coerce.date(), z.string().datetime()]).transform(val => 
-    typeof val === 'string' ? new Date(val) : val
-  ),
-  dataFi: z.union([z.coerce.date(), z.string().datetime()]).transform(val => 
-    typeof val === 'string' ? new Date(val) : val
-  ),
+  dataInici: z.union([
+    z.date(),
+    z.string().transform((str) => {
+      // Handle DD/MM/YYYY format
+      const dateParts = str.split('/');
+      if (dateParts.length === 3) {
+        const [day, month, year] = dateParts;
+        return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T08:00:00`);
+      }
+      // Handle other date formats
+      return new Date(str);
+    })
+  ]),
+  dataFi: z.union([
+    z.date(),
+    z.string().transform((str) => {
+      // Handle DD/MM/YYYY format
+      const dateParts = str.split('/');
+      if (dateParts.length === 3) {
+        const [day, month, year] = dateParts;
+        return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T18:00:00`);
+      }
+      // Handle other date formats
+      return new Date(str);
+    })
+  ]),
+  responsableId: z.union([
+    z.number(),
+    z.string().transform((str) => {
+      const professorMapping: { [key: string]: number } = {
+        'MCY': 149, 'CM': 150, 'JC': 151, 'AF': 152, 'LA': 153, 'MS': 154,
+        'LM': 155, 'F': 156, 'R': 157, 'AP': 158, 'IZ': 159, 'IM': 160,
+        'BR': 161, 'AN': 162, 'JM': 163, 'NM': 164, 'MV': 165, 'L': 166,
+        'MÇ': 167, 'S': 168, 'PF': 169, 'A': 170, 'MA': 171, 'DP': 172,
+        'JT': 173, 'LC': 174, 'MJ': 175, 'RY': 180, 'RM': 187, 'AS': 185, 
+        'AD': 186, 'BA': 182
+      };
+      return professorMapping[str] || null;
+    }),
+    z.null()
+  ]).optional(),
+  grupId: z.union([
+    z.number(),
+    z.string().transform((str) => {
+      const grupMapping: { [key: string]: number } = {
+        '1A': 37, '1B': 38, '1C': 39,
+        '2A': 40, '2B': 41, '2C': 42, 
+        '3A': 43, '3B': 44, '3C': 45,
+        '4tA': 46, '4tB': 47, '4tC': 48,
+        '1r ESO A': 37, '1r ESO B': 38, '1r ESO C': 39,
+        '2n ESO A': 40, '2n ESO B': 41, '2n ESO C': 42,
+        '3r ESO A': 43, '3r ESO B': 44, '3r ESO C': 45,
+        '4t ESO A': 46, '4t ESO B': 47, '4t ESO C': 48,
+        '3r ESO': 43
+      };
+      return grupMapping[str] || null;
+    }),
+    z.null()
+  ]).optional(),
 });
 
 export const insertGuardiaSchema = createInsertSchema(guardies).omit({
