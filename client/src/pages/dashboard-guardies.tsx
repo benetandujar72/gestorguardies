@@ -338,7 +338,7 @@ export default function DashboardGuardiesVisual() {
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {seccion.items.map((item) => (
-                      <Button key={item.href} variant="outline" className="w-full justify-start hover:bg-amber-50" asChild>
+                      <Button key={item.href} variant="outline" className="w-full justify-start border-gray-300 text-gray-700 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all duration-200 shadow-sm hover:shadow-md" asChild>
                         <Link href={item.href}>
                           <item.icon className="h-4 w-4 mr-2" />
                           {item.label}
