@@ -1285,9 +1285,7 @@ export class DatabaseStorage implements IStorage {
                 AND h.dia_setmana = ${classe.dia_setmana}
                 AND h.hora_inici = ${classe.hora_inici}
                 AND h.hora_fi = ${classe.hora_fi}
-                AND h.assignatura IS NOT NULL
-                AND h.assignatura != ''
-                AND h.assignatura != 'G'
+                AND (h.assignatura IS NULL OR h.assignatura != 'G')
             )
         `);
       } else {
@@ -1303,9 +1301,7 @@ export class DatabaseStorage implements IStorage {
                 AND h.dia_setmana = ${classe.dia_setmana}
                 AND h.hora_inici = ${classe.hora_inici}
                 AND h.hora_fi = ${classe.hora_fi}
-                AND h.assignatura IS NOT NULL
-                AND h.assignatura != ''
-                AND h.assignatura != 'G'
+                AND (h.assignatura IS NULL OR h.assignatura != 'G')
             )
         `);
       }
