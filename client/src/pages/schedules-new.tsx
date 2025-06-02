@@ -287,7 +287,7 @@ export default function SchedulesNew() {
   const updateScheduleMutation = useMutation({
     mutationFn: async (data: { id: number } & ScheduleFormData) => {
       const { id, ...updateData } = data;
-      return await apiRequest(`/api/horaris/${id}`, 'PATCH', updateData);
+      return await apiRequest('PATCH', `/api/horaris/${id}`, updateData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/horaris'] });
