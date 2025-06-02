@@ -796,15 +796,18 @@ export class DatabaseStorage implements IStorage {
       .where(gte(guardies.data, new Date().toISOString().split('T')[0]))
       .orderBy(guardies.data, guardies.horaInici);
 
-    // Obtenir substitucions (assignacions sense guardiaId)
+    // Obtenir substitucions actives (assignacions sense guardiaId)
     const substitucions = await db.execute(sql`
       SELECT 
         ag.assigna_id as id,
         CURRENT_DATE as data,
-        '13:30:00' as hora,
+        COALESCE(
+          SUBSTRING(t.descripcio FROM 'de ([0-9]{2}:[0-9]{2}:[0-9]{2})'),
+          '09:00:00'
+        ) as hora,
         'Substitució' as "tipusGuardia",
         ag.estat as categoria,
-        CONCAT('Substitució - ', ag.motiu) as observacions,
+        CONCAT('Substitució - ', t.titol) as observacions,
         ag.assigna_id as "assignacioId",
         json_build_object(
           'id', p.professor_id,
@@ -814,11 +817,14 @@ export class DatabaseStorage implements IStorage {
         NULL as aula
       FROM assignacions_guardia ag
       LEFT JOIN professors p ON ag.professor_id = p.professor_id
+      LEFT JOIN tasques t ON t.assigna_id = ag.assigna_id
       WHERE ag.guardia_id IS NULL 
         AND ag.motiu = 'substitucio'
+        AND ag.estat = 'assignada'
         AND ag.any_academic_id = (
           SELECT any_academic_id FROM anys_academics WHERE estat = 'actiu' LIMIT 1
         )
+        AND t.data_creacio >= CURRENT_DATE - INTERVAL '7 days'
       ORDER BY ag.assigna_id DESC
     `);
 
