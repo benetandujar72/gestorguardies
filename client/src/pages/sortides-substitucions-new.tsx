@@ -8,6 +8,8 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { isUnauthorizedError } from '@/lib/authUtils';
 import { CalendarDays, Users, Clock, CheckCircle2, AlertTriangle, UserCheck, Send, User } from 'lucide-react';
@@ -99,6 +101,86 @@ export default function SortidesSubstitucions() {
   const { data: professorsDisponibles = [], isLoading: loadingProfessors } = useQuery({
     queryKey: [`/api/horari/${classeSeleccionada}/professors-disponibles`],
     enabled: !!classeSeleccionada,
+  });
+
+  // Mutació per crear tasca de substitució
+  const mutationCrearTasca = useMutation({
+    mutationFn: async (tasca: {
+      professorOriginalId: number;
+      professorAssignatId: number;
+      horariId: number;
+      diaSetmana: number;
+      horaInici: string;
+      horaFi: string;
+      motiu: string;
+      descripcio: string;
+    }) => {
+      const response = await fetch('/api/tasques', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(tasca)
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Error creant tasca');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Tasca creada",
+        description: `Tasca de substitució creada i comunicacions enviades als professors involucrats.`,
+      });
+      
+      // Tancar modal i reset
+      setModalConfirmacio(false);
+      setAssignacioTemporal(null);
+      
+      // Actualitzar substitucions locals
+      if (assignacioTemporal) {
+        setProfessorPerClasse(prev => ({ 
+          ...prev, 
+          [assignacioTemporal.classeId]: assignacioTemporal.professorSubstitutId 
+        }));
+        
+        setSubstitucions(prev => {
+          const filtered = prev.filter(s => s.horariId !== assignacioTemporal.classeId);
+          return [...filtered, {
+            horariId: assignacioTemporal.classeId,
+            horariOriginalId: assignacioTemporal.classeId,
+            professorOriginalId: assignacioTemporal.professorOriginalId,
+            professorSubstitutId: assignacioTemporal.professorSubstitutId,
+            observacions: assignacioTemporal.descripcioTasca
+          }];
+        });
+      }
+      
+      // Invalidar caches
+      queryClient.invalidateQueries({ queryKey: ['/api/tasques'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/comunicacions'] });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "No autoritzat",
+          description: "Estàs desconnectat. Connectant-te de nou...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      
+      toast({
+        title: "Error",
+        description: error.message || "Error creant la tasca de substitució",
+        variant: "destructive",
+      });
+    },
   });
 
   const classesToUse = Array.isArray(classesToSubstitute) ? classesToSubstitute : [];
@@ -554,6 +636,93 @@ export default function SortidesSubstitucions() {
           )}
         </div>
       </div>
+
+      {/* Modal de confirmació per crear tasca */}
+      <Dialog open={modalConfirmacio} onOpenChange={setModalConfirmacio}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Confirmar Assignació de Substitució</DialogTitle>
+            <DialogDescription>
+              Estàs a punt de crear una tasca de substitució. Revisa els detalls abans de confirmar.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {assignacioTemporal && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Professor Original</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {classesToUse.find(c => c.id === assignacioTemporal.classeId)?.professor?.nom}{' '}
+                    {classesToUse.find(c => c.id === assignacioTemporal.classeId)?.professor?.cognoms}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Professor Substitut</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {(professorsDisponibles as any[])?.find((p: any) => p.id === assignacioTemporal.professorSubstitutId)?.nom}{' '}
+                    {(professorsDisponibles as any[])?.find((p: any) => p.id === assignacioTemporal.professorSubstitutId)?.cognoms}
+                  </p>
+                </div>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium">Motiu</Label>
+                <Input
+                  value={assignacioTemporal.motiu}
+                  onChange={(e) => setAssignacioTemporal(prev => prev ? {...prev, motiu: e.target.value} : null)}
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium">Descripció de la Tasca</Label>
+                <Textarea
+                  value={assignacioTemporal.descripcioTasca}
+                  onChange={(e) => setAssignacioTemporal(prev => prev ? {...prev, descripcioTasca: e.target.value} : null)}
+                  className="mt-1"
+                  rows={3}
+                  placeholder="Descriu la tasca específica que ha de realitzar el professor substitut..."
+                />
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setModalConfirmacio(false);
+                setAssignacioTemporal(null);
+              }}
+            >
+              Cancel·lar
+            </Button>
+            <Button 
+              onClick={() => {
+                if (assignacioTemporal) {
+                  const classeInfo = classesToUse.find(c => c.id === assignacioTemporal.classeId);
+                  if (classeInfo) {
+                    mutationCrearTasca.mutate({
+                      professorOriginalId: assignacioTemporal.professorOriginalId,
+                      professorAssignatId: assignacioTemporal.professorSubstitutId,
+                      horariId: assignacioTemporal.classeId,
+                      diaSetmana: classeInfo.diaSetmana,
+                      horaInici: classeInfo.horaInici,
+                      horaFi: classeInfo.horaFi,
+                      motiu: assignacioTemporal.motiu,
+                      descripcio: assignacioTemporal.descripcioTasca
+                    });
+                  }
+                }
+              }}
+              disabled={mutationCrearTasca.isPending}
+            >
+              {mutationCrearTasca.isPending ? "Creant..." : "Confirmar i Enviar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

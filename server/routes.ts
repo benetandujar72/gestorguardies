@@ -5,6 +5,12 @@ import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+
+// Funció auxiliar per convertir dia de setmana
+function getDiaSemanaText(dia: number): string {
+  const dies = ['Diumenge', 'Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres', 'Dissabte'];
+  return dies[dia] || `Dia ${dia}`;
+}
 import { 
   insertProfessorSchema,
   insertGrupSchema,
@@ -2010,6 +2016,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error getting sortida substitutions:", error);
       res.status(500).json({ message: "Error obtenint substitucions de la sortida" });
+    }
+  });
+
+  // Crear tasca de substitució amb comunicacions automàtiques
+  app.post('/api/tasques', isAuthenticated, async (req, res) => {
+    try {
+      const {
+        professorOriginalId,
+        professorAssignatId,
+        horariId,
+        diaSetmana,
+        horaInici,
+        horaFi,
+        motiu,
+        descripcio
+      } = req.body;
+
+      console.log('=== CREANT TASCA DE SUBSTITUCIÓ ===');
+      console.log('Professor Original:', professorOriginalId);
+      console.log('Professor Assignat:', professorAssignatId);
+      console.log('Horari:', horariId, diaSetmana, horaInici, horaFi);
+
+      const activeYear = await storage.getActiveAcademicYear();
+      if (!activeYear) {
+        return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });
+      }
+
+      const anyAcademicId = typeof activeYear === 'number' ? activeYear : activeYear.id;
+
+      // Crear la tasca
+      const tasca = await storage.createTasca({
+        anyAcademicId,
+        descripcio: `${descripcio} - Professor original: ${professorOriginalId}, Professor assignat: ${professorAssignatId}, Horari: ${diaSetmana}/${horaInici}-${horaFi}`,
+        estat: 'pendent',
+        prioritat: 'mitjana'
+      });
+
+      console.log('Tasca creada:', tasca.id);
+
+      // Obtenir informació dels professors per les comunicacions
+      const professorOriginal = await storage.getProfessor(professorOriginalId);
+      const professorAssignat = await storage.getProfessor(professorAssignatId);
+
+      // Crear comunicacions automàtiques
+      const comunicacions = [];
+
+      // Comunicació al professor original
+      if (professorOriginal) {
+        const comunicacioOriginal = await storage.createComunicacio({
+          professorId: professorOriginalId,
+          anyAcademicId,
+          tipus: 'substitucio',
+          titol: 'Substitució de classe assignada',
+          missatge: `La teva classe del ${getDiaSemanaText(diaSetmana)} de ${horaInici} a ${horaFi} serà coberta per ${professorAssignat?.nom} ${professorAssignat?.cognoms}. Motiu: ${motiu}`,
+          llegit: false
+        });
+        comunicacions.push(comunicacioOriginal);
+      }
+
+      // Comunicació al professor substitut
+      if (professorAssignat) {
+        const comunicacioSubstitut = await storage.createComunicacio({
+          professorId: professorAssignatId,
+          anyAcademicId,
+          tipus: 'guardia',
+          titol: 'Nova tasca de substitució assignada',
+          missatge: `Se t'ha assignat una substitució del ${getDiaSemanaText(diaSetmana)} de ${horaInici} a ${horaFi} per ${professorOriginal?.nom} ${professorOriginal?.cognoms}. Tasca: ${descripcio}`,
+          llegit: false
+        });
+        comunicacions.push(comunicacioSubstitut);
+      }
+
+      console.log(`Creades ${comunicacions.length} comunicacions`);
+
+      res.json({
+        tasca,
+        comunicacions: comunicacions.length,
+        message: 'Tasca creada i comunicacions enviades correctament'
+      });
+
+    } catch (error: any) {
+      console.error("Error creating tasca:", error);
+      res.status(500).json({ message: "Error creant la tasca de substitució" });
     }
   });
 
