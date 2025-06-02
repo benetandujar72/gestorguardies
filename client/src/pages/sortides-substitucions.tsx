@@ -49,6 +49,7 @@ interface ProfessorDisponible {
 
 interface Substitucio {
   horariId: number;
+  horariOriginalId?: number;
   professorOriginalId: number;
   professorSubstitutId: number;
   observacions: string;
@@ -172,6 +173,7 @@ export default function SortidesSubstitucions() {
       const filtered = prev.filter(s => s.horariId !== horariId);
       return [...filtered, {
         horariId,
+        horariOriginalId: horariId,
         professorOriginalId,
         professorSubstitutId: professorId,
         observacions: observacionsPerClasse[horariId] || ''
