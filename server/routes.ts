@@ -1149,7 +1149,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 errorCount++;
                 continue;
               }
-              await storage.createAlumne(insertAlumneSchema.parse(recordWithAcademicYear));
+              
+              // Mapatge dels IDs del CSV als IDs reals de la base de dades
+              const GRUP_ID_MAPPING: { [key: number]: number } = {
+                1: 37, // 1r ESO A
+                2: 38, // 1r ESO B 
+                3: 39, // 1r ESO C
+                4: 40  // 2n ESO A
+              };
+              
+              const csvGrupId = parseInt(record.grupId);
+              const realGrupId = GRUP_ID_MAPPING[csvGrupId];
+              
+              if (!realGrupId) {
+                console.log(`Skipping row ${i}: grupId ${csvGrupId} no està mapejat`);
+                errorCount++;
+                continue;
+              }
+              
+              // Crear el record amb el grupId correcte
+              const alumneWithCorrectGrup = {
+                ...recordWithAcademicYear,
+                grupId: realGrupId
+              };
+              
+              console.log(`Mapping grupId ${csvGrupId} -> ${realGrupId} for alumne: ${record.nom} ${record.cognoms}`);
+              await storage.createAlumne(insertAlumneSchema.parse(alumneWithCorrectGrup));
               break;
               
             case 'aules':
