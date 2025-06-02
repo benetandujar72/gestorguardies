@@ -1265,24 +1265,49 @@ export class DatabaseStorage implements IStorage {
 
       // 3. PRIORITAT 2: Professors LLIURES (sense classe assignada) en aquesta franja
       console.log(`--- Cercant professors lliures ---`);
-      const professorsLliuresResult = await db.execute(sql`
-        SELECT p.professor_id as id, p.nom, p.cognoms
-        FROM professors p
-        WHERE p.any_academic_id = ${anyAcademicId}
-          AND p.professor_id != ${classe.professor_original}
-          AND p.professor_id NOT IN (${candidats.map(c => c.id).join(',') || '0'})
-          AND NOT EXISTS (
-            SELECT 1 FROM horaris h
-            WHERE h.professor_id = p.professor_id
-              AND h.any_academic_id = ${anyAcademicId}
-              AND h.dia_setmana = ${classe.dia_setmana}
-              AND h.hora_inici = ${classe.hora_inici}
-              AND h.hora_fi = ${classe.hora_fi}
-              AND h.assignatura IS NOT NULL
-              AND h.assignatura != ''
-              AND h.assignatura != 'G'
-          )
-      `);
+      
+      // Crear la condició NOT IN només si hi ha candidats ja trobats
+      const excludeIds = candidats.length > 0 ? candidats.map(c => c.id) : [];
+      
+      let professorsLliuresResult;
+      if (excludeIds.length > 0) {
+        professorsLliuresResult = await db.execute(sql`
+          SELECT p.professor_id as id, p.nom, p.cognoms
+          FROM professors p
+          WHERE p.any_academic_id = ${anyAcademicId}
+            AND p.professor_id != ${classe.professor_original}
+            AND p.professor_id NOT IN (${sql.join(excludeIds.map(id => sql`${id}`), sql`, `)})
+            AND NOT EXISTS (
+              SELECT 1 FROM horaris h
+              WHERE h.professor_id = p.professor_id
+                AND h.any_academic_id = ${anyAcademicId}
+                AND h.dia_setmana = ${classe.dia_setmana}
+                AND h.hora_inici = ${classe.hora_inici}
+                AND h.hora_fi = ${classe.hora_fi}
+                AND h.assignatura IS NOT NULL
+                AND h.assignatura != ''
+                AND h.assignatura != 'G'
+            )
+        `);
+      } else {
+        professorsLliuresResult = await db.execute(sql`
+          SELECT p.professor_id as id, p.nom, p.cognoms
+          FROM professors p
+          WHERE p.any_academic_id = ${anyAcademicId}
+            AND p.professor_id != ${classe.professor_original}
+            AND NOT EXISTS (
+              SELECT 1 FROM horaris h
+              WHERE h.professor_id = p.professor_id
+                AND h.any_academic_id = ${anyAcademicId}
+                AND h.dia_setmana = ${classe.dia_setmana}
+                AND h.hora_inici = ${classe.hora_inici}
+                AND h.hora_fi = ${classe.hora_fi}
+                AND h.assignatura IS NOT NULL
+                AND h.assignatura != ''
+                AND h.assignatura != 'G'
+            )
+        `);
+      }
 
       professorsLliuresResult.rows.forEach((prof: any) => {
         candidats.push({
@@ -1299,20 +1324,41 @@ export class DatabaseStorage implements IStorage {
 
       // 4. PRIORITAT 3: Professors amb REUNIONS/CÀRRECS (poden alliberar-se)
       console.log(`--- Cercant professors amb reunions/càrrecs ---`);
-      const professorsReunionsResult = await db.execute(sql`
-        SELECT DISTINCT p.professor_id as id, p.nom, p.cognoms
-        FROM professors p
-        INNER JOIN horaris h ON p.professor_id = h.professor_id
-        WHERE p.any_academic_id = ${anyAcademicId}
-          AND h.dia_setmana = ${classe.dia_setmana}
-          AND h.hora_inici = ${classe.hora_inici}
-          AND h.hora_fi = ${classe.hora_fi}
-          AND h.any_academic_id = ${anyAcademicId}
-          AND (h.assignatura ILIKE '%reunió%' OR h.assignatura ILIKE '%càrrec%' 
-               OR h.assignatura ILIKE '%coordinació%' OR h.assignatura ILIKE '%tutoria%')
-          AND p.professor_id != ${classe.professor_original}
-          AND p.professor_id NOT IN (${candidats.map(c => c.id).join(',') || '0'})
-      `);
+      
+      // Actualitzar la llista d'exclusions amb els nous candidats
+      const allExcludeIds = candidats.map(c => c.id);
+      
+      let professorsReunionsResult;
+      if (allExcludeIds.length > 0) {
+        professorsReunionsResult = await db.execute(sql`
+          SELECT DISTINCT p.professor_id as id, p.nom, p.cognoms
+          FROM professors p
+          INNER JOIN horaris h ON p.professor_id = h.professor_id
+          WHERE p.any_academic_id = ${anyAcademicId}
+            AND h.dia_setmana = ${classe.dia_setmana}
+            AND h.hora_inici = ${classe.hora_inici}
+            AND h.hora_fi = ${classe.hora_fi}
+            AND h.any_academic_id = ${anyAcademicId}
+            AND (h.assignatura ILIKE '%reunió%' OR h.assignatura ILIKE '%càrrec%' 
+                 OR h.assignatura ILIKE '%coordinació%' OR h.assignatura ILIKE '%tutoria%')
+            AND p.professor_id != ${classe.professor_original}
+            AND p.professor_id NOT IN (${sql.join(allExcludeIds.map(id => sql`${id}`), sql`, `)})
+        `);
+      } else {
+        professorsReunionsResult = await db.execute(sql`
+          SELECT DISTINCT p.professor_id as id, p.nom, p.cognoms
+          FROM professors p
+          INNER JOIN horaris h ON p.professor_id = h.professor_id
+          WHERE p.any_academic_id = ${anyAcademicId}
+            AND h.dia_setmana = ${classe.dia_setmana}
+            AND h.hora_inici = ${classe.hora_inici}
+            AND h.hora_fi = ${classe.hora_fi}
+            AND h.any_academic_id = ${anyAcademicId}
+            AND (h.assignatura ILIKE '%reunió%' OR h.assignatura ILIKE '%càrrec%' 
+                 OR h.assignatura ILIKE '%coordinació%' OR h.assignatura ILIKE '%tutoria%')
+            AND p.professor_id != ${classe.professor_original}
+        `);
+      }
 
       professorsReunionsResult.rows.forEach((prof: any) => {
         candidats.push({
