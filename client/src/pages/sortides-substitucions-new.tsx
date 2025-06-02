@@ -75,6 +75,14 @@ export default function SortidesSubstitucions() {
   const [professorPerClasse, setProfessorPerClasse] = useState<{ [key: number]: number }>({});
   const [observacionsPerClasse, setObservacionsPerClasse] = useState<{ [key: number]: string }>({});
   const [classeSeleccionada, setClasseSeleccionada] = useState<number | null>(null);
+  const [modalConfirmacio, setModalConfirmacio] = useState(false);
+  const [assignacioTemporal, setAssignacioTemporal] = useState<{
+    classeId: number;
+    professorSubstitutId: number;
+    professorOriginalId: number;
+    motiu: string;
+    descripcioTasca: string;
+  } | null>(null);
 
   // Obtenir sortides planificades
   const { data: sortides = [], isLoading: loadingSortides } = useQuery({
@@ -218,19 +226,23 @@ export default function SortidesSubstitucions() {
   };
 
   const handleAssignarProfessor = (horariId: number, professorId: number, professorOriginalId: number) => {
-    setProfessorPerClasse(prev => ({ ...prev, [horariId]: professorId }));
+    // Obtenir informació del professor seleccionat
+    const professorSeleccionat = professorsDisponibles.find(p => p.id === professorId);
+    const classeInfo = classesToUse.find(c => c.id === horariId);
     
-    // Actualitzar substitucions
-    setSubstitucions(prev => {
-      const filtered = prev.filter(s => s.horariId !== horariId);
-      return [...filtered, {
-        horariId,
-        horariOriginalId: horariId,
-        professorOriginalId,
-        professorSubstitutId: professorId,
-        observacions: observacionsPerClasse[horariId] || ''
-      }];
+    if (!professorSeleccionat || !classeInfo) return;
+
+    // Configurar dades temporals per al modal
+    setAssignacioTemporal({
+      classeId: horariId,
+      professorSubstitutId: professorId,
+      professorOriginalId,
+      motiu: `Substitució per sortida: ${sortidaActual?.nomSortida}`,
+      descripcioTasca: `Cobrir classe de ${classeInfo.assignatura} - ${classeInfo.grup?.nomGrup || 'Sense grup'} de ${classeInfo.horaInici} a ${classeInfo.horaFi}`
     });
+    
+    // Obrir modal de confirmació
+    setModalConfirmacio(true);
   };
 
   const handleObservacions = (horariId: number, observacions: string) => {
