@@ -286,31 +286,54 @@ export class DatabaseStorage implements IStorage {
     await db.delete(professors).where(eq(professors.id, id));
   }
 
-  async getAvailableProfessorsForGuard(guardiaId: number): Promise<Professor[]> {
-    // Get guard details
-    const [guardia] = await db.select().from(guardies).where(eq(guardies.id, guardiaId));
-    if (!guardia) return [];
+  async getAvailableProfessorsForGuard(guardiaId: number): Promise<any[]> {
+    try {
+      // Get guard details
+      const [guardia] = await db
+        .select()
+        .from(guardies)
+        .where(eq(guardies.id, guardiaId));
+      
+      if (!guardia) return [];
 
-    // Get all professors
-    const allProfessors = await db.select().from(professors);
+      // Get all professors for the active academic year
+      const activeYear = await this.getActiveAcademicYear();
+      const allProfessors = await db
+        .select()
+        .from(professors)
+        .where(eq(professors.anyAcademicId, activeYear));
 
-    // Get professors already assigned to this guard
-    const assignedProfessors = await db
-      .select({ professorId: assignacionsGuardia.professorId })
-      .from(assignacionsGuardia)
-      .where(eq(assignacionsGuardia.guardiaId, guardiaId));
+      // Get professors already assigned to this guard
+      const assignedProfessors = await db
+        .select({ professorId: assignacionsGuardia.professorId })
+        .from(assignacionsGuardia)
+        .where(eq(assignacionsGuardia.guardiaId, guardiaId));
 
-    const assignedIds = assignedProfessors.map(a => a.professorId);
+      const assignedIds = assignedProfessors.map(a => a.professorId);
 
-    // Get professors on outings that overlap with the guard (simplified for now)
-    // Note: This would need proper implementation based on how responsable field is stored
+      // For now, simplified approach - just filter out assigned professors
+      // and add basic priority information
+      const availableProfessors = allProfessors
+        .filter(prof => !assignedIds.includes(prof.id))
+        .map(prof => {
+          return {
+            ...prof,
+            prioritat: 30, // Default available priority
+            motiu: "Disponible",
+            grupObjectiu: "",
+            badgeVariant: 'outline' as const,
+            prioritatColor: 'bg-gray-100 text-gray-800'
+          };
+        })
+        .sort((a, b) => a.prioritat - b.prioritat);
 
-    // Filter available professors (not assigned and not on outings)
-    const availableProfessors = allProfessors.filter(prof => 
-      !assignedIds.includes(prof.id)
-    );
+      console.log(`Found ${availableProfessors.length} available professors for guard ${guardiaId}`);
+      return availableProfessors;
 
-    return availableProfessors;
+    } catch (error) {
+      console.error('Error getting available professors:', error);
+      return [];
+    }
   }
 
   // Grup operations

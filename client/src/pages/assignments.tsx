@@ -65,7 +65,7 @@ export default function Assignments() {
 
   // Fetch available professors for the selected guard
   const { data: availableProfessors = [] } = useQuery({
-    queryKey: ['/api/professors/available', selectedGuardId],
+    queryKey: [`/api/professors/available/${selectedGuardId}`],
     enabled: isCreateDialogOpen && selectedGuardId !== null,
   });
 
@@ -266,9 +266,14 @@ export default function Assignments() {
                       <FormItem>
                         <FormLabel>Professor</FormLabel>
                         {selectedGuardId && (
-                          <p className="text-sm text-muted-foreground mb-2">
-                            Mostrant només professors disponibles (no assignats i no de sortida)
-                          </p>
+                          <div className="text-sm text-muted-foreground mb-2 p-2 bg-blue-50 rounded">
+                            <p className="font-medium">Professors ordenats per prioritat:</p>
+                            <ul className="text-xs mt-1 space-y-1">
+                              <li>• <span className="text-green-700 font-medium">Alta</span>: Guàrdia programada</li>
+                              <li>• <span className="text-blue-700 font-medium">Mitjana</span>: Té classe (pot substituir)</li>
+                              <li>• <span className="text-gray-700 font-medium">Baixa</span>: Disponible</li>
+                            </ul>
+                          </div>
                         )}
                         <Select 
                           onValueChange={(value) => field.onChange(Number(value))}
@@ -288,7 +293,19 @@ export default function Assignments() {
                           <SelectContent>
                             {professors.map((professor: any) => (
                               <SelectItem key={professor.id} value={professor.id.toString()}>
-                                {professor.nom} {professor.cognoms}
+                                <div className="flex items-center justify-between w-full">
+                                  <span>{professor.nom} {professor.cognoms}</span>
+                                  <div className="flex items-center gap-2 ml-2">
+                                    <span className={`px-2 py-1 rounded text-xs ${professor.prioritatColor || 'bg-gray-100 text-gray-800'}`}>
+                                      {professor.motiu || 'Disponible'}
+                                    </span>
+                                    {professor.grupObjectiu && (
+                                      <span className="text-xs text-gray-500">
+                                        {professor.grupObjectiu}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
                               </SelectItem>
                             ))}
                           </SelectContent>
