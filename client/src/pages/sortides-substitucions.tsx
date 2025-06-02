@@ -94,8 +94,6 @@ export default function SortidesSubstitucions() {
   useEffect(() => {
     if (classesToSubstitute && Array.isArray(classesToSubstitute)) {
       setClassesASubstituir(classesToSubstitute);
-    } else {
-      setClassesASubstituir([]);
     }
   }, [classesToSubstitute]);
 
