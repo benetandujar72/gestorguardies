@@ -757,7 +757,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getGuardiesWithDetails(): Promise<any[]> {
-    return await db
+    // Obtenir guardies regulars
+    const guardiesRegulars = await db
       .select({
         id: guardies.id,
         data: guardies.data,
@@ -791,9 +792,50 @@ export class DatabaseStorage implements IStorage {
       .from(guardies)
       .leftJoin(assignacionsGuardia, eq(guardies.id, assignacionsGuardia.guardiaId))
       .leftJoin(professors, eq(assignacionsGuardia.professorId, professors.id))
-
+      .leftJoin(aules, eq(guardies.id, aules.id))
       .where(gte(guardies.data, new Date().toISOString().split('T')[0]))
       .orderBy(guardies.data, guardies.horaInici);
+
+    // Obtenir substitucions (assignacions sense guardiaId)
+    const substitucions = await db.execute(sql`
+      SELECT 
+        ag.assigna_id as id,
+        CURRENT_DATE as data,
+        '13:30:00' as hora,
+        'Substitució' as "tipusGuardia",
+        ag.estat as categoria,
+        CONCAT('Substitució - ', ag.motiu) as observacions,
+        ag.assigna_id as "assignacioId",
+        json_build_object(
+          'id', p.professor_id,
+          'nom', p.nom,
+          'cognoms', p.cognoms
+        ) as professor,
+        NULL as aula
+      FROM assignacions_guardia ag
+      LEFT JOIN professors p ON ag.professor_id = p.professor_id
+      WHERE ag.guardia_id IS NULL 
+        AND ag.motiu = 'substitucio'
+        AND ag.any_academic_id = (
+          SELECT any_academic_id FROM anys_academics WHERE estat = 'actiu' LIMIT 1
+        )
+      ORDER BY ag.assigna_id DESC
+    `);
+
+    // Combinar resultats
+    const substitucionsFormatted = substitucions.rows.map((sub: any) => ({
+      id: `sub_${sub.id}`,
+      data: sub.data,
+      hora: sub.hora,
+      tipusGuardia: sub.tipusGuardia,
+      categoria: sub.categoria,
+      observacions: sub.observacions,
+      assignacioId: sub.assignacioId,
+      professor: sub.professor,
+      aula: sub.aula
+    }));
+
+    return [...guardiesRegulars, ...substitucionsFormatted];
   }
 
   async getGuardiesAvui(): Promise<Guardia[]> {
