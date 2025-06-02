@@ -1688,7 +1688,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('sortidaId:', sortidaId);
       
       const activeYear = await storage.getAnysAcademics().then(years => 
-        years.find(y => y.actiu)
+        years.find(y => y.estat === 'actiu')
       );
       console.log('activeYear:', activeYear);
       
