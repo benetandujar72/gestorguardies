@@ -54,6 +54,8 @@ interface ProfessorDisponible {
   prioritat: number;
   guardiesRealiitzades: number;
   color: string;
+  motiu: string;
+  tipus: string;
 }
 
 interface Substitucio {
@@ -428,7 +430,7 @@ export default function SortidesSubstitucions() {
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                             {Array.isArray(professorsDisponibles) && 
                               professorsDisponibles
-                                .filter((prof: ProfessorDisponible) => prof.color === 'Guàrdia')
+                                .filter((prof: ProfessorDisponible) => prof.motiu === 'Guàrdia')
                                 .map((professor: ProfessorDisponible) => (
                                   <Card 
                                     key={`guardia-${professor.id}`}
@@ -460,7 +462,7 @@ export default function SortidesSubstitucions() {
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                             {Array.isArray(professorsDisponibles) && 
                               professorsDisponibles
-                                .filter((prof: ProfessorDisponible) => prof.color === 'Lliure')
+                                .filter((prof: ProfessorDisponible) => prof.motiu === 'Lliure')
                                 .map((professor: ProfessorDisponible) => (
                                   <Card 
                                     key={`lliure-${professor.id}`}
