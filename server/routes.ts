@@ -1082,7 +1082,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let errorCount = 0;
       
       console.log('CSV Headers found:', headers);
+      console.log('Header mapping will be:', headerMapping);
       console.log('Processing', lines.length - 1, 'rows for entity type:', entityType);
+      
+      // Debug primera línia de dades per veure el problema
+      if (lines.length > 1) {
+        const firstDataLine = lines[1].split(',');
+        console.log('First data line values:', firstDataLine);
+        console.log('Number of headers:', headers.length, 'Number of values:', firstDataLine.length);
+      }
       
       for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split(',');
