@@ -1,0 +1,248 @@
+  detail: 'Key (grup_id)=(4) is not present in table "grups".',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'alumnes',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'alumnes_grup_id_grups_grup_id_fk',
+  file: 'ri_triggers.c',
+  line: '2608',
+  routine: 'ri_ReportViolation'
+}
+Converting grupId: "4" (string) -> 4 (number)
+Processing row 259 for alumnes: {
+  nom: 'Nathalye Jissel',
+  cognoms: 'Posadas Fuentes',
+  email: 'nathalye.posadas@insbitacola.cat',
+  telefon: '688205972',
+  grupId: 4,
+  anyAcademicId: 2
+}
+Error importing row 259: error: insert or update on table "alumnes" violates foreign key constraint "alumnes_grup_id_grups_grup_id_fk"
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async DatabaseStorage.createAlumne (/home/runner/workspace/server/storage.ts:360:25)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:1152:15) {
+  length: 274,
+  severity: 'ERROR',
+  code: '23503',
+  detail: 'Key (grup_id)=(4) is not present in table "grups".',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'alumnes',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'alumnes_grup_id_grups_grup_id_fk',
+  file: 'ri_triggers.c',
+  line: '2608',
+  routine: 'ri_ReportViolation'
+}
+Converting grupId: "4" (string) -> 4 (number)
+Processing row 260 for alumnes: {
+  nom: 'Mar',
+  cognoms: 'Puiggalí Villamón',
+  email: 'mar.puiggali@insbitacola.cat',
+  telefon: '637492282',
+  grupId: 4,
+  anyAcademicId: 2
+}
+Error importing row 260: error: insert or update on table "alumnes" violates foreign key constraint "alumnes_grup_id_grups_grup_id_fk"
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async DatabaseStorage.createAlumne (/home/runner/workspace/server/storage.ts:360:25)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:1152:15) {
+  length: 274,
+  severity: 'ERROR',
+  code: '23503',
+  detail: 'Key (grup_id)=(4) is not present in table "grups".',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'alumnes',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'alumnes_grup_id_grups_grup_id_fk',
+  file: 'ri_triggers.c',
+  line: '2608',
+  routine: 'ri_ReportViolation'
+}
+Converting grupId: "4" (string) -> 4 (number)
+Processing row 261 for alumnes: {
+  nom: 'Lola',
+  cognoms: 'Pujante Tejada',
+  email: 'lola.pujante@insbitacola.cat',
+  telefon: '640955554',
+  grupId: 4,
+  anyAcademicId: 2
+}
+Error importing row 261: error: insert or update on table "alumnes" violates foreign key constraint "alumnes_grup_id_grups_grup_id_fk"
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async DatabaseStorage.createAlumne (/home/runner/workspace/server/storage.ts:360:25)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:1152:15) {
+  length: 274,
+  severity: 'ERROR',
+  code: '23503',
+  detail: 'Key (grup_id)=(4) is not present in table "grups".',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'alumnes',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'alumnes_grup_id_grups_grup_id_fk',
+  file: 'ri_triggers.c',
+  line: '2608',
+  routine: 'ri_ReportViolation'
+}
+Converting grupId: "4" (string) -> 4 (number)
+Processing row 262 for alumnes: {
+  nom: 'Aitor',
+  cognoms: 'Risco Ortiz',
+  email: 'aitor.risco@insbitacola.cat',
+  telefon: '600027682',
+  grupId: 4,
+  anyAcademicId: 2
+}
+Error importing row 262: error: insert or update on table "alumnes" violates foreign key constraint "alumnes_grup_id_grups_grup_id_fk"
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async DatabaseStorage.createAlumne (/home/runner/workspace/server/storage.ts:360:25)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:1152:15) {
+  length: 274,
+  severity: 'ERROR',
+  code: '23503',
+  detail: 'Key (grup_id)=(4) is not present in table "grups".',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'alumnes',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'alumnes_grup_id_grups_grup_id_fk',
+  file: 'ri_triggers.c',
+  line: '2608',
+  routine: 'ri_ReportViolation'
+}
+Converting grupId: "4" (string) -> 4 (number)
+Processing row 263 for alumnes: {
+  nom: 'Bruno',
+  cognoms: 'Rodríguez Roldan',
+  email: 'bruno.rodriguez@insbitacola.cat',
+  telefon: '670229405',
+  grupId: 4,
+  anyAcademicId: 2
+}
+Error importing row 263: error: insert or update on table "alumnes" violates foreign key constraint "alumnes_grup_id_grups_grup_id_fk"
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async DatabaseStorage.createAlumne (/home/runner/workspace/server/storage.ts:360:25)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:1152:15) {
+  length: 274,
+  severity: 'ERROR',
+  code: '23503',
+  detail: 'Key (grup_id)=(4) is not present in table "grups".',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'alumnes',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'alumnes_grup_id_grups_grup_id_fk',
+  file: 'ri_triggers.c',
+  line: '2608',
+  routine: 'ri_ReportViolation'
+}
+Converting grupId: "4" (string) -> 4 (number)
+Processing row 264 for alumnes: {
+  nom: 'Gonzalo Eloy',
+  cognoms: 'Schiavo Lombardo',
+  email: 'gonzalo.schiavo@insbitacola.cat',
+  telefon: '672057011',
+  grupId: 4,
+  anyAcademicId: 2
+}
+Error importing row 264: error: insert or update on table "alumnes" violates foreign key constraint "alumnes_grup_id_grups_grup_id_fk"
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async DatabaseStorage.createAlumne (/home/runner/workspace/server/storage.ts:360:25)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:1152:15) {
+  length: 274,
+  severity: 'ERROR',
+  code: '23503',
+  detail: 'Key (grup_id)=(4) is not present in table "grups".',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'alumnes',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'alumnes_grup_id_grups_grup_id_fk',
+  file: 'ri_triggers.c',
+  line: '2608',
+  routine: 'ri_ReportViolation'
+}
+Converting grupId: "4" (string) -> 4 (number)
+Processing row 265 for alumnes: {
+  nom: 'Anna',
+  cognoms: 'Villamana Sanmiquel',
+  email: 'anna.villamana@insbitacola.cat',
+  telefon: '610742686',
+  grupId: 4,
+  anyAcademicId: 2
+}
+Error importing row 265: error: insert or update on table "alumnes" violates foreign key constraint "alumnes_grup_id_grups_grup_id_fk"
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async DatabaseStorage.createAlumne (/home/runner/workspace/server/storage.ts:360:25)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:1152:15) {
+  length: 274,
+  severity: 'ERROR',
+  code: '23503',
+  detail: 'Key (grup_id)=(4) is not present in table "grups".',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'alumnes',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'alumnes_grup_id_grups_grup_id_fk',
+  file: 'ri_triggers.c',
+  line: '2608',
+  routine: 'ri_ReportViolation'
+}
+6:13:18 AM [express] POST /api/import/csv 200 in 67683ms :: {"success":true,"importedCount":0,"total…
+6:13:19 AM [express] GET /api/anys-academics 304 in 178ms :: [{"id":3,"nom":"2026-2027","dataInici":…
