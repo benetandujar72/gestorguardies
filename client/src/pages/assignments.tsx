@@ -86,7 +86,13 @@ export default function Assignments() {
   // Create assignment mutation
   const createAssignmentMutation = useMutation({
     mutationFn: async (data: AssignmentFormData) => {
-      const response = await apiRequest('POST', '/api/assignacions-guardia', data);
+      // Add the missing anyAcademicId field
+      const payload = {
+        ...data,
+        anyAcademicId: 2, // Active academic year
+        estat: "assignada"
+      };
+      const response = await apiRequest('POST', '/api/assignacions-guardia', payload);
       return response.json();
     },
     onSuccess: () => {
@@ -98,10 +104,11 @@ export default function Assignments() {
       });
       form.reset();
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Assignment creation error:", error);
       toast({
-        title: "Error",
-        description: "No s'ha pogut crear l'assignació.",
+        title: "Error en crear l'assignació",
+        description: error.message || "No s'ha pogut crear l'assignació. Comprova les dades.",
         variant: "destructive",
       });
     },

@@ -536,23 +536,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/assignacions-guardia', isAuthenticated, async (req, res) => {
     try {
+      console.log('Assignment creation request body:', req.body);
       const assignacioData = insertAssignacioGuardiaSchema.parse(req.body);
+      console.log('Parsed assignment data:', assignacioData);
+      
       const assignacio = await storage.createAssignacioGuardia(assignacioData);
       
-      // Create metric
-      await storage.createMetric({
-        anyAcademicId: assignacio.anyAcademicId,
-        timestamp: new Date(),
-        usuariId: (req as any).user.claims.sub,
-        accio: 'assignar_guardia',
-        detalls: { assignacioId: assignacio.id, professorId: assignacio.professorId, guardiaId: assignacio.guardiaId },
-        entityType: 'assignacio_guardia',
-        entityId: assignacio.id
-      });
+      // Create metric (skip if fails to avoid blocking main operation)
+      try {
+        await storage.createMetric({
+          anyAcademicId: assignacio.anyAcademicId,
+          timestamp: new Date(),
+          usuariId: (req as any).user.claims.sub,
+          accio: 'assignar_guardia',
+          detalls: { assignacioId: assignacio.id, professorId: assignacio.professorId, guardiaId: assignacio.guardiaId },
+          entityType: 'assignacio_guardia',
+          entityId: assignacio.id
+        });
+      } catch (metricError) {
+        console.warn('Metric creation failed (non-blocking):', metricError);
+      }
       
       res.json(assignacio);
     } catch (error: any) {
-      res.status(400).json({ message: "Invalid assignment data" });
+      console.error('Assignment creation error:', error);
+      res.status(400).json({ 
+        message: "Invalid assignment data", 
+        details: error.message,
+        errors: error.errors || []
+      });
     }
   });
 
