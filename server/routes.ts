@@ -1293,6 +1293,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 continue;
               }
               
+              // Mapatge dels IDs de grup del CSV als IDs reals de la base de dades (si existeix grupId)
+              let horariGrupId = record.grupId;
+              if (record.grupId) {
+                const GRUP_ID_MAPPING: { [key: string]: number } = {
+                  '1A': 37, '1B': 38, '1C': 39,
+                  '2A': 40, '2B': 41, '2C': 42,
+                  '3A': 43, '3B': 44, '3C': 45,
+                  '4A': 46, '4B': 47, '4C': 48, '4D': 49,
+                  '4tA': 46, '4tB': 47, '4tC': 48, '4tD': 49  // Variants amb 4t
+                };
+                
+                const csvGrupId = record.grupId.toString().trim();
+                const mappedGrupId = GRUP_ID_MAPPING[csvGrupId];
+                
+                if (mappedGrupId) {
+                  horariGrupId = mappedGrupId;
+                  console.log(`Mapping grupId ${csvGrupId} -> ${horariGrupId} for horari`);
+                } else {
+                  console.log(`Warning: grupId ${csvGrupId} no està mapejat, usant valor original`);
+                }
+              }
+              
               // Convertir dia de la setmana a número si és text
               let diaSetmanaHorari = record.diaSemana;
               if (typeof diaSetmanaHorari === 'string') {
@@ -1306,6 +1328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const horariData = {
                 ...recordWithAcademicYear,
                 professorId: professorId,
+                grupId: horariGrupId,
                 diaSetmana: diaSetmanaHorari
               };
               
