@@ -1343,7 +1343,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 ...recordWithAcademicYear,
                 professorId: professorId,
                 grupId: horariGrupId,
-                diaSetmana: diaSetmanaHorari
+                diaSetmana: diaSetmanaHorari,
+                assignatura: record.materia || record.assignatura
               };
               
               console.log('Creating horari with data:', horariData);
