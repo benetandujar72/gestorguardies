@@ -1220,7 +1220,7 @@ export class DatabaseStorage implements IStorage {
           SELECT h.dia_setmana, h.hora_inici, h.hora_fi, h.professor_id as professor_original,
                  g.nom_grup, p.nom as professor_nom, p.cognoms as professor_cognoms
           FROM horaris h
-          LEFT JOIN grups g ON h.grup_id = g.id
+          LEFT JOIN grups g ON h.grup_id = g.grup_id
           LEFT JOIN professors p ON h.professor_id = p.professor_id
           WHERE h.id = ${horariId}
         ),
