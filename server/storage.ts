@@ -1235,11 +1235,17 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  private getPriorityColor(prioritat: number): string {
-    if (prioritat >= 80) return 'green'; // Alta prioritat (poques guardies)
-    if (prioritat >= 60) return 'yellow'; // Mitjana prioritat
-    if (prioritat >= 40) return 'orange'; // Baixa prioritat
-    return 'red'; // Molt baixa prioritat (moltes guardies)
+  private getPriorityColor(percentatgeRealitzat: number): string {
+    // Escala de colors degradant: menys guàrdies realitzades = més prioritari (verd)
+    // Més guàrdies realitzades = menys prioritari (vermell/negre)
+    if (percentatgeRealitzat <= 10) return 'emerald'; // Molt prioritari
+    if (percentatgeRealitzat <= 25) return 'green';   // Alta prioritat
+    if (percentatgeRealitzat <= 40) return 'lime';    // Bona prioritat
+    if (percentatgeRealitzat <= 55) return 'yellow';  // Mitjana prioritat
+    if (percentatgeRealitzat <= 70) return 'amber';   // Baixa prioritat
+    if (percentatgeRealitzat <= 85) return 'orange';  // Molt baixa prioritat
+    if (percentatgeRealitzat <= 95) return 'red';     // Crítica prioritat
+    return 'slate'; // Sobrecàrregat (equivalent a negre)
   }
 }
 

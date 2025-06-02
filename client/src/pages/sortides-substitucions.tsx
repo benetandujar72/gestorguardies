@@ -90,12 +90,8 @@ export default function SortidesSubstitucions() {
     enabled: !!sortidaSeleccionada,
   });
 
-  // Actualitzar l'estat quan arriben les dades
-  useEffect(() => {
-    if (classesToSubstitute && Array.isArray(classesToSubstitute)) {
-      setClassesASubstituir(classesToSubstitute);
-    }
-  }, [classesToSubstitute]);
+  // Usar directament les dades de la query sense useEffect per evitar bucles
+  const classesToUse = Array.isArray(classesToSubstitute) ? classesToSubstitute : [];
 
   // Mutació per confirmar substitucions
   const confirmSubstitucions = useMutation({
@@ -203,16 +199,20 @@ export default function SortidesSubstitucions() {
 
   const getColorBadge = (color: string) => {
     switch (color) {
-      case 'green': return 'bg-green-100 text-green-800';
-      case 'yellow': return 'bg-yellow-100 text-yellow-800';
-      case 'orange': return 'bg-orange-100 text-orange-800';
-      case 'red': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'emerald': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      case 'green': return 'bg-green-100 text-green-800 border-green-200';
+      case 'lime': return 'bg-lime-100 text-lime-800 border-lime-200';
+      case 'yellow': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'amber': return 'bg-amber-100 text-amber-800 border-amber-200';
+      case 'orange': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'red': return 'bg-red-100 text-red-800 border-red-200';
+      case 'slate': return 'bg-slate-100 text-slate-800 border-slate-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  const sortidaActual = sortides?.find((s: Sortida) => s.id === sortidaSeleccionada);
-  const totesClassesAssignades = classesASubstituir.every(classe => professorPerClasse[classe.id]);
+  const sortidaActual = sortides && Array.isArray(sortides) ? sortides.find((s: Sortida) => s.id === sortidaSeleccionada) : null;
+  const totesClassesAssignades = classesToUse.every(classe => professorPerClasse[classe.id]);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
