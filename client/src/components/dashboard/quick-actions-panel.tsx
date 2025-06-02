@@ -23,28 +23,28 @@ export default function QuickActionsPanel({ onCreateTask }: QuickActionsPanelPro
       icon: Plus,
       href: "/guardies",
       variant: "default" as const,
-      className: "bg-primary hover:bg-blue-800 text-white",
+      className: "bg-blue-600 hover:bg-blue-800 text-white shadow-md hover:shadow-lg transition-all",
     },
     {
       label: "Assignar Tasques",
       icon: ListTodo,
       onClick: onCreateTask,
       variant: "default" as const,
-      className: "bg-secondary hover:bg-green-700 text-white",
+      className: "bg-green-600 hover:bg-green-800 text-white shadow-md hover:shadow-lg transition-all",
     },
     {
       label: "Enviar Comunicació",
       icon: Bell,
       href: "/comunicacions",
       variant: "default" as const,
-      className: "bg-accent hover:bg-orange-600 text-white",
+      className: "bg-orange-600 hover:bg-orange-800 text-white shadow-md hover:shadow-lg transition-all",
     },
     {
       label: "Generar Informe",
       icon: BarChart3,
       href: "/analytics",
       variant: "outline" as const,
-      className: "border-gray-300 text-text-primary hover:bg-gray-50",
+      className: "border-2 border-gray-400 text-gray-800 hover:bg-gray-800 hover:text-white hover:border-gray-800 transition-all shadow-sm hover:shadow-md",
     },
   ];
 
