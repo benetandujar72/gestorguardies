@@ -2034,9 +2034,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } = req.body;
 
       console.log('=== CREANT TASCA DE SUBSTITUCIÓ ===');
+      console.log('Request body:', req.body);
       console.log('Professor Original:', professorOriginalId);
       console.log('Professor Assignat:', professorAssignatId);
       console.log('Horari:', horariId, diaSetmana, horaInici, horaFi);
+
+      // Validar dades obligatòries
+      if (!professorOriginalId || !professorAssignatId || !diaSetmana || !horaInici || !horaFi || !descripcio) {
+        console.log('Dades obligatòries mancants');
+        return res.status(400).json({ 
+          message: "Dades obligatòries mancants",
+          missing: {
+            professorOriginalId: !professorOriginalId,
+            professorAssignatId: !professorAssignatId,
+            diaSetmana: !diaSetmana,
+            horaInici: !horaInici,
+            horaFi: !horaFi,
+            descripcio: !descripcio
+          }
+        });
+      }
 
       const activeYear = await storage.getActiveAcademicYear();
       if (!activeYear) {
@@ -2102,7 +2119,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error: any) {
       console.error("Error creating tasca:", error);
-      res.status(500).json({ message: "Error creant la tasca de substitució" });
+      console.error("Error stack:", error.stack);
+      res.status(500).json({ 
+        message: "Error creant la tasca de substitució",
+        error: error.message
+      });
     }
   });
 
