@@ -1713,15 +1713,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/horari/:horariId/professors-disponibles', isAuthenticated, async (req, res) => {
     try {
       const horariId = parseInt(req.params.horariId);
-      const activeYear = await storage.getAnysAcademics().then(years => 
-        years.find(y => y.actiu)
-      );
+      console.log(`=== INICI RUTA PROFESSORS-DISPONIBLES ===`);
+      console.log(`horariId: ${horariId}`);
+      
+      const activeYear = await storage.getActiveAcademicYear();
+      console.log('activeYear:', activeYear);
       
       if (!activeYear) {
+        console.log('No hi ha any acadèmic actiu');
         return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });
       }
 
       const availableProfessors = await storage.getProfessorsAvailableForSubstitution(horariId, activeYear.id);
+      console.log(`Resultat professors disponibles: ${availableProfessors.length} professors`);
       res.json(availableProfessors);
     } catch (error: any) {
       console.error("Error getting available professors:", error);

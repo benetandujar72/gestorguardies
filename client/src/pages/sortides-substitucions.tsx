@@ -85,15 +85,17 @@ export default function SortidesSubstitucions() {
   }, [sortidsError, toast]);
 
   // Obtenir classes a substituir quan se selecciona una sortida
-  const { data: classesToSubstitute, isLoading: loadingClasses } = useQuery({
+  const { data: classesToSubstitute = [], isLoading: loadingClasses } = useQuery({
     queryKey: [`/api/sortides/${sortidaSeleccionada}/classes-substituir`],
     enabled: !!sortidaSeleccionada,
   });
 
   // Actualitzar l'estat quan arriben les dades
   useEffect(() => {
-    if (classesToSubstitute) {
+    if (classesToSubstitute && Array.isArray(classesToSubstitute)) {
       setClassesASubstituir(classesToSubstitute);
+    } else {
+      setClassesASubstituir([]);
     }
   }, [classesToSubstitute]);
 
