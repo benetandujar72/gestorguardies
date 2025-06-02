@@ -367,15 +367,12 @@ export default function SortidesSubstitucions() {
                 const classe = classesToUse.find(c => c.id === sub.horariId);
                 if (!classe) return null;
 
-                // Obtenir informació del professor substitut de la query
-                const { data: professorsDisponibles = [] } = useQuery({
-                  queryKey: [`/api/horari/${classe.id}/professors-disponibles`],
-                  enabled: false  // No executar automàticament
-                });
-
-                const professorSubstitut = Array.isArray(professorsDisponibles) 
-                  ? professorsDisponibles.find((p: any) => p.id === sub.professorSubstitutId)
-                  : null;
+                // Mostrar informació bàsica del substitut sense consulta extra
+                const professorSubstitut = {
+                  id: sub.professorSubstitutId,
+                  nom: `Professor ${sub.professorSubstitutId}`,
+                  cognoms: ''
+                };
 
                 return (
                   <div key={index} className="border rounded p-3 bg-gray-50">
