@@ -42,9 +42,13 @@ class GmailService {
     const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || '5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev';
     const redirectUri = `https://${domain}/oauth2callback`;
       
+    // Utilitzar les credencials correctes (forçar les primeres de la llista)
+    const clientId = '86658517609-tmcpm9an5ulqtnkiol1p61hbtu8tqau9.apps.googleusercontent.com';
+    const clientSecret = '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';
+    
     this.oauth2Client = new OAuth2Client(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
+      clientId,
+      clientSecret,
       redirectUri
     );
 
