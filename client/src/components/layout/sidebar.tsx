@@ -141,13 +141,11 @@ export default function Sidebar() {
     <aside className="w-64 bg-white shadow-lg border-r border-gray-200 flex-shrink-0 h-[calc(100vh-64px)]">
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <School className="text-white w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="font-semibold text-sm text-text-primary">Centre Educatiu</h2>
-            <p className="text-xs text-text-secondary">IES Sant Jordi</p>
-          </div>
+          <img 
+            src="/src/assets/bitacola-logo.svg" 
+            alt="Bitàcola" 
+            className="w-40 h-auto"
+          />
         </div>
       </div>
 
