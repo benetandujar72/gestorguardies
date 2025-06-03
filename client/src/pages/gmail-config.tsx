@@ -206,17 +206,11 @@ export default function GmailConfig() {
             <Alert>
               <Key className="h-4 w-4" />
               <AlertDescription>
-                <strong>Configuració necessària a Google Cloud Console:</strong>
+                <strong>Pas 1:</strong> Fes clic al botó d'autorització per obrir Google OAuth2.
                 <br />
-                1. Ves a console.cloud.google.com → Projecte amb ID: 86658517609
+                <strong>Pas 2:</strong> Autoritza l'aplicació i copia el codi de verificació.
                 <br />
-                2. Navega a "APIs & Services" → "OAuth consent screen"
-                <br />
-                3. A la secció "Test users", fes clic "ADD USERS"
-                <br />
-                4. Afegeix: benet.andujar@insbitacola.cat
-                <br />
-                5. Guarda els canvis i torna aquí per autoritzar
+                <strong>Pas 3:</strong> Enganxa el codi aquí i confirma la configuració.
               </AlertDescription>
             </Alert>
 

@@ -82,16 +82,21 @@ class GmailService {
   private createEmailMessage(emailData: GmailEmailData): string {
     const { to, subject, html, from = process.env.GMAIL_USER } = emailData;
     
+    // Codificar l'assumpte en UTF-8 per Gmail
+    const encodedSubject = `=?UTF-8?B?${Buffer.from(subject, 'utf8').toString('base64')}?=`;
+    
     const message = [
       `To: ${to}`,
       `From: ${from}`,
-      `Subject: ${subject}`,
+      `Subject: ${encodedSubject}`,
+      'MIME-Version: 1.0',
       'Content-Type: text/html; charset=utf-8',
+      'Content-Transfer-Encoding: 8bit',
       '',
       html
     ].join('\n');
 
-    return Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return Buffer.from(message, 'utf8').toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
 
   async sendEmail(emailData: GmailEmailData): Promise<boolean> {
