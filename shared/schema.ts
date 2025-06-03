@@ -162,6 +162,7 @@ export const tasques = pgTable("tasques", {
   id: serial("tasca_id").primaryKey(),
   anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   assignaId: integer("assigna_id").references(() => assignacionsGuardia.id),
+  sortidaId: integer("sortida_id").references(() => sortides.id),
   descripcio: text("descripcio").notNull(),
   estat: varchar("estat").notNull().default("pendent"), // "pendent", "en_progress", "completada", "cancel·lada"
   dataCreacio: timestamp("data_creacio").defaultNow(),

@@ -380,30 +380,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/sortides', isAuthenticated, async (req, res) => {
     try {
       const { thisWeek } = req.query;
-      let sortides = thisWeek === 'true' 
+      const sortides = thisWeek === 'true' 
         ? await storage.getSortidesThisWeek()
         : await storage.getSortides();
-      
-      // Filtrar sortides que ja tenen substitucions assignades (tasques creades)
-      const sortidesSenseSubstitucions = [];
-      for (const sortida of sortides) {
-        // Verificar si aquesta sortida té tasques de substitució assignades
-        const tasquesSubstitucio = await storage.db.execute(storage.sql`
-          SELECT COUNT(*) as count
-          FROM tasques 
-          WHERE sortida_id = ${sortida.id}
-            AND descripcio LIKE '%Professor original:%'
-            AND estat IN ('pendent', 'en_progress', 'completada')
-        `);
-        
-        const haSubstitucions = tasquesSubstitucio.rows[0]?.count > 0;
-        
-        if (!haSubstitucions) {
-          sortidesSenseSubstitucions.push(sortida);
-        }
-      }
-      
-      res.json(sortidesSenseSubstitucions);
+      res.json(sortides);
     } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch outings" });
     }
