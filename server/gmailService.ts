@@ -55,15 +55,28 @@ class GmailService {
       redirectUri
     );
 
-    // Set credentials if available
-    if (process.env.GOOGLE_REFRESH_TOKEN) {
-      this.oauth2Client.setCredentials({
-        refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-        access_token: process.env.GOOGLE_ACCESS_TOKEN,
-      });
-    }
-
     this.gmail = google.gmail({ version: 'v1', auth: this.oauth2Client });
+    
+    // Carregar credencials de manera asíncrona després de la inicialització
+    this.initializeCredentials();
+  }
+
+  private async initializeCredentials(): Promise<void> {
+    try {
+      const [refreshTokenSetting] = await db
+        .select()
+        .from(systemSettings)
+        .where(eq(systemSettings.key, 'gmail_refresh_token'));
+
+      if (refreshTokenSetting?.value) {
+        this.oauth2Client.setCredentials({
+          refresh_token: refreshTokenSetting.value
+        });
+        console.log('✓ Refresh token Gmail carregat des de la base de dades');
+      }
+    } catch (error) {
+      console.log('ℹ️ No s\'ha trobat refresh token a la base de dades:', error.message);
+    }
   }
 
   private createEmailMessage(emailData: GmailEmailData): string {
@@ -284,6 +297,26 @@ class GmailService {
       console.log('Tokens Gmail API obtinguts correctament');
       console.log('Refresh Token:', tokens.refresh_token);
       console.log('Access Token:', tokens.access_token);
+      
+      // Guardar el refresh token a la base de dades per persistència
+      if (tokens.refresh_token) {
+        await db
+          .insert(systemSettings)
+          .values({
+            key: 'gmail_refresh_token',
+            value: tokens.refresh_token,
+            updatedAt: new Date()
+          })
+          .onConflictDoUpdate({
+            target: systemSettings.key,
+            set: {
+              value: tokens.refresh_token,
+              updatedAt: new Date()
+            }
+          });
+        
+        console.log('✓ Refresh token guardat a la base de dades');
+      }
       
       return true;
     } catch (error) {
