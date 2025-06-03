@@ -380,10 +380,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/sortides', isAuthenticated, async (req, res) => {
     try {
       const { thisWeek } = req.query;
-      const sortides = thisWeek === 'true' 
+      let sortides = thisWeek === 'true' 
         ? await storage.getSortidesThisWeek()
         : await storage.getSortides();
-      res.json(sortides);
+      
+      // Filtrar sortides que ja tenen substitucions assignades (tasques creades)
+      const sortidesSenseSubstitucions = [];
+      for (const sortida of sortides) {
+        // Verificar si aquesta sortida té tasques de substitució assignades
+        const tasquesSubstitucio = await storage.db.execute(storage.sql`
+          SELECT COUNT(*) as count
+          FROM tasques 
+          WHERE sortida_id = ${sortida.id}
+            AND descripcio LIKE '%Professor original:%'
+            AND estat IN ('pendent', 'en_progress', 'completada')
+        `);
+        
+        const haSubstitucions = tasquesSubstitucio.rows[0]?.count > 0;
+        
+        if (!haSubstitucions) {
+          sortidesSenseSubstitucions.push(sortida);
+        }
+      }
+      
+      res.json(sortidesSenseSubstitucions);
     } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch outings" });
     }
@@ -2106,13 +2126,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const anyAcademicId = typeof activeYear === 'number' ? activeYear : activeYear.id;
 
-      // Crear la tasca
-      const tasca = await storage.createTasca({
+      // Crear la tasca amb relació a sortida si existeix
+      const tascaData = {
         anyAcademicId,
         descripcio: `${descripcio} - Professor original: ${professorOriginalId}, Professor assignat: ${professorAssignatId}, Horari: ${diaSetmana}/${horaInici}-${horaFi}`,
         estat: 'pendent',
         prioritat: 'mitjana'
-      });
+      };
+      
+      // Afegir sortidaId si existeix al body de la request
+      if (req.body.sortidaId) {
+        tascaData.sortidaId = req.body.sortidaId;
+      }
+      
+      const tasca = await storage.createTasca(tascaData);
 
       console.log('Tasca creada:', tasca.id);
 
