@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Clock, User, Users, MapPin, Plus, Filter, Search, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { Calendar, Clock, User, Users, MapPin, Plus, Filter, Search, AlertCircle, CheckCircle, XCircle, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from "date-fns";
@@ -229,6 +229,69 @@ export default function GestioGuardies() {
           <p className="text-gray-600">
             Gestiona totes les substitucions necessàries per sortides, activitats i altres motius
           </p>
+        </div>
+
+        {/* Class Assignment Analysis */}
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-4">Anàlisi de Classes</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Classes Assignades</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {classAnalysis.assignades}
+                    </p>
+                  </div>
+                  <CheckCircle className="h-8 w-8 text-green-600" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Pendents d'Assignar</p>
+                    <p className="text-2xl font-bold text-yellow-600">
+                      {classAnalysis.pendents}
+                    </p>
+                  </div>
+                  <AlertCircle className="h-8 w-8 text-yellow-600" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">No Assignables</p>
+                    <p className="text-2xl font-bold text-red-600">
+                      {classAnalysis.noAssignables}
+                    </p>
+                    <p className="text-xs text-gray-500">Falta professorat</p>
+                  </div>
+                  <X className="h-8 w-8 text-red-600" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Classes</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {classAnalysis.total}
+                    </p>
+                  </div>
+                  <Users className="h-8 w-8 text-blue-600" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Filters */}

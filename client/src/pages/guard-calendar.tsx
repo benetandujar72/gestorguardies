@@ -9,7 +9,7 @@ import { format, addDays, startOfWeek, endOfWeek, isSameDay, parseISO } from "da
 import { ca } from "date-fns/locale";
 
 interface GuardEvent {
-  id: number;
+  id: number | string;
   data: string;
   hora: string;
   tipusGuardia: string;
