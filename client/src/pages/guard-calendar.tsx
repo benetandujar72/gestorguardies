@@ -1,34 +1,12 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, CalendarDays, Clock, MapPin, User, Download, ExternalLink, Edit2, List, Grid3x3, Smartphone, Monitor } from "lucide-react";
+import { Calendar, CalendarDays, Clock, MapPin, User, List, Grid3x3, ChevronLeft, ChevronRight } from "lucide-react";
 import MobileGuardList from "@/components/calendar/mobile-guard-list";
 import { format, addDays, startOfWeek, endOfWeek, isSameDay, parseISO } from "date-fns";
 import { ca } from "date-fns/locale";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { apiRequest } from "@/lib/api";
-import { useToast } from "@/hooks/use-toast";
-
-const guardEditSchema = z.object({
-  data: z.string().min(1, "La data és obligatòria"),
-  horaInici: z.string().min(1, "L'hora d'inici és obligatòria"),
-  horaFi: z.string().min(1, "L'hora de fi és obligatòria"),
-  tipusGuardia: z.string().min(1, "El tipus de guàrdia és obligatori"),
-  estat: z.string().optional(),
-  lloc: z.string().optional(),
-  observacions: z.string().optional(),
-});
-
-type GuardEditFormData = z.infer<typeof guardEditSchema>;
 
 interface GuardEvent {
   id: number;
@@ -56,10 +34,6 @@ export default function GuardCalendar() {
   });
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [isMobile, setIsMobile] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedGuard, setSelectedGuard] = useState<GuardEvent | null>(null);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   // Detect mobile device
   useEffect(() => {
@@ -75,7 +49,7 @@ export default function GuardCalendar() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetch guards for the next 4 weeks
+  // Fetch guards
   const { data: guards = [], isLoading } = useQuery({
     queryKey: ['/api/guardies'],
     select: (data: any[]) => data.map(guard => ({
@@ -90,73 +64,23 @@ export default function GuardCalendar() {
         id: guard.assignacions[0].professor.id,
         nom: guard.assignacions[0].professor.nom,
         cognoms: guard.assignacions[0].professor.cognoms,
-      } : undefined,
-      aula: undefined // Will be added later when aula relationship is fixed
+      } : null,
+      aula: null
     })),
   });
 
-  // Form for editing guards
-  const form = useForm<GuardEditFormData>({
-    resolver: zodResolver(guardEditSchema),
-    defaultValues: {
-      data: "",
-      horaInici: "",
-      horaFi: "",
-      tipusGuardia: "",
-      estat: "",
-      lloc: "",
-      observacions: "",
-    },
-  });
-
-  // Edit guard mutation
-  const editGuardMutation = useMutation({
-    mutationFn: async (data: GuardEditFormData & { id: number }) => {
-      return await apiRequest('PATCH', `/api/guardies/${data.id}`, data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/guardies'] });
-      setIsEditDialogOpen(false);
-      setSelectedGuard(null);
-      form.reset();
-      toast({
-        title: "Guàrdia actualitzada",
-        description: "La guàrdia s'ha actualitzat correctament.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "No s'ha pogut actualitzar la guàrdia.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleEditGuard = (guard: GuardEvent) => {
-    setSelectedGuard(guard);
-    form.reset({
-      data: guard.data,
-      horaInici: guard.hora,
-      horaFi: guard.hora, // Will need to be updated when we have horaFi in data
-      tipusGuardia: guard.tipusGuardia,
-      estat: guard.categoria,
-      lloc: "",
-      observacions: guard.observacions || "",
-    });
-    setIsEditDialogOpen(true);
+  // Week navigation
+  const navigateWeek = (direction: 'previous' | 'next') => {
+    const daysToAdd = direction === 'next' ? 7 : -7;
+    setSelectedWeek(addDays(selectedWeek, daysToAdd));
   };
 
-  const onSubmitEdit = (data: GuardEditFormData) => {
-    if (selectedGuard) {
-      editGuardMutation.mutate({ ...data, id: selectedGuard.id });
-    }
-  };
-
-  // Get guards for the selected week
-  const weekStart = selectedWeek;
+  // Generate week days
+  const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(selectedWeek, { weekStartsOn: 1 });
-  
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+  // Filter guards for current week
   const weekGuards = guards.filter(guard => {
     const guardDate = parseISO(guard.data);
     return guardDate >= weekStart && guardDate <= weekEnd;
@@ -164,47 +88,11 @@ export default function GuardCalendar() {
 
   // Group guards by day
   const groupedGuards = weekGuards.reduce((acc, guard) => {
-    const day = format(parseISO(guard.data), 'yyyy-MM-dd');
-    if (!acc[day]) acc[day] = [];
-    acc[day].push(guard);
+    const dayKey = format(parseISO(guard.data), 'yyyy-MM-dd');
+    if (!acc[dayKey]) acc[dayKey] = [];
+    acc[dayKey].push(guard);
     return acc;
   }, {} as Record<string, GuardEvent[]>);
-
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-
-  const navigateWeek = (direction: 'prev' | 'next') => {
-    setSelectedWeek(prev => addDays(prev, direction === 'next' ? 7 : -7));
-  };
-
-  const getGuardTypeColor = (tipus: string, categoria: string) => {
-    if (categoria === 'Especial') return "bg-purple-100 text-purple-800 border-purple-200";
-    switch (tipus) {
-      case 'Substitució':
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case 'Pati':
-        return "bg-green-100 text-green-800 border-green-200";
-      case 'Biblioteca':
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case 'Aula':
-        return "bg-orange-100 text-orange-800 border-orange-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const exportToGoogleCalendar = () => {
-    // Create Google Calendar URL with guard events
-    const events = weekGuards.map(guard => {
-      const date = format(parseISO(guard.data), 'yyyyMMdd');
-      const title = `Guàrdia ${guard.tipusGuardia}${guard.professor ? ` - ${guard.professor.nom} ${guard.professor.cognoms}` : ''}`;
-      const details = `Tipus: ${guard.tipusGuardia}\nCategoria: ${guard.categoria}${guard.aula ? `\nAula: ${guard.aula.nom}` : ''}${guard.observacions ? `\nObservacions: ${guard.observacions}` : ''}`;
-      
-      return `${title}\n${date}T${guard.hora.replace(':', '')}00\n${details}`;
-    }).join('\n\n');
-
-    const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Guàrdies%20Setmana&details=${encodeURIComponent(events)}`;
-    window.open(calendarUrl, '_blank');
-  };
 
   if (isLoading) {
     return (
@@ -248,11 +136,6 @@ export default function GuardCalendar() {
               </Button>
             </div>
           )}
-          <Button variant="outline" onClick={exportToGoogleCalendar}>
-            <ExternalLink className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Exportar a Google Calendar</span>
-            <span className="sm:hidden">Exportar</span>
-          </Button>
         </div>
       </div>
 
@@ -262,7 +145,7 @@ export default function GuardCalendar() {
           <div className="flex items-center justify-between">
             <Button 
               variant="outline" 
-              onClick={() => navigateWeek('prev')}
+              onClick={() => navigateWeek('previous')}
             >
               ← Setmana anterior
             </Button>
@@ -291,9 +174,7 @@ export default function GuardCalendar() {
             id: guard.id,
             data: guard.data,
             horaInici: guard.hora,
-            horaFi: guard.hora ? 
-              format(new Date(`${guard.data}T${guard.hora}`), 'HH:mm') : 
-              '00:00',
+            horaFi: guard.hora,
             tipusGuardia: guard.tipusGuardia,
             estat: guard.categoria,
             lloc: guard.aula?.nom || null,
@@ -309,130 +190,111 @@ export default function GuardCalendar() {
             }] : []
           }))}
           onEditGuard={(guard) => {
-            setSelectedGuard({
-              id: guard.id,
-              data: guard.data,
-              hora: guard.horaInici,
-              tipusGuardia: guard.tipusGuardia,
-              categoria: guard.estat,
-              observacions: guard.observacions || undefined
-            });
-            setIsEditDialogOpen(true);
+            console.log('Edit guard:', guard);
           }}
           onViewAssignments={(guard) => {
-            setSelectedGuard({
-              id: guard.id,
-              data: guard.data,
-              hora: guard.horaInici,
-              tipusGuardia: guard.tipusGuardia,
-              categoria: guard.estat,
-              observacions: guard.observacions || undefined
-            });
+            console.log('View assignments:', guard);
           }}
         />
       ) : (
         /* Vista de calendari per desktop */
         <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-        {weekDays.map((day, index) => {
-          const dayKey = format(day, 'yyyy-MM-dd');
-          const dayGuards = groupedGuards[dayKey] || [];
-          const isToday = isSameDay(day, new Date());
+          {weekDays.map((day, index) => {
+            const dayKey = format(day, 'yyyy-MM-dd');
+            const dayGuards = groupedGuards[dayKey] || [];
+            const isToday = isSameDay(day, new Date());
 
-          return (
-            <Card key={dayKey} className={`min-h-[300px] ${isToday ? 'ring-2 ring-primary' : ''}`}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-sm font-medium">
-                      {format(day, 'EEEE', { locale: ca })}
-                    </CardTitle>
-                    <div className="flex items-center space-x-1 mt-1">
-                      <CalendarDays className="w-3 h-3 text-text-secondary" />
-                      <span className="text-xs text-text-secondary">
-                        {format(day, 'dd MMM', { locale: ca })}
-                      </span>
-                    </div>
-                  </div>
-                  {dayGuards.length > 0 && (
-                    <Badge variant="outline" className="text-xs">
-                      {dayGuards.length} guàrdies
-                    </Badge>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {dayGuards.length === 0 ? (
-                  <div className="text-center py-8 text-text-secondary">
-                    <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Sense guàrdies</p>
-                  </div>
-                ) : (
-                  dayGuards
-                    .sort((a, b) => a.hora.localeCompare(b.hora))
-                    .map((guard) => (
-                      <div
-                        key={guard.id}
-                        className="p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <Badge className={getGuardTypeColor(guard.tipusGuardia, guard.categoria)}>
-                            {guard.tipusGuardia}
-                          </Badge>
-                          <div className="flex items-center text-xs text-text-secondary">
-                            <Clock className="w-3 h-3 mr-1" />
-                            {guard.hora}
-                          </div>
-                        </div>
-                        
-                        {guard.professor && (
-                          <div className="flex items-center text-sm mb-1">
-                            <User className="w-3 h-3 mr-1 text-text-secondary" />
-                            <span className="font-medium">
-                              {guard.professor.nom} {guard.professor.cognoms}
-                            </span>
-                          </div>
-                        )}
-                        
-                        {guard.aula && (
-                          <div className="flex items-center text-sm mb-1">
-                            <MapPin className="w-3 h-3 mr-1 text-text-secondary" />
-                            <span>{guard.aula.nom}</span>
-                          </div>
-                        )}
-                        
-                        {guard.categoria && (
-                          <div className="text-xs text-text-secondary mt-1">
-                            Categoria: {guard.categoria}
-                          </div>
-                        )}
-                        
-                        {guard.observacions && (
-                          <div className="text-xs text-text-secondary mt-1 italic">
-                            {guard.observacions}
-                          </div>
-                        )}
+            return (
+              <Card key={dayKey} className={`min-h-[300px] ${isToday ? 'ring-2 ring-primary' : ''}`}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-sm font-medium">
+                        {format(day, 'EEEE', { locale: ca })}
+                      </CardTitle>
+                      <div className="flex items-center space-x-1 mt-1">
+                        <CalendarDays className="w-3 h-3 text-text-secondary" />
+                        <span className="text-xs text-text-secondary">
+                          {format(day, 'dd MMM', { locale: ca })}
+                        </span>
                       </div>
-                    ))
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+                    </div>
+                    {dayGuards.length > 0 && (
+                      <Badge variant="outline" className="text-xs">
+                        {dayGuards.length} guàrdies
+                      </Badge>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {dayGuards.length === 0 ? (
+                    <div className="text-center py-8 text-text-secondary">
+                      <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">Sense guàrdies</p>
+                    </div>
+                  ) : (
+                    dayGuards
+                      .sort((a, b) => a.hora.localeCompare(b.hora))
+                      .map(guard => (
+                        <div key={guard.id} className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <div className="flex items-center justify-between mb-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {guard.tipusGuardia}
+                            </Badge>
+                            <div className="flex items-center text-xs text-text-secondary">
+                              <Clock className="w-3 h-3 mr-1" />
+                              {guard.hora}
+                            </div>
+                          </div>
+                          
+                          {guard.professor && (
+                            <div className="flex items-center text-sm mb-1">
+                              <User className="w-3 h-3 mr-1 text-text-secondary" />
+                              <span className="font-medium">
+                                {guard.professor.nom} {guard.professor.cognoms}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {guard.aula && (
+                            <div className="flex items-center text-sm mb-1">
+                              <MapPin className="w-3 h-3 mr-1 text-text-secondary" />
+                              <span>{guard.aula.nom}</span>
+                            </div>
+                          )}
+                          
+                          {guard.categoria && (
+                            <div className="text-xs text-text-secondary mt-1">
+                              Categoria: {guard.categoria}
+                            </div>
+                          )}
+                          
+                          {guard.observacions && (
+                            <div className="text-xs text-text-secondary mt-1 italic">
+                              {guard.observacions}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
       {/* Summary Stats */}
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle className="text-lg flex items-center">
-            <CalendarDays className="w-5 h-5 mr-2" />
-            Resum de la Setmana
-          </CardTitle>
+          <CardTitle className="text-lg">Resum de la Setmana</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-primary">{weekGuards.length}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {weekGuards.length}
+              </div>
               <div className="text-sm text-text-secondary">Total Guàrdies</div>
             </div>
             <div className="text-center">
