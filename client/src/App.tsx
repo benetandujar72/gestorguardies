@@ -25,6 +25,7 @@ import Analytics from "@/pages/analytics-real";
 import SimpleChat from "@/pages/simple-chat";
 import ImportCSV from "@/pages/import-csv";
 import SortidesSubstitucions from "@/pages/sortides-substitucions-new";
+import GestioGuardies from "@/pages/gestio-guardies";
 import GmailConfig from "@/pages/gmail-config";
 import Setup from "@/pages/setup";
 import NotFound from "@/pages/not-found";

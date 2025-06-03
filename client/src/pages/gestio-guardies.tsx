@@ -1,0 +1,502 @@
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, Clock, User, Users, MapPin, Plus, Filter, Search, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { format, parseISO } from "date-fns";
+import { ca } from "date-fns/locale";
+
+interface Substitucio {
+  id: number;
+  tipus: string;
+  data: string;
+  horaInici: string;
+  horaFi: string;
+  descripcio: string;
+  motiu: string;
+  estat: string;
+  professorOriginal: {
+    id: number;
+    nom: string;
+    cognoms: string;
+  } | null;
+  professorAssignat: {
+    id: number;
+    nom: string;
+    cognoms: string;
+  } | null;
+  sortida: {
+    id: number;
+    nom: string;
+    lloc: string;
+  } | null;
+  horari: {
+    id: number;
+    assignatura: string;
+    grup: {
+      id: number;
+      nomGrup: string;
+    } | null;
+    aula: {
+      id: number;
+      nom: string;
+    } | null;
+  } | null;
+}
+
+interface Professor {
+  id: number;
+  nom: string;
+  cognoms: string;
+  email: string;
+}
+
+interface Sortida {
+  id: number;
+  nomSortida: string;
+  dataInici: string;
+  dataFi: string;
+  lloc: string;
+}
+
+export default function GestioGuardies() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Filters state
+  const [filters, setFilters] = useState({
+    sortidaId: '',
+    professorId: '',
+    dataInici: '',
+    dataFi: '',
+    estat: 'tots'
+  });
+  
+  // Dialog state
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedSubstitucio, setSelectedSubstitucio] = useState<Substitucio | null>(null);
+
+  // Fetch data
+  const { data: substitucions = [], isLoading: isLoadingSubstitucions } = useQuery({
+    queryKey: ['/api/substitucions-necessaries', filters],
+    enabled: true
+  });
+
+  const { data: professors = [] } = useQuery<Professor[]>({
+    queryKey: ['/api/professors']
+  });
+
+  const { data: sortides = [] } = useQuery<Sortida[]>({
+    queryKey: ['/api/sortides']
+  });
+
+  // Filter substitutions
+  const filteredSubstitucions = useMemo(() => {
+    return substitucions.filter((substitucio: Substitucio) => {
+      if (filters.estat !== 'tots' && substitucio.estat !== filters.estat) {
+        return false;
+      }
+      return true;
+    });
+  }, [substitucions, filters]);
+
+  // Group by date
+  const substitucionsPerData = useMemo(() => {
+    const grouped: { [key: string]: Substitucio[] } = {};
+    filteredSubstitucions.forEach((substitucio: Substitucio) => {
+      const data = substitucio.data;
+      if (!grouped[data]) {
+        grouped[data] = [];
+      }
+      grouped[data].push(substitucio);
+    });
+    
+    // Sort dates
+    const sortedDates = Object.keys(grouped).sort();
+    const result: { [key: string]: Substitucio[] } = {};
+    sortedDates.forEach(date => {
+      result[date] = grouped[date].sort((a, b) => a.horaInici.localeCompare(b.horaInici));
+    });
+    
+    return result;
+  }, [filteredSubstitucions]);
+
+  // Assign professor mutation
+  const assignProfessorMutation = useMutation({
+    mutationFn: async ({ taskId, professorId }: { taskId: number; professorId: number }) => {
+      const response = await fetch(`/api/tasques/${taskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignaId: professorId, estat: 'assignada' })
+      });
+      if (!response.ok) throw new Error('Error assignant professor');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Professor assignat",
+        description: "La substitució ha estat assignada correctament"
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/substitucions-necessaries'] });
+      setIsDialogOpen(false);
+      setSelectedSubstitucio(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No s'ha pogut assignar el professor",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleAssignProfessor = (professorId: number) => {
+    if (selectedSubstitucio) {
+      assignProfessorMutation.mutate({
+        taskId: selectedSubstitucio.id,
+        professorId: professorId
+      });
+    }
+  };
+
+  const getEstatColor = (estat: string) => {
+    switch (estat) {
+      case 'pendent': return 'bg-yellow-500';
+      case 'assignada': return 'bg-blue-500';
+      case 'confirmada': return 'bg-green-500';
+      case 'completada': return 'bg-gray-500';
+      default: return 'bg-red-500';
+    }
+  };
+
+  const getEstatIcon = (estat: string) => {
+    switch (estat) {
+      case 'pendent': return <AlertCircle className="h-4 w-4" />;
+      case 'assignada': return <Clock className="h-4 w-4" />;
+      case 'confirmada': return <CheckCircle className="h-4 w-4" />;
+      case 'completada': return <CheckCircle className="h-4 w-4" />;
+      default: return <XCircle className="h-4 w-4" />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Gestió de Guardies i Substitucions
+          </h1>
+          <p className="text-gray-600">
+            Gestiona totes les substitucions necessàries per sortides, activitats i altres motius
+          </p>
+        </div>
+
+        {/* Filters */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Filtres
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div>
+                <Label htmlFor="sortida">Sortida</Label>
+                <Select
+                  value={filters.sortidaId}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, sortidaId: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Totes les sortides" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Totes les sortides</SelectItem>
+                    {sortides.map((sortida) => (
+                      <SelectItem key={sortida.id} value={sortida.id.toString()}>
+                        {sortida.nomSortida}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="professor">Professor</Label>
+                <Select
+                  value={filters.professorId}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, professorId: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tots els professors" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Tots els professors</SelectItem>
+                    {professors.map((professor) => (
+                      <SelectItem key={professor.id} value={professor.id.toString()}>
+                        {professor.nom} {professor.cognoms}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="dataInici">Data inici</Label>
+                <Input
+                  id="dataInici"
+                  type="date"
+                  value={filters.dataInici}
+                  onChange={(e) => setFilters(prev => ({ ...prev, dataInici: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="dataFi">Data fi</Label>
+                <Input
+                  id="dataFi"
+                  type="date"
+                  value={filters.dataFi}
+                  onChange={(e) => setFilters(prev => ({ ...prev, dataFi: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="estat">Estat</Label>
+                <Select
+                  value={filters.estat}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, estat: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="tots">Tots els estats</SelectItem>
+                    <SelectItem value="pendent">Pendent</SelectItem>
+                    <SelectItem value="assignada">Assignada</SelectItem>
+                    <SelectItem value="confirmada">Confirmada</SelectItem>
+                    <SelectItem value="completada">Completada</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total</p>
+                  <p className="text-2xl font-bold">{filteredSubstitucions.length}</p>
+                </div>
+                <Users className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Pendents</p>
+                  <p className="text-2xl font-bold text-yellow-600">
+                    {filteredSubstitucions.filter(s => s.estat === 'pendent').length}
+                  </p>
+                </div>
+                <AlertCircle className="h-8 w-8 text-yellow-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Assignades</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {filteredSubstitucions.filter(s => s.estat === 'assignada').length}
+                  </p>
+                </div>
+                <Clock className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Completades</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {filteredSubstitucions.filter(s => s.estat === 'completada').length}
+                  </p>
+                </div>
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Substitutions list */}
+        {isLoadingSubstitucions ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <p>Carregant substitucions...</p>
+            </CardContent>
+          </Card>
+        ) : Object.keys(substitucionsPerData).length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <p className="text-gray-500">No s'han trobat substitucions amb els filtres aplicats</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-6">
+            {Object.entries(substitucionsPerData).map(([data, substitucions]) => (
+              <Card key={data}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    {format(parseISO(data), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ca })}
+                    <Badge variant="secondary">{substitucions.length} substitucions</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {substitucions.map((substitucio) => (
+                      <div
+                        key={substitucio.id}
+                        className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <Badge className={`${getEstatColor(substitucio.estat)} text-white`}>
+                              {getEstatIcon(substitucio.estat)}
+                              {substitucio.estat}
+                            </Badge>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Clock className="h-4 w-4" />
+                              {substitucio.horaInici} - {substitucio.horaFi}
+                            </div>
+                          </div>
+                          
+                          {substitucio.estat === 'pendent' && (
+                            <Button
+                              onClick={() => {
+                                setSelectedSubstitucio(substitucio);
+                                setIsDialogOpen(true);
+                              }}
+                              size="sm"
+                            >
+                              Assignar Professor
+                            </Button>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-medium mb-2">{substitucio.motiu}</h4>
+                            <p className="text-sm text-gray-600 mb-2">{substitucio.descripcio}</p>
+                            
+                            {substitucio.sortida && (
+                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <MapPin className="h-4 w-4" />
+                                {substitucio.sortida.nom} - {substitucio.sortida.lloc}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            {substitucio.professorOriginal && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <User className="h-4 w-4 text-red-500" />
+                                <span className="font-medium">Professor original:</span>
+                                {substitucio.professorOriginal.nom} {substitucio.professorOriginal.cognoms}
+                              </div>
+                            )}
+                            
+                            {substitucio.professorAssignat && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <User className="h-4 w-4 text-green-500" />
+                                <span className="font-medium">Professor assignat:</span>
+                                {substitucio.professorAssignat.nom} {substitucio.professorAssignat.cognoms}
+                              </div>
+                            )}
+                            
+                            {substitucio.horari && (
+                              <div className="text-sm text-gray-600">
+                                <span className="font-medium">Classe:</span> {substitucio.horari.assignatura}
+                                {substitucio.horari.grup && ` - ${substitucio.horari.grup.nomGrup}`}
+                                {substitucio.horari.aula && ` (${substitucio.horari.aula.nom})`}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Assign Professor Dialog */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Assignar Professor</DialogTitle>
+              <DialogDescription>
+                Selecciona un professor per cobrir aquesta substitució
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedSubstitucio && (
+              <div className="space-y-4">
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium">{selectedSubstitucio.motiu}</h4>
+                  <p className="text-sm text-gray-600">{selectedSubstitucio.descripcio}</p>
+                  <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
+                    <Clock className="h-4 w-4" />
+                    {selectedSubstitucio.horaInici} - {selectedSubstitucio.horaFi}
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="professorSelect">Professor disponible</Label>
+                  <Select onValueChange={(value) => handleAssignProfessor(parseInt(value))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un professor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {professors.map((professor) => (
+                        <SelectItem key={professor.id} value={professor.id.toString()}>
+                          {professor.nom} {professor.cognoms}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel·lar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  );
+}

@@ -621,6 +621,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all substitutions needed (from sortides and other activities)
+  app.get('/api/substitucions-necessaries', isAuthenticated, async (req, res) => {
+    try {
+      const substitucions = await storage.getSubstitucionsNecessaries(req.query);
+      res.json(substitucions);
+    } catch (error) {
+      console.error("Error fetching substitucions necessàries:", error);
+      res.status(500).json({ message: "Error intern del servidor" });
+    }
+  });
+
   app.post('/api/guardies', isAuthenticated, async (req, res) => {
     try {
       const guardiaData = insertGuardiaSchema.parse(req.body);
