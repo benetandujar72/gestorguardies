@@ -71,8 +71,8 @@ export default function GestioGuardies() {
   
   // Filters state
   const [filters, setFilters] = useState({
-    sortidaId: '',
-    professorId: '',
+    sortidaId: 'tots',
+    professorId: 'tots',
     dataInici: '',
     dataFi: '',
     estat: 'tots'
@@ -98,7 +98,7 @@ export default function GestioGuardies() {
 
   // Filter substitutions
   const filteredSubstitucions = useMemo(() => {
-    return substitucions.filter((substitucio: Substitucio) => {
+    return (substitucions as Substitucio[]).filter((substitucio: Substitucio) => {
       if (filters.estat !== 'tots' && substitucio.estat !== filters.estat) {
         return false;
       }
@@ -217,7 +217,7 @@ export default function GestioGuardies() {
                     <SelectValue placeholder="Totes les sortides" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Totes les sortides</SelectItem>
+                    <SelectItem value="tots">Totes les sortides</SelectItem>
                     {sortides.map((sortida) => (
                       <SelectItem key={sortida.id} value={sortida.id.toString()}>
                         {sortida.nomSortida}
@@ -237,7 +237,7 @@ export default function GestioGuardies() {
                     <SelectValue placeholder="Tots els professors" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tots els professors</SelectItem>
+                    <SelectItem value="tots">Tots els professors</SelectItem>
                     {professors.map((professor) => (
                       <SelectItem key={professor.id} value={professor.id.toString()}>
                         {professor.nom} {professor.cognoms}
@@ -309,7 +309,7 @@ export default function GestioGuardies() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Pendents</p>
                   <p className="text-2xl font-bold text-yellow-600">
-                    {filteredSubstitucions.filter(s => s.estat === 'pendent').length}
+                    {filteredSubstitucions.filter((s: any) => s.estat === 'pendent').length}
                   </p>
                 </div>
                 <AlertCircle className="h-8 w-8 text-yellow-600" />
@@ -323,7 +323,7 @@ export default function GestioGuardies() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Assignades</p>
                   <p className="text-2xl font-bold text-blue-600">
-                    {filteredSubstitucions.filter(s => s.estat === 'assignada').length}
+                    {filteredSubstitucions.filter((s: any) => s.estat === 'assignada').length}
                   </p>
                 </div>
                 <Clock className="h-8 w-8 text-blue-600" />
@@ -337,7 +337,7 @@ export default function GestioGuardies() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Completades</p>
                   <p className="text-2xl font-bold text-green-600">
-                    {filteredSubstitucions.filter(s => s.estat === 'completada').length}
+                    {filteredSubstitucions.filter((s: any) => s.estat === 'completada').length}
                   </p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-600" />
