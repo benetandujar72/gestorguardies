@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import {
@@ -17,8 +17,11 @@ import {
   Presentation,
   UsersIcon,
   MessageSquare,
+  Menu,
+  X,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 
 // Seccions principals organitzades
 const principalItems = [
@@ -124,11 +127,36 @@ const toolsItems = [
   },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [location] = useLocation();
   const [isAdminOpen, setIsAdminOpen] = useState(true);
   const [isToolsOpen, setIsToolsOpen] = useState(true);
   const [isGestioOpen, setIsGestioOpen] = useState(true);
+
+  // Tancar sidebar al fer clic en un enllaç en mòbil
+  const handleLinkClick = () => {
+    if (window.innerWidth < 768) {
+      onClose();
+    }
+  };
+
+  // Evitar scroll del body quan la sidebar està oberta en mòbil
+  useEffect(() => {
+    if (isOpen && window.innerWidth < 768) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   const isActive = (href: string) => {
     if (href === "/") {
@@ -138,7 +166,21 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-white shadow-lg border-r border-gray-200 flex-shrink-0 h-[calc(100vh-64px)]">
+    <>
+      {/* Overlay per mòbil */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={onClose}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <aside className={cn(
+        "fixed md:relative inset-y-0 left-0 z-50 w-64 bg-white shadow-lg border-r border-gray-200 transform transition-transform duration-300 ease-in-out h-full",
+        "md:translate-x-0 md:h-[calc(100vh-64px)]",
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center space-x-3">
           <img 
@@ -168,6 +210,7 @@ export default function Sidebar() {
                           ? "bg-blue-50 text-primary font-medium"
                           : "text-text-secondary hover:bg-gray-100 hover:text-text-primary"
                       )}
+                      onClick={handleLinkClick}
                     >
                       <Icon className="w-5 h-5" />
                       <span>{item.label}</span>
@@ -282,5 +325,6 @@ export default function Sidebar() {
         </div>
       </nav>
     </aside>
+    </>
   );
 }
