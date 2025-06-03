@@ -1,37 +1,99 @@
+import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { isUnauthorizedError } from "@/lib/authUtils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
-import { TrendingUp, Users, Clock, AlertTriangle, Download, RefreshCw, Calendar, CheckCircle, Shield } from "lucide-react";
+import { TrendingUp, Users, Clock, AlertTriangle, Download, RefreshCw, Calendar, CheckCircle, Shield, Loader2 } from "lucide-react";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 export default function Analytics() {
-  // Dades reals de l'any acadèmic actiu
-  const { data: guardies = [] } = useQuery({
+  const { toast } = useToast();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, authLoading, toast]);
+
+  // Dades reals de l'any acadèmic actiu amb gestió d'errors
+  const { data: guardies = [], isLoading: guardiesLoading, error: guardiesError } = useQuery({
     queryKey: ["/api/guardies"],
+    enabled: isAuthenticated,
+    retry: false
   });
 
-  const { data: assignacions = [] } = useQuery({
+  const { data: assignacions = [], isLoading: assignacionsLoading, error: assignacionsError } = useQuery({
     queryKey: ["/api/assignacions-guardia"],
+    enabled: isAuthenticated,
+    retry: false
   });
 
-  const { data: tasques = [] } = useQuery({
+  const { data: tasques = [], isLoading: tasquesLoading, error: tasquesError } = useQuery({
     queryKey: ["/api/tasques"],
+    enabled: isAuthenticated,
+    retry: false
   });
 
-  const { data: professors = [] } = useQuery({
+  const { data: professors = [], isLoading: professorsLoading, error: professorsError } = useQuery({
     queryKey: ["/api/professors"],
+    enabled: isAuthenticated,
+    retry: false
   });
 
-  const { data: sortides = [] } = useQuery({
+  const { data: sortides = [], isLoading: sortidesLoading, error: sortidesError } = useQuery({
     queryKey: ["/api/sortides"],
+    enabled: isAuthenticated,
+    retry: false
   });
 
-  const { data: comunicacions = [] } = useQuery({
+  const { data: comunicacions = [], isLoading: comunicacionsLoading, error: comunicacionsError } = useQuery({
     queryKey: ["/api/comunicacions"],
+    enabled: isAuthenticated,
+    retry: false
   });
+
+  // Handle authentication errors
+  const errors = [guardiesError, assignacionsError, tasquesError, professorsError, sortidesError, comunicacionsError];
+  useEffect(() => {
+    const authError = errors.find(error => error && isUnauthorizedError(error as Error));
+    if (authError) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+    }
+  }, [errors, toast]);
+
+  // Loading state
+  if (authLoading || guardiesLoading || assignacionsLoading || tasquesLoading || professorsLoading || sortidesLoading || comunicacionsLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-text-secondary">Carregant estadístiques...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Calcular estadístiques reals
   const statsData = {
