@@ -34,8 +34,18 @@ export default function GmailConfig() {
 
   // Obtenir URL d'autorització
   const getAuthUrlMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest('/api/gmail/auth-url', 'GET');
+    mutationFn: async (): Promise<any> => {
+      const response = await fetch('/api/gmail/auth-url', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Error obtenint URL d\'autorització');
+      }
+      return await response.json();
     },
     onSuccess: (data: any) => {
       // Obrir nova finestra per autorització
@@ -67,8 +77,19 @@ export default function GmailConfig() {
 
   // Configurar tokens d'autorització
   const configureTokensMutation = useMutation({
-    mutationFn: async (code: string) => {
-      return await apiRequest('/api/gmail/auth-callback', 'POST', { code });
+    mutationFn: async (code: string): Promise<any> => {
+      const response = await fetch('/api/gmail/auth-callback', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code }),
+      });
+      if (!response.ok) {
+        throw new Error('Error configurant tokens Gmail');
+      }
+      return await response.json();
     },
     onSuccess: () => {
       toast({
