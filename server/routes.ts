@@ -2116,7 +2116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Afegir sortidaId si existeix al body de la request
       if (req.body.sortidaId) {
-        tascaData.sortidaId = req.body.sortidaId;
+        (tascaData as any).sortidaId = req.body.sortidaId;
       }
       
       const tasca = await storage.createTasca(tascaData);

@@ -60,7 +60,7 @@ import {
   type AssignacioGuardiaWithProfessor,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, or, sql, count, between, gte, lte, isNotNull } from "drizzle-orm";
+import { eq, desc, and, or, sql, count, between, gte, lte, isNotNull, isNull } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -612,6 +612,8 @@ export class DatabaseStorage implements IStorage {
 
   async getSortides(): Promise<SortidaWithRelations[]> {
     const activeYear = await this.getActiveAcademicYear();
+    
+    // Filtrar sortides que NO tenen substitucions assignades (tasques de substitució)
     const rawResults = await db.select({
       id: sortides.id,
       nomSortida: sortides.nomSortida,
@@ -628,14 +630,20 @@ export class DatabaseStorage implements IStorage {
     }).from(sortides)
       .leftJoin(grups, eq(sortides.grupId, grups.id))
       .leftJoin(professors, eq(sortides.responsableId, professors.id))
-      .where(eq(sortides.anyAcademicId, activeYear))
+      .leftJoin(tasques, eq(tasques.sortidaId, sortides.id))
+      .where(
+        and(
+          eq(sortides.anyAcademicId, activeYear),
+          isNull(tasques.id) // Només sortides sense tasques de substitució
+        )
+      )
       .orderBy(desc(sortides.dataInici));
 
     return rawResults.map(result => ({
       ...result,
       responsableFullName: result.responsableNom && result.responsableCognoms 
         ? `${result.responsableNom} ${result.responsableCognoms}` 
-        : null,
+        : undefined,
       grup: result.grupNom ? {
         id: result.grupId!,
         nomGrup: result.grupNom,
