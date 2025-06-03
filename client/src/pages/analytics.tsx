@@ -3,11 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
-import { TrendingUp, Users, Clock, AlertTriangle, Download, RefreshCw } from "lucide-react";
+import { TrendingUp, Users, Clock, AlertTriangle, Download, RefreshCw, Calendar, CheckCircle } from "lucide-react";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 export default function Analytics() {
+  // Obtenir dades reals de l'any acadèmic actiu
   const { data: guardStats, isLoading: loadingGuardStats } = useQuery({
     queryKey: ["/api/analytics/guard-stats"],
   });
@@ -18,6 +19,27 @@ export default function Analytics() {
 
   const { data: predictions, isLoading: loadingPredictions } = useQuery({
     queryKey: ["/api/analytics/predictions"],
+  });
+
+  // Dades complementàries de l'any actiu
+  const { data: guardies = [] } = useQuery({
+    queryKey: ["/api/guardies"],
+  });
+
+  const { data: assignacions = [] } = useQuery({
+    queryKey: ["/api/assignacions-guardia"],
+  });
+
+  const { data: tasques = [] } = useQuery({
+    queryKey: ["/api/tasques"],
+  });
+
+  const { data: professors = [] } = useQuery({
+    queryKey: ["/api/professors"],
+  });
+
+  const { data: sortides = [] } = useQuery({
+    queryKey: ["/api/sortides"],
   });
 
   if (loadingGuardStats || loadingWorkload || loadingPredictions) {
@@ -40,35 +62,70 @@ export default function Analytics() {
     );
   }
 
-  const mockGuardStats = {
-    totalAssignments: 156,
-    activeGuards: 24,
-    pendingTasks: 12,
-    completionRate: 87
+  // Calcular estadístiques reals de l'any acadèmic actiu
+  const realGuardStats = {
+    totalAssignments: Array.isArray(assignacions) ? assignacions.length : 0,
+    activeGuards: Array.isArray(guardies) ? guardies.filter(g => g.estat === 'activa').length : 0,
+    pendingTasks: Array.isArray(tasques) ? tasques.filter(t => t.estat === 'pendent').length : 0,
+    completionRate: Array.isArray(tasques) && tasques.length > 0 
+      ? Math.round((tasques.filter(t => t.estat === 'completada').length / tasques.length) * 100)
+      : 0
   };
 
-  const mockWorkloadData = [
-    { professor: "Maria García", assignments: 8, hours: 16 },
-    { professor: "Josep Martí", assignments: 6, hours: 12 },
-    { professor: "Anna Soler", assignments: 7, hours: 14 },
-    { professor: "Carles Vidal", assignments: 5, hours: 10 },
-    { professor: "Laura Pérez", assignments: 9, hours: 18 }
-  ];
+  // Càrrega de treball real dels professors
+  const realWorkloadData = Array.isArray(professors) && Array.isArray(assignacions) 
+    ? professors.map(professor => {
+        const professorAssignments = assignacions.filter(a => a.professorId === professor.id);
+        return {
+          professor: `${professor.nom} ${professor.cognoms}`,
+          assignments: professorAssignments.length,
+          hours: professorAssignments.length * 2
+        };
+      }).filter(p => p.assignments > 0).slice(0, 10)
+    : [];
 
-  const mockMonthlyData = [
-    { month: "Gen", assignments: 45, tasks: 38 },
-    { month: "Feb", assignments: 52, tasks: 44 },
-    { month: "Mar", assignments: 48, tasks: 41 },
-    { month: "Abr", assignments: 56, tasks: 49 },
-    { month: "Mai", assignments: 62, tasks: 53 }
-  ];
+  // Dades mensuals reals basades en les tasques creades
+  const realMonthlyData = Array.isArray(tasques) 
+    ? tasques.reduce((acc, tasca) => {
+        const month = new Date(tasca.dataCreacio || Date.now()).getMonth();
+        const monthNames = ["Gen", "Feb", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Oct", "Nov", "Des"];
+        const monthName = monthNames[month];
+        
+        const existing = acc.find(item => item.month === monthName);
+        if (existing) {
+          existing.tasks += 1;
+        } else {
+          acc.push({ month: monthName, assignments: 0, tasks: 1 });
+        }
+        return acc;
+      }, [] as any[]).slice(-6)
+    : [];
 
-  const mockTaskDistribution = [
-    { name: "Vigilància pati", value: 35, color: "#0088FE" },
-    { name: "Substitució", value: 28, color: "#00C49F" },
-    { name: "Acompanyament", value: 20, color: "#FFBB28" },
-    { name: "Altres", value: 17, color: "#FF8042" }
-  ];
+  // Distribució real de tipus de tasques
+  const realTaskDistribution = Array.isArray(tasques) && tasques.length > 0
+    ? [
+        { 
+          name: "Substitució", 
+          value: tasques.filter(t => t.motiu?.includes('substitucio')).length,
+          color: "#00C49F" 
+        },
+        { 
+          name: "Guàrdia", 
+          value: tasques.filter(t => t.motiu?.includes('guardia')).length,
+          color: "#0088FE" 
+        },
+        { 
+          name: "Sortides", 
+          value: tasques.filter(t => t.motiu?.includes('sortida')).length,
+          color: "#FFBB28" 
+        },
+        { 
+          name: "Altres", 
+          value: tasques.filter(t => !t.motiu || (!t.motiu.includes('substitucio') && !t.motiu.includes('guardia') && !t.motiu.includes('sortida'))).length,
+          color: "#FF8042" 
+        }
+      ].filter(item => item.value > 0)
+    : [];
 
   return (
     <div className="p-6 space-y-6">
@@ -99,7 +156,7 @@ export default function Analytics() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockGuardStats.totalAssignments}</div>
+            <div className="text-2xl font-bold">{realGuardStats.totalAssignments}</div>
             <p className="text-xs text-muted-foreground">
               +12% respecte al mes anterior
             </p>
