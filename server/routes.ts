@@ -624,8 +624,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all substitutions needed (from sortides and other activities)
   app.get('/api/substitucions-necessaries', isAuthenticated, async (req, res) => {
     try {
-      const substitucions = await storage.getSubstitucionsNecessaries(req.query);
-      res.json(substitucions);
+      const activeYear = await storage.getActiveAcademicYear();
+      if (!activeYear) {
+        return res.status(404).json({ message: "No hi ha cap any acadèmic actiu" });
+      }
+
+      // Get all tasks that are substitutions (contain "sortida" in motiu)
+      const tasques = await storage.getTasques();
+      const substitucions = tasques.filter((tasca: any) => 
+        tasca.motiu && tasca.motiu.toLowerCase().includes('sortida')
+      );
+
+      // Transform to include additional data structure
+      const result = substitucions.map((tasca: any) => ({
+        id: tasca.id,
+        tipus: 'Substitució',
+        data: new Date().toISOString().split('T')[0], // Use current date as placeholder
+        horaInici: '08:00:00',
+        horaFi: '09:00:00', 
+        descripcio: tasca.descripcio,
+        motiu: tasca.motiu,
+        estat: tasca.estat,
+        professorOriginal: null,
+        professorAssignat: tasca.assigna ? {
+          id: tasca.assigna.id,
+          nom: tasca.assigna.nom,
+          cognoms: tasca.assigna.cognoms
+        } : null,
+        sortida: null,
+        horari: null
+      }));
+
+      res.json(result);
     } catch (error) {
       console.error("Error fetching substitucions necessàries:", error);
       res.status(500).json({ message: "Error intern del servidor" });

@@ -46,6 +46,11 @@ const principalItems = [
     label: "Calendari de Guàrdies",
     icon: Calendar,
   },
+  {
+    href: "/gestio-guardies",
+    label: "Gestió de Guardies",
+    icon: Shield,
+  },
 ];
 
 // Elements de gestió detallada

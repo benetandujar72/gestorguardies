@@ -88,6 +88,7 @@ function Router() {
             <Route path="/horaris" component={Schedules} />
             <Route path="/sortides" component={OutingsEnhanced} />
             <Route path="/sortides-substitucions-new" component={SortidesSubstitucions} />
+            <Route path="/gestio-guardies" component={GestioGuardies} />
             <Route path="/gmail-config" component={GmailConfig} />
             <Route path="/tasques" component={Tasks} />
             <Route path="/professors" component={Professors} />
