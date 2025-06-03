@@ -85,16 +85,22 @@ function Router() {
             <Route path="/anys-academics" component={AcademicYears} />
             <Route path="/horaris" component={Schedules} />
             <Route path="/sortides" component={OutingsEnhanced} />
-            <Route path="/sortides-substitucions" component={SortidesSubstitucions} />
+            <Route path="/sortides-substitucions-new" component={SortidesSubstitucions} />
             <Route path="/tasques" component={Tasks} />
             <Route path="/professors" component={Professors} />
             <Route path="/grups" component={Groups} />
             <Route path="/aules" component={Classrooms} />
             <Route path="/alumnes" component={Students} />
             <Route path="/materies" component={Subjects} />
-            <Route path="/analytics" component={Analytics} />
-            <Route path="/chat-bot" component={SimpleChat} />
+            <Route path="/analytics-real" component={Analytics} />
+            <Route path="/ai-chat" component={SimpleChat} />
             <Route path="/import-csv" component={ImportCSV} />
+            <Route path="/guard-calendar" component={GuardCalendarResponsive} />
+            <Route path="/schedules" component={Schedules} />
+            <Route path="/students" component={Students} />
+            <Route path="/subjects" component={Subjects} />
+            <Route path="/groups" component={Groups} />
+            <Route path="/classrooms" component={Classrooms} />
             <Route component={NotFound} />
             </Switch>
           </div>
