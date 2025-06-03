@@ -38,10 +38,15 @@ class GmailService {
   private gmail: any;
 
   constructor() {
+    // Utilitzar la URL de Replit com a redirect URI
+    const redirectUri = process.env.REPLIT_DOMAINS 
+      ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}/gmail-oauth-callback`
+      : 'urn:ietf:wg:oauth:2.0:oob'; // Out of band per codi manual
+      
     this.oauth2Client = new OAuth2Client(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/callback'
+      redirectUri
     );
 
     // Set credentials if available

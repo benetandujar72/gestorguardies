@@ -17,6 +17,7 @@ import {
   Presentation,
   UsersIcon,
   MessageSquare,
+  Mail,
   Menu,
   X,
 } from "lucide-react";
@@ -107,6 +108,11 @@ const adminItems = [
     href: "/ai-chat",
     label: "Assistent IA",
     icon: Bot,
+  },
+  {
+    href: "/gmail-config",
+    label: "Configurar Gmail",
+    icon: Mail,
   },
   {
     href: "/import-csv",
