@@ -49,7 +49,7 @@ export default function GuardCalendar() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetch guards
+  // Fetch guards and substitutions
   const { data: guards = [], isLoading } = useQuery({
     queryKey: ['/api/guardies'],
     select: (data: any[]) => data.map(guard => ({
@@ -69,6 +69,11 @@ export default function GuardCalendar() {
     })),
   });
 
+  // Fetch substitutions for outings/activities
+  const { data: substitucions = [] } = useQuery({
+    queryKey: ['/api/substitucions-necessaries']
+  });
+
   // Week navigation
   const navigateWeek = (direction: 'previous' | 'next') => {
     const daysToAdd = direction === 'next' ? 7 : -7;
@@ -86,8 +91,35 @@ export default function GuardCalendar() {
     return guardDate >= weekStart && guardDate <= weekEnd;
   });
 
-  // Group guards by day
-  const groupedGuards = weekGuards.reduce((acc, guard) => {
+  // Convert substitutions to guard events
+  const substitutionEvents: GuardEvent[] = (substitucions as any[]).map(sub => ({
+    id: `sub-${sub.id}`,
+    data: sub.data,
+    hora: sub.horaInici || '08:00',
+    tipusGuardia: 'Substitució',
+    categoria: sub.estat === 'pendent' ? 'Substitució Pendent' : 
+               sub.estat === 'assignada' ? 'Substitució Assignada' : 'Substitució',
+    observacions: `${sub.sortida?.nomSortida || 'Sortida'} - ${sub.assignatura} (${sub.grup})`,
+    assignacioId: sub.professorSubstitutId,
+    professor: sub.professorSubstitut ? {
+      id: sub.professorSubstitut.id,
+      nom: sub.professorSubstitut.nom,
+      cognoms: sub.professorSubstitut.cognoms
+    } : null,
+    aula: sub.aula ? { id: sub.aula.id, nom: sub.aula.nom } : null
+  }));
+
+  // Filter substitution events for current week
+  const weekSubstitutions = substitutionEvents.filter(sub => {
+    const subDate = parseISO(sub.data);
+    return subDate >= weekStart && subDate <= weekEnd;
+  });
+
+  // Combine all events
+  const allEvents = [...weekGuards, ...weekSubstitutions];
+
+  // Group all events by day
+  const groupedGuards = allEvents.reduce((acc, guard) => {
     const dayKey = format(parseISO(guard.data), 'yyyy-MM-dd');
     if (!acc[dayKey]) acc[dayKey] = [];
     acc[dayKey].push(guard);

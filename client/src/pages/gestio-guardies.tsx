@@ -96,6 +96,16 @@ export default function GestioGuardies() {
     queryKey: ['/api/sortides']
   });
 
+  // Get current academic year classes/schedule  
+  const { data: horaris = [] } = useQuery({
+    queryKey: ['/api/horaris']
+  });
+
+  // Get current assignments
+  const { data: assignacions = [] } = useQuery({
+    queryKey: ['/api/assignacions-guardia']
+  });
+
   // Filter substitutions
   const filteredSubstitucions = useMemo(() => {
     return (substitucions as Substitucio[]).filter((substitucio: Substitucio) => {
@@ -126,6 +136,30 @@ export default function GestioGuardies() {
     
     return result;
   }, [filteredSubstitucions]);
+
+  // Analyze class assignment status
+  const classAnalysis = useMemo(() => {
+    const classesToCover = (horaris as any[]).filter(h => 
+      h.diaSemana && h.horaInici && h.assignatura !== 'G' // Exclude guard slots
+    );
+    
+    const assignades = (substitucions as any[]).filter(s => s.estat === 'assignada').length;
+    const pendents = (substitucions as any[]).filter(s => s.estat === 'pendent').length;
+    const noAssignables = classesToCover.filter(classe => {
+      // Check if there are available professors for this class
+      const professorsMaterias = (professors as any[]).filter(p => 
+        p.especialitat === classe.assignatura || p.habilitacio?.includes(classe.assignatura)
+      );
+      return professorsMaterias.length === 0;
+    }).length;
+
+    return {
+      assignades,
+      pendents,
+      noAssignables,
+      total: classesToCover.length
+    };
+  }, [horaris, substitucions, professors]);
 
   // Assign professor mutation
   const assignProfessorMutation = useMutation({
