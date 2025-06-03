@@ -980,26 +980,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getGuardAssignmentStats(): Promise<any> {
+    const activeYear = await this.getActiveAcademicYear();
+    
     const stats = await db
       .select({
         professorId: assignacionsGuardia.professorId,
         count: count(assignacionsGuardia.id),
       })
       .from(assignacionsGuardia)
+      .where(eq(assignacionsGuardia.anyAcademicId, activeYear))
       .groupBy(assignacionsGuardia.professorId);
     
     return stats;
   }
 
   async getProfessorWorkloadBalance(): Promise<any> {
+    const activeYear = await this.getActiveAcademicYear();
+    
     const balance = await db
       .select({
         professorId: assignacionsGuardia.professorId,
         guardCount: count(assignacionsGuardia.id),
       })
       .from(assignacionsGuardia)
-      .innerJoin(guardies, eq(assignacionsGuardia.guardiaId, guardies.id))
-      .where(gte(guardies.data, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]))
+      .leftJoin(guardies, eq(assignacionsGuardia.guardiaId, guardies.id))
+      .where(eq(assignacionsGuardia.anyAcademicId, activeYear))
       .groupBy(assignacionsGuardia.professorId);
     
     return balance;

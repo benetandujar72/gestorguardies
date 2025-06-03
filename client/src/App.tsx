@@ -21,7 +21,7 @@ import Groups from "@/pages/groups";
 import Classrooms from "@/pages/classrooms";
 import Students from "@/pages/students";
 import Subjects from "@/pages/subjects";
-import Analytics from "@/pages/analytics";
+import Analytics from "@/pages/analytics-real";
 import SimpleChat from "@/pages/simple-chat";
 import ImportCSV from "@/pages/import-csv";
 import SortidesSubstitucions from "@/pages/sortides-substitucions-new";
