@@ -38,13 +38,9 @@ class GmailService {
   private gmail: any;
 
   constructor() {
-    // Utilitzar la URL de Replit adequada segons el domini
-    let redirectUri = 'urn:ietf:wg:oauth:2.0:oob'; // fallback per codi manual
-    
-    if (process.env.REPLIT_DOMAINS) {
-      const domain = process.env.REPLIT_DOMAINS.split(',')[0];
-      redirectUri = `https://${domain}/oauth2callback`;
-    }
+    // Utilitzar sempre la URL de Replit per aplicacions web
+    const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || '5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev';
+    const redirectUri = `https://${domain}/oauth2callback`;
       
     this.oauth2Client = new OAuth2Client(
       process.env.GOOGLE_CLIENT_ID,
