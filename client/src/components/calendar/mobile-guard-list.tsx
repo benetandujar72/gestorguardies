@@ -16,7 +16,7 @@ interface GuardiaWithAssignments {
   tipusGuardia: string;
   estat: string;
   lloc: string | null;
-  observacions: string | null;
+  observacions: string | null | undefined;
   assignacions?: Array<{
     id: number;
     professor?: {

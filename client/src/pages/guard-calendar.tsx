@@ -291,18 +291,20 @@ export default function GuardCalendar() {
             id: guard.id,
             data: guard.data,
             horaInici: guard.hora,
-            horaFi: format(addDays(parseISO(`${guard.data}T${guard.hora}`), 0), 'HH:mm'),
+            horaFi: guard.hora ? 
+              format(new Date(`${guard.data}T${guard.hora}`), 'HH:mm') : 
+              '00:00',
             tipusGuardia: guard.tipusGuardia,
             estat: guard.categoria,
             lloc: guard.aula?.nom || null,
-            observacions: guard.observacions,
+            observacions: guard.observacions || undefined,
             assignacions: guard.professor ? [{
               id: guard.assignacioId || 0,
               professor: {
                 id: guard.professor.id,
                 nom: guard.professor.nom,
                 cognoms: guard.professor.cognoms,
-                fullName: guard.professor.fullName
+                fullName: `${guard.professor.nom} ${guard.professor.cognoms}`
               }
             }] : []
           }))}
@@ -313,7 +315,7 @@ export default function GuardCalendar() {
               hora: guard.horaInici,
               tipusGuardia: guard.tipusGuardia,
               categoria: guard.estat,
-              observacions: guard.observacions
+              observacions: guard.observacions || undefined
             });
             setIsEditDialogOpen(true);
           }}
@@ -324,7 +326,7 @@ export default function GuardCalendar() {
               hora: guard.horaInici,
               tipusGuardia: guard.tipusGuardia,
               categoria: guard.estat,
-              observacions: guard.observacions
+              observacions: guard.observacions || undefined
             });
           }}
         />
