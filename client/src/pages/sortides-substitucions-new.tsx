@@ -266,6 +266,9 @@ export default function SortidesSubstitucions() {
         description: `${data.substitucionsConfirmades} substitucions confirmades i ${data.comunicacionsEnviades} comunicacions enviades.`,
       });
       
+      // Eliminar les classes confirmades de la llista de planificació
+      const classesConfirmades = substitucions.map(s => s.horariId);
+      
       // Reset state
       setSortidaSeleccionada(null);
       setSubstitucions([]);
@@ -273,9 +276,18 @@ export default function SortidesSubstitucions() {
       setObservacionsPerClasse({});
       setClasseSeleccionada(null);
       
-      // Invalidar caches
+      // Invalidar caches per actualitzar les llistes
       queryClient.invalidateQueries({ queryKey: ['/api/sortides'] });
       queryClient.invalidateQueries({ queryKey: ['/api/comunicacions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasques'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/assignacions-guardia'] });
+      
+      // Força la recàrrega de les classes per a substitució per eliminar les confirmades
+      if (sortidaSeleccionada) {
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/sortides', sortidaSeleccionada, 'classes-substitucio'] 
+        });
+      }
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
