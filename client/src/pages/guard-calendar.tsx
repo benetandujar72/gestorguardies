@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, CalendarDays, Clock, MapPin, User, Download, ExternalLink, Edit2, List, Grid3x3, Smartphone, Monitor } from "lucide-react";
+import MobileGuardList from "@/components/calendar/mobile-guard-list";
 import { format, addDays, startOfWeek, endOfWeek, isSameDay, parseISO } from "date-fns";
 import { ca } from "date-fns/locale";
 import { useForm } from "react-hook-form";
@@ -283,8 +284,53 @@ export default function GuardCalendar() {
         </CardHeader>
       </Card>
 
-      {/* Weekly Calendar Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+      {/* Vista condicional: llista per mòbil, calendari per desktop */}
+      {isMobile || viewMode === 'list' ? (
+        <MobileGuardList 
+          guardies={guards.map(guard => ({
+            id: guard.id,
+            data: guard.data,
+            horaInici: guard.hora,
+            horaFi: format(addDays(parseISO(`${guard.data}T${guard.hora}`), 0), 'HH:mm'),
+            tipusGuardia: guard.tipusGuardia,
+            estat: guard.categoria,
+            lloc: guard.aula?.nom || null,
+            observacions: guard.observacions,
+            assignacions: guard.professor ? [{
+              id: guard.assignacioId || 0,
+              professor: {
+                id: guard.professor.id,
+                nom: guard.professor.nom,
+                cognoms: guard.professor.cognoms,
+                fullName: guard.professor.fullName
+              }
+            }] : []
+          }))}
+          onEditGuard={(guard) => {
+            setSelectedGuard({
+              id: guard.id,
+              data: guard.data,
+              hora: guard.horaInici,
+              tipusGuardia: guard.tipusGuardia,
+              categoria: guard.estat,
+              observacions: guard.observacions
+            });
+            setIsEditDialogOpen(true);
+          }}
+          onViewAssignments={(guard) => {
+            setSelectedGuard({
+              id: guard.id,
+              data: guard.data,
+              hora: guard.horaInici,
+              tipusGuardia: guard.tipusGuardia,
+              categoria: guard.estat,
+              observacions: guard.observacions
+            });
+          }}
+        />
+      ) : (
+        /* Vista de calendari per desktop */
+        <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
         {weekDays.map((day, index) => {
           const dayKey = format(day, 'yyyy-MM-dd');
           const dayGuards = groupedGuards[dayKey] || [];
@@ -370,7 +416,8 @@ export default function GuardCalendar() {
             </Card>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* Summary Stats */}
       <Card className="mt-6">
