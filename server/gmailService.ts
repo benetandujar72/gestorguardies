@@ -1,5 +1,8 @@
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
+import { db } from './db';
+import { systemSettings } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 
 interface GmailEmailData {
   to: string;
