@@ -6,6 +6,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { sendSubstitutionEmails, verifyEmailConfiguration } from "./emailService";
+import { gmailService } from "./gmailService";
 
 // Funció auxiliar per convertir dia de setmana
 function getDiaSemanaText(dia: number): string {
@@ -73,6 +74,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error) {
     console.log('⚠️  No s\'ha pogut verificar la configuració d\'email');
   }
+
+  // Rutes d'autenticació Gmail OAuth2
+  app.get('/api/gmail/auth-url', isAuthenticated, async (req, res) => {
+    try {
+      const authUrl = gmailService.getAuthUrl();
+      res.json({ authUrl });
+    } catch (error) {
+      console.error('Error generating Gmail auth URL:', error);
+      res.status(500).json({ message: 'Error generant URL d\'autenticació Gmail' });
+    }
+  });
+
+  app.post('/api/gmail/auth-callback', isAuthenticated, async (req, res) => {
+    try {
+      const { code } = req.body;
+      if (!code) {
+        return res.status(400).json({ message: 'Codi d\'autorització requerit' });
+      }
+
+      const success = await gmailService.setTokenFromCode(code);
+      if (success) {
+        res.json({ success: true, message: 'Gmail API configurat correctament' });
+      } else {
+        res.status(400).json({ message: 'Error configurant tokens Gmail' });
+      }
+    } catch (error) {
+      console.error('Error setting Gmail tokens:', error);
+      res.status(500).json({ message: 'Error processant autorització Gmail' });
+    }
+  });
+
+  app.get('/api/gmail/status', isAuthenticated, async (req, res) => {
+    try {
+      const isConfigured = await gmailService.verifyConfiguration();
+      res.json({ configured: isConfigured });
+    } catch (error) {
+      res.json({ configured: false });
+    }
+  });
 
   // Test endpoint for debugging (MUST BE FIRST)
   app.post('/api/chat/test', isAuthenticated, async (req, res) => {
