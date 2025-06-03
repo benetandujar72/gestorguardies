@@ -27,12 +27,15 @@ import ImportCSV from "@/pages/import-csv";
 import SortidesSubstitucions from "@/pages/sortides-substitucions-new";
 import Setup from "@/pages/setup";
 import NotFound from "@/pages/not-found";
-import Sidebar from "@/components/layout/sidebar";
+import ResponsiveSidebar from "@/components/layout/sidebar-responsive";
+import MobileHeader from "@/components/layout/mobile-header";
 import TopNavigation from "@/components/layout/top-navigation";
 import FloatingChatBot from "@/components/common/floating-chat-bot";
+import { useState } from "react";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -56,11 +59,22 @@ function Router() {
 
   return (
     <div className="min-h-screen bg-surface">
-      <TopNavigation />
+      {/* Header per mòbil */}
+      <MobileHeader onMenuClick={() => setSidebarOpen(true)} />
+      
+      {/* Header per desktop (ocult en mòbil) */}
+      <div className="hidden md:block">
+        <TopNavigation />
+      </div>
+      
       <div className="flex">
-        <Sidebar />
-        <main className="flex-1 overflow-auto">
-          <Switch>
+        <ResponsiveSidebar 
+          isOpen={sidebarOpen} 
+          onClose={() => setSidebarOpen(false)} 
+        />
+        <main className="flex-1 overflow-auto min-h-[calc(100vh-64px)] md:min-h-[calc(100vh-64px)]">
+          <div className="px-4 md:px-6 py-4 md:py-8">
+            <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/dashboard-guardies" component={DashboardGuardiesVisual} />
             <Route path="/guardies" component={Guards} />
@@ -82,7 +96,8 @@ function Router() {
             <Route path="/chat-bot" component={SimpleChat} />
             <Route path="/import-csv" component={ImportCSV} />
             <Route component={NotFound} />
-          </Switch>
+            </Switch>
+          </div>
         </main>
       </div>
       <FloatingChatBot />
