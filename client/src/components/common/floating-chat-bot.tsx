@@ -41,8 +41,8 @@ export default function FloatingChatBot() {
     mutationFn: async (messageText: string) => {
       if (!session?.id) throw new Error("No session available");
       
-      const response = await apiRequest('POST', `/api/chat/${session.id}/message`, {
-        message: messageText,
+      const response = await apiRequest('POST', `/api/chat/sessions/${session.id}/messages`, {
+        content: messageText,
       });
       return response.json();
     },

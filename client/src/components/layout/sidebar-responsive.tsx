@@ -80,22 +80,22 @@ const gestioItems = [
     icon: Calendar,
   },
   {
-    href: "/outings",
+    href: "/sortides",
     label: "Sortides",
     icon: Route,
   },
   {
-    href: "/guards",
+    href: "/guardies",
     label: "Guàrdies",
     icon: Shield,
   },
   {
-    href: "/tasks",
+    href: "/tasques",
     label: "Tasques",
     icon: ListTodo,
   },
   {
-    href: "/communications",
+    href: "/comunicacions",
     label: "Comunicacions",
     icon: MessageSquare,
   },
