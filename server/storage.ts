@@ -1235,8 +1235,8 @@ export class DatabaseStorage implements IStorage {
               AND t.data_creacio >= CURRENT_DATE - INTERVAL '7 days'
           )
           AND NOT EXISTS (
-            SELECT 1 FROM sortides_substitucions ss
-            WHERE ss.horari_original_id = h.horari_id
+            SELECT 1 FROM sortida_substitucions ss
+            WHERE ss.horari_id = h.horari_id
               AND ss.estat = 'confirmada'
           )
       `);
