@@ -1236,7 +1236,7 @@ export class DatabaseStorage implements IStorage {
           )
           AND NOT EXISTS (
             SELECT 1 FROM sortida_substitucions ss
-            WHERE ss.horari_id = h.horari_id
+            WHERE ss.horari_original_id = h.horari_id
               AND ss.estat = 'confirmada'
           )
       `);
