@@ -114,6 +114,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Ruta per gestionar el callback OAuth2
+  app.get('/oauth2callback', async (req, res) => {
+    const { code, error } = req.query;
+    
+    if (error) {
+      res.send(`
+        <html>
+          <head><title>Error d'autorització</title></head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1>Error d'autorització</h1>
+            <p>Error: ${error}</p>
+            <p>Torna a la pàgina de configuració per intentar-ho de nou.</p>
+            <button onclick="window.close()">Tancar finestra</button>
+          </body>
+        </html>
+      `);
+      return;
+    }
+
+    if (code) {
+      try {
+        const success = await gmailService.setTokenFromCode(code as string);
+        if (success) {
+          res.send(`
+            <html>
+              <head><title>Autorització exitosa</title></head>
+              <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+                <h1>Autorització completada!</h1>
+                <p>Gmail API s'ha configurat correctament.</p>
+                <p>Ja pots tancar aquesta finestra i tornar a l'aplicació.</p>
+                <button onclick="window.close()">Tancar finestra</button>
+                <script>
+                  setTimeout(() => {
+                    window.close();
+                  }, 3000);
+                </script>
+              </body>
+            </html>
+          `);
+        } else {
+          throw new Error('Error processant tokens');
+        }
+      } catch (error) {
+        res.send(`
+          <html>
+            <head><title>Error de configuració</title></head>
+            <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+              <h1>Error de configuració</h1>
+              <p>No s'han pogut processar els tokens d'autorització.</p>
+              <p>Torna a la pàgina de configuració per intentar-ho de nou.</p>
+              <button onclick="window.close()">Tancar finestra</button>
+            </body>
+          </html>
+        `);
+      }
+    } else {
+      res.send(`
+        <html>
+          <head><title>Codi d'autorització no trobat</title></head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1>Codi no trobat</h1>
+            <p>No s'ha rebut cap codi d'autorització.</p>
+            <p>Torna a la pàgina de configuració per intentar-ho de nou.</p>
+            <button onclick="window.close()">Tancar finestra</button>
+          </body>
+        </html>
+      `);
+    }
+  });
+
   // Test endpoint for debugging (MUST BE FIRST)
   app.post('/api/chat/test', isAuthenticated, async (req, res) => {
     console.log("=== TEST ENDPOINT HIT ===");
