@@ -110,6 +110,11 @@ const gestioItems = [
 // Eines d'administració
 const adminItems = [
   {
+    href: "/anys-academics",
+    label: "Anys Acadèmics",
+    icon: Calendar,
+  },
+  {
     href: "/ai-chat",
     label: "Assistent IA",
     icon: Bot,
