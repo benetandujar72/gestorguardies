@@ -8,6 +8,8 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { sendSubstitutionEmails, verifyEmailConfiguration } from "./emailService";
 import { gmailService } from "./gmailService";
 import { pool } from "./db";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 
 // Funció auxiliar per convertir dia de setmana
 function getDiaSemanaText(dia: number): string {
@@ -2108,16 +2110,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('sortidaId:', sortidaId);
       
       // Obtenir l'any acadèmic específic de la sortida directament de la base de dades
-      const sortidaResult = await db.execute(sql`
-        SELECT any_academic_id FROM sortides WHERE sortida_id = ${sortidaId}
-      `);
+      const sortidaResult = await pool.query(
+        'SELECT any_academic_id FROM sortides WHERE sortida_id = $1',
+        [sortidaId]
+      );
       
       if (sortidaResult.rows.length === 0) {
         console.log('ERROR: Sortida no trobada');
         return res.status(404).json({ message: "Sortida no trobada" });
       }
       
-      const anyAcademicId = (sortidaResult.rows[0] as any).any_academic_id;
+      const anyAcademicId = sortidaResult.rows[0].any_academic_id;
       console.log('Sortida trobada - Any acadèmic:', anyAcademicId);
 
       console.log('Cridant getClassesToSubstitute amb:', { sortidaId, anyAcademicId });
