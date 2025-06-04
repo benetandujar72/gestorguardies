@@ -1,0 +1,89 @@
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+framework-2bcfc913b3383f64.js:1 Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-2bcfc913b3383f64.js:1
+framework-2bcfc913b3383f64.js:1 Unrecognized feature: 'battery'.
+_ @ framework-2bcfc913b3383f64.js:1
+framework-2bcfc913b3383f64.js:1 Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-2bcfc913b3383f64.js:1
+framework-2bcfc913b3383f64.js:1 Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-2bcfc913b3383f64.js:1
+framework-2bcfc913b3383f64.js:1 Unrecognized feature: 'layout-animations'.
+_ @ framework-2bcfc913b3383f64.js:1
+framework-2bcfc913b3383f64.js:1 Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-2bcfc913b3383f64.js:1
+framework-2bcfc913b3383f64.js:1 Unrecognized feature: 'navigation-override'.
+_ @ framework-2bcfc913b3383f64.js:1
+framework-2bcfc913b3383f64.js:1 Unrecognized feature: 'oversized-images'.
+_ @ framework-2bcfc913b3383f64.js:1
+framework-2bcfc913b3383f64.js:1 Unrecognized feature: 'publickey-credentials'.
+_ @ framework-2bcfc913b3383f64.js:1
+framework-2bcfc913b3383f64.js:1 Unrecognized feature: 'speaker-selection'.
+_ @ framework-2bcfc913b3383f64.js:1
+framework-2bcfc913b3383f64.js:1 Unrecognized feature: 'unoptimized-images'.
+_ @ framework-2bcfc913b3383f64.js:1
+framework-2bcfc913b3383f64.js:1 Unrecognized feature: 'unsized-media'.
+_ @ framework-2bcfc913b3383f64.js:1
+framework-2bcfc913b3383f64.js:1 Unrecognized feature: 'pointer-lock'.
+_ @ framework-2bcfc913b3383f64.js:1
+framework-2bcfc913b3383f64.js:1 Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-2bcfc913b3383f64.js:1
+framework-2bcfc913b3383f64.js:1 Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-2bcfc913b3383f64.js:1
+4899-eb4341bb4039a4b1.js:1 WebSocket connection to 'wss://eval.spock.platform.replit.com/wsv2/v2.public.Q2dZSXRxdit3UVlTQmdqVngvN0JCaUlGYzNCdlkyc3dBRHJ0QVFva05XUXhNakU0TWpjdFlUVmtaQzAwWlRZekxUazROelV0T0dReU1HTmlZV0kwTlRBMkVnTnVhWGdhRjNKbGNHeHBkQzF5WlhCc0xXWnBiR1Z6TFhOd2IyTnJJZzVIWlhOMGIzSkhkV0Z5WkdsbGN5b01ZbVZ1WlhSaGJtUjFhbUZ5UWxFS0dISmxjR3hwZEMxeVpYQnNMV0pzYjJOcmN5MXpjRzlqYXhJV2NtVndiR2wwTFhKbGNHd3RiV1YwWVMxemNHOWpheG9kY21Wd2JHbDBMVzFoY21kaGNtbHVaUzFpYkc5amEzTXRjM0J2WTJ0S0J3aUo5Y3NSRUFGUUFGb1piMjVpYjJGeVpHbHVaMTlsZUhCbGNtbGxibU5sWDJ4dmQxb09hVzUwWlc1MFgzTjB...0UVRodmQzTkpWVzlaUVdzeFMyWnBkVGR1Y3pORmFGQmpUbTlKUmpSU1JraGlUMnBYVkVKWVNEbHRUWEpFVVVoRldFNW9aMkZ5UjBoVFJHbDRhRzVDUVdoUldEQmpNamxETlhnbE1rSm9OM0J2Vm1aRVducHRNSFJQYnpBMU5UZFVWM1l3ZFdGS2VIVTNRVTlSY2tsWVJXbEpNbkpTVkV4SGRrUjFVa05LWVVsTmExQTRUMjlYY1c1bVkzcExOVTFZUldWWmNpVXlSak5ZUldKS1lYTlZiR2RuTjJwbVZYcEZNRk5sV2tOcmJrSndlWFZ4VWtobFR5VXlSa0pQT1ZNbE1rWllNVXRpZG1zM2VqTnlKVEpHTVhjbE0wUWxNMFE9PchoK5wSLANdQmpzlEpZ1ED2FhrKXjVgs7XBk20wxzVymmuVURCWe6m7eNW5wuQmdIzkFdsz6VKUCodGuU-qCg.Q2dad2NtOWtPak1pQ25KbGNHeHBkQzVqYjIwPQ' failed: WebSocket is closed before the connection is established.
+cleanupSocket @ 4899-eb4341bb4039a4b1.js:1
+_app-60c1bfc66a8d5374.js:38 Adding extension: CSS Shadow Generator Object
+_app-60c1bfc66a8d5374.js:38 Adding extension: Icon Generator Object
+_app-60c1bfc66a8d5374.js:38 Adding extension: CSS Shadow Generator Object
+_app-60c1bfc66a8d5374.js:38 Adding extension: Icon Generator Object
+workspace_iframe.html:32 Unrecognized feature: 'ambient-light-sensor'.
+workspace_iframe.html:32 Unrecognized feature: 'battery'.
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-not-rendered'.
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-out-of-viewport'.
+workspace_iframe.html:32 Unrecognized feature: 'layout-animations'.
+workspace_iframe.html:32 Unrecognized feature: 'legacy-image-formats'.
+workspace_iframe.html:32 Unrecognized feature: 'navigation-override'.
+workspace_iframe.html:32 Unrecognized feature: 'oversized-images'.
+workspace_iframe.html:32 Unrecognized feature: 'publickey-credentials'.
+workspace_iframe.html:32 Unrecognized feature: 'speaker-selection'.
+workspace_iframe.html:32 Unrecognized feature: 'unoptimized-images'.
+workspace_iframe.html:32 Unrecognized feature: 'unsized-media'.
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowfullscreen'.
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowpaymentrequest'.
+Console.js:61 Warning: validateDOMNesting(...): <a> cannot appear as a descendant of <a>.
+    at a
+    at a
+    at https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9b58ecac:337:18
+    at li
+    at ul
+    at div
+    at nav
+    at aside
+    at ResponsiveSidebar (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/src/components/layout/sidebar-responsive.tsx:137:45)
+    at div
+    at div
+    at Router (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/src/App.tsx?v=CbEA9T1s7hyrCqgJPbQr3:55:42)
+    at Provider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=9b58ecac:38:15)
+    at TooltipProvider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9b58ecac:64:5)
+    at QueryClientProvider (https://5d121827-a5dd-4e63-9875-8d20cbab4506-00-2vq5a9umw9isu.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9b58ecac:2805:3)
+    at App
+Mt.forEach.n.<computed> @ Console.js:61
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
