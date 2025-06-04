@@ -90,7 +90,11 @@ export default function GestioGuardies() {
   // Fetch data
   const { data: substitucions = [], isLoading: isLoadingSubstitucions } = useQuery({
     queryKey: ['/api/substitucions-necessaries', filters],
-    enabled: true
+    enabled: true,
+    onSuccess: (data) => {
+      console.log('Substitucions carregades:', data);
+      console.log('Nombre de substitucions:', data.length);
+    }
   });
 
   const { data: professors = [] } = useQuery<Professor[]>({
