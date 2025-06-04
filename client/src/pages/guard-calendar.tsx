@@ -59,8 +59,9 @@ interface Guardia {
 
 export default function GuardCalendar() {
   const [selectedWeek, setSelectedWeek] = useState(() => {
-    const today = new Date();
-    return startOfWeek(today, { weekStartsOn: 1 }); // Monday start
+    // Setmana del 2-8 juny 2025 on hi ha les substitucions
+    const june2025 = new Date('2025-06-02');
+    return startOfWeek(june2025, { weekStartsOn: 1 }); // Monday start
   });
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [isMobile, setIsMobile] = useState(false);
