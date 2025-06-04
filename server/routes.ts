@@ -625,109 +625,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Temporary endpoint for testing calendar without auth
   app.get('/api/substitucions-test', async (req, res) => {
     try {
-      const activeYear = await storage.getActiveAcademicYearFull();
-      if (!activeYear) {
-        return res.status(404).json({ message: "No hi ha cap any acadèmic actiu" });
-      }
-
-      console.log('Obtenint substitucions TEST per any acadèmic:', activeYear.id);
-
-      // Get substitutions from sortida_substitucions table using pool directly
+      // Simple query to get basic substitution data that we know exists
       const query = `
         SELECT 
           ss.id,
-          ss.sortida_id,
-          ss.horari_original_id,
-          ss.professor_original_id,
-          ss.professor_substitut_id,
-          ss.estat,
-          ss.observacions,
-          ss.comunicacio_enviada,
           s.data_inici as data,
-          
-          -- Sortida information
-          s.nom_sortida,
-          s.data_inici as sortida_data_inici,
-          s.data_fi as sortida_data_fi,
-          s.lloc as sortida_lloc,
-          
-          -- Horari information
-          h.dia_setmana,
+          ss.estat,
+          h.assignatura,
+          g.nom_grup as grup,
           h.hora_inici,
           h.hora_fi,
-          h.assignatura,
-          
-          -- Grup information
-          g.nom_grup as grup,
-          
-          -- Professor original information
-          po.nom as professor_original_nom,
-          po.cognoms as professor_original_cognoms,
-          po.email as professor_original_email,
-          
-          -- Professor substitut information
-          ps.nom as professor_substitut_nom,
-          ps.cognoms as professor_substitut_cognoms,
-          ps.email as professor_substitut_email
-          
+          s.nom_sortida
         FROM sortida_substitucions ss
         JOIN sortides s ON ss.sortida_id = s.sortida_id
         JOIN horaris h ON ss.horari_original_id = h.horari_id
         LEFT JOIN grups g ON h.grup_id = g.grup_id
-        LEFT JOIN professors po ON ss.professor_original_id = po.id
-        LEFT JOIN professors ps ON ss.professor_substitut_id = ps.id
-        WHERE s.any_academic_id = $1
         ORDER BY s.data_inici, h.hora_inici
       `;
 
-      const result = await pool.query(query, [activeYear.id]);
+      const result = await pool.query(query);
 
       // Transform the data to match the expected format
       const substitucions = result.rows.map(row => ({
         id: row.id,
         data: row.data,
         estat: row.estat,
-        observacions: row.observacions,
-        comunicacioEnviada: row.comunicacio_enviada,
-        
-        // Horari details
-        diaSemana: row.dia_setmana,
+        assignatura: row.assignatura,
+        grup: row.grup,
         horaInici: row.hora_inici,
         horaFi: row.hora_fi,
-        assignatura: row.assignatura,
-        aula: row.aula,
-        grup: row.grup,
-        
-        // Sortida details
         sortida: {
-          id: row.sortida_id,
-          nomSortida: row.nom_sortida,
-          dataInici: row.sortida_data_inici,
-          dataFi: row.sortida_data_fi,
-          lloc: row.sortida_lloc
-        },
-        
-        // Professor details
-        professorOriginal: row.professor_original_id ? {
-          id: row.professor_original_id,
-          nom: row.professor_original_nom,
-          cognoms: row.professor_original_cognoms,
-          email: row.professor_original_email
-        } : null,
-        
-        professorSubstitut: row.professor_substitut_id ? {
-          id: row.professor_substitut_id,
-          nom: row.professor_substitut_nom,
-          cognoms: row.professor_substitut_cognoms,
-          email: row.professor_substitut_email
-        } : null
+          nomSortida: row.nom_sortida
+        }
       }));
 
       console.log(`Trobades ${substitucions.length} substitucions TEST`);
       res.json(substitucions);
     } catch (error) {
       console.error("Error fetching substitucions TEST:", error);
-      res.status(500).json({ message: "Error intern del servidor" });
+      res.status(500).json({ message: "Error intern del servidor", details: error.message });
     }
   });
 
