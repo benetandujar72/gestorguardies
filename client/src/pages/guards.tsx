@@ -19,7 +19,10 @@ const guardSchema = z.object({
   data: z.string().min(1, "La data és obligatòria"),
   horaInici: z.string().min(1, "L'hora d'inici és obligatòria"),
   horaFi: z.string().min(1, "L'hora de fi és obligatòria"),
-  tipusGuardia: z.string().min(1, "El tipus de guàrdia és obligatori"),
+  professorOriginalId: z.number().min(1, "El professor original és obligatori"),
+  horariOriginalId: z.number().optional(),
+  professorSubstitutId: z.number().optional(),
+  tipusGuardia: z.string().min(1, "El tipus de substitució és obligatori"),
   lloc: z.string().optional(),
   observacions: z.string().optional(),
 });
@@ -35,12 +38,11 @@ interface Guard {
   estat: string;
   lloc?: string;
   observacions?: string;
-  assignacions?: Array<{
-    id: number;
-    professor: { nom: string; cognoms: string };
-    prioritat: number;
-    estat: string;
-  }>;
+  sortidaId?: number;
+  horariOriginalId?: number;
+  professorOriginalId?: number;
+  professorSubstitutId?: number;
+  comunicacioEnviada?: boolean;
 }
 
 export default function Guards() {
@@ -116,11 +118,16 @@ export default function Guards() {
     },
   });
 
+  // Fetch professors for selection
+  const { data: professors = [] } = useQuery({
+    queryKey: ['/api/professors'],
+  });
+
   const form = useForm<GuardFormData>({
     resolver: zodResolver(guardSchema),
     defaultValues: {
       data: new Date().toISOString().split('T')[0],
-      tipusGuardia: "pati",
+      tipusGuardia: "sortida",
       horaInici: "08:00",
       horaFi: "09:00",
     },
@@ -209,7 +216,7 @@ export default function Guards() {
                     name="tipusGuardia"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Tipus de Guàrdia</FormLabel>
+                        <FormLabel>Tipus de Substitució</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -217,11 +224,11 @@ export default function Guards() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="pati">Pati</SelectItem>
-                            <SelectItem value="biblioteca">Biblioteca</SelectItem>
-                            <SelectItem value="aula">Aula</SelectItem>
-                            <SelectItem value="entrada">Entrada</SelectItem>
-                            <SelectItem value="menjador">Menjador</SelectItem>
+                            <SelectItem value="sortida">Sortida</SelectItem>
+                            <SelectItem value="baixa">Baixa laboral</SelectItem>
+                            <SelectItem value="permis">Permís</SelectItem>
+                            <SelectItem value="formacio">Formació</SelectItem>
+                            <SelectItem value="altre">Altre</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -252,6 +259,57 @@ export default function Guards() {
                         <FormControl>
                           <Input type="time" {...field} />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="professorOriginalId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Professor Original</FormLabel>
+                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona professor" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {professors.map((professor: any) => (
+                              <SelectItem key={professor.id} value={professor.id.toString()}>
+                                {professor.nom} {professor.cognoms}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="professorSubstitutId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Professor Substitut (opcional)</FormLabel>
+                        <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} value={field.value?.toString() || ""}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona substitut" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="">Cap substitut assignat</SelectItem>
+                            {professors.map((professor: any) => (
+                              <SelectItem key={professor.id} value={professor.id.toString()}>
+                                {professor.nom} {professor.cognoms}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
