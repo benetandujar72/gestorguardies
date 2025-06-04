@@ -625,7 +625,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Temporary endpoint for testing calendar without auth
   app.get('/api/substitucions-test', async (req, res) => {
     try {
-      // Simple query to get basic substitution data that we know exists
+      // Get active academic year first
+      const activeYear = await storage.getActiveAcademicYearFull();
+      if (!activeYear) {
+        return res.status(404).json({ message: "No hi ha cap any acadèmic actiu" });
+      }
+
+      console.log('Obtenint substitucions TEST per any acadèmic actiu:', activeYear.id);
+
+      // Query filtered by active academic year
       const query = `
         SELECT 
           ss.id,
@@ -640,10 +648,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         JOIN sortides s ON ss.sortida_id = s.sortida_id
         JOIN horaris h ON ss.horari_original_id = h.horari_id
         LEFT JOIN grups g ON h.grup_id = g.grup_id
+        WHERE ss.any_academic_id = $1
         ORDER BY s.data_inici, h.hora_inici
       `;
 
-      const result = await pool.query(query);
+      const result = await pool.query(query, [activeYear.id]);
 
       // Transform the data to match the expected format
       const substitucions = result.rows.map(row => ({
