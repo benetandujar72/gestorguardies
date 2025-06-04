@@ -46,12 +46,15 @@ interface GuardEvent {
     id: number;
     nom: string;
   };
+  grup?: string;
+  sortida?: string;
 }
 
 export default function GuardCalendarResponsive() {
   const [selectedWeek, setSelectedWeek] = useState(() => {
-    const today = new Date();
-    return startOfWeek(today, { weekStartsOn: 1 });
+    // Start with June 2025 where substitutions are
+    const june2025 = new Date('2025-06-02');
+    return startOfWeek(june2025, { weekStartsOn: 1 });
   });
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [isMobile, setIsMobile] = useState(false);
@@ -74,23 +77,25 @@ export default function GuardCalendarResponsive() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetch guards
+  // Fetch substitutions (guards)
   const { data: guards = [], isLoading } = useQuery({
-    queryKey: ['/api/guardies'],
-    select: (data: any[]) => data.map(guard => ({
-      id: guard.id,
-      data: guard.data,
-      hora: guard.horaInici,
-      tipusGuardia: guard.tipusGuardia,
-      categoria: guard.estat || 'Pendent',
-      observacions: guard.observacions,
-      assignacioId: guard.assignacions?.[0]?.id,
-      professor: guard.assignacions?.[0]?.professor ? {
-        id: guard.assignacions[0].professor.id,
-        nom: guard.assignacions[0].professor.nom,
-        cognoms: guard.assignacions[0].professor.cognoms,
+    queryKey: ['/api/substitucions-necessaries'],
+    select: (data: any[]) => data.map(substitucio => ({
+      id: substitucio.id,
+      data: substitucio.data,
+      hora: `${substitucio.horaInici} - ${substitucio.horaFi}`,
+      tipusGuardia: substitucio.assignatura,
+      categoria: substitucio.estat === 'pendent' ? 'Pendent' : 'Assignada',
+      observacions: substitucio.descripcio,
+      assignacioId: substitucio.id,
+      professor: substitucio.professorSubstitut ? {
+        id: substitucio.professorSubstitut.id,
+        nom: substitucio.professorSubstitut.nom,
+        cognoms: substitucio.professorSubstitut.cognoms,
       } : undefined,
-      aula: undefined
+      aula: { id: 1, nom: substitucio.aula || 'Aula' },
+      grup: substitucio.grup,
+      sortida: substitucio.sortida?.nomSortida
     })),
   });
 
@@ -108,13 +113,17 @@ export default function GuardCalendarResponsive() {
     },
   });
 
-  // Edit guard mutation
+  // Edit substitution mutation
   const editGuardMutation = useMutation({
     mutationFn: async (data: GuardEditFormData & { id: number }) => {
-      return await apiRequest('PATCH', `/api/guardies/${data.id}`, data);
+      return await apiRequest('PUT', `/api/substitucions/${data.id}`, {
+        professorSubstitutId: data.estat === 'assignada' ? 1 : null, // Would need proper professor selection
+        estat: data.estat,
+        observacions: data.observacions
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/guardies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/substitucions-necessaries'] });
       setIsEditDialogOpen(false);
       setSelectedGuard(null);
       form.reset();
