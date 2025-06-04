@@ -143,13 +143,18 @@ export const sortides = pgTable("sortides", {
 export const guardies = pgTable("guardies", {
   id: serial("guardia_id").primaryKey(),
   anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
+  sortidaId: integer("sortida_id").references(() => sortides.id), // Nullable per guardies no relacionades amb sortides
+  horariOriginalId: integer("horari_original_id").references(() => horaris.id).notNull(),
+  professorOriginalId: integer("professor_original_id").references(() => professors.id).notNull(),
+  professorSubstitutId: integer("professor_substitut_id").references(() => professors.id), // Nullable fins assignació
   data: date("data").notNull(),
   horaInici: time("hora_inici").notNull(),
   horaFi: time("hora_fi").notNull(),
-  tipusGuardia: varchar("tipus_guardia").notNull(), // "pati", "biblioteca", "aula", etc.
+  tipusGuardia: varchar("tipus_guardia").notNull(), // "sortida", "baixa", "permis", etc.
   estat: varchar("estat").notNull().default("pendent"), // "pendent", "assignada", "completada"
   lloc: varchar("lloc"),
   observacions: text("observacions"),
+  comunicacioEnviada: boolean("comunicacio_enviada").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

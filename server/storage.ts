@@ -710,6 +710,12 @@ export class DatabaseStorage implements IStorage {
 
   async createSortida(sortida: InsertSortida): Promise<Sortida> {
     const [newSortida] = await db.insert(sortides).values(sortida).returning();
+    
+    // Generar guardies automàticament quan es crea la sortida
+    if (newSortida.responsableId) {
+      await this.generateGuardiesForSortida(newSortida.id, newSortida.responsableId, newSortida.dataInici, newSortida.dataFi, newSortida.anyAcademicId);
+    }
+    
     return newSortida;
   }
 
@@ -723,7 +729,60 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteSortida(id: number): Promise<void> {
+    // Eliminar guardies relacionades amb aquesta sortida
+    await db.delete(guardies).where(eq(guardies.sortidaId, id));
     await db.delete(sortides).where(eq(sortides.id, id));
+  }
+
+  // Generació automàtica de guardies per sortides
+  async generateGuardiesForSortida(sortidaId: number, professorId: number, dataInici: Date, dataFi: Date, anyAcademicId: number): Promise<void> {
+    // Obtenir horaris del professor durant el període de la sortida
+    const horarisAfectats = await db.select()
+      .from(horaris)
+      .where(and(
+        eq(horaris.professorId, professorId),
+        eq(horaris.anyAcademicId, anyAcademicId)
+      ));
+
+    if (horarisAfectats.length === 0) {
+      return; // No hi ha horaris a substituir
+    }
+
+    // Generar dates durant el període de la sortida
+    const dates: Date[] = [];
+    const currentDate = new Date(dataInici);
+    while (currentDate <= dataFi) {
+      dates.push(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // Per cada data, generar guardies per les classes del professor
+    for (const data of dates) {
+      const diaSetmana = data.getDay(); // 0=diumenge, 1=dilluns, etc.
+      
+      // Filtrar horaris per dia de la setmana (convertir a format 1-7 on 1=dilluns)
+      const diaSetmanaAjustat = diaSetmana === 0 ? 7 : diaSetmana;
+      const horarisDelDia = horarisAfectats.filter(h => h.diaSetmana === diaSetmanaAjustat);
+
+      for (const horari of horarisDelDia) {
+        // Crear una guàrdia per cada classe afectada
+        await db.insert(guardies).values({
+          anyAcademicId,
+          sortidaId,
+          horariOriginalId: horari.id,
+          professorOriginalId: professorId,
+          professorSubstitutId: null, // Sense assignar inicialment
+          data: data.toISOString().split('T')[0], // Format YYYY-MM-DD
+          horaInici: horari.horaInici,
+          horaFi: horari.horaFi,
+          tipusGuardia: "sortida",
+          estat: "pendent",
+          lloc: horari.aulaId ? `Aula ${horari.aulaId}` : null,
+          observacions: `Substitució per sortida: ${sortidaId}`,
+          comunicacioEnviada: false
+        });
+      }
+    }
   }
 
   // Guardia operations
