@@ -7,6 +7,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { sendSubstitutionEmails, verifyEmailConfiguration } from "./emailService";
 import { gmailService } from "./gmailService";
+import { pool } from "./db";
 
 // Funció auxiliar per convertir dia de setmana
 function getDiaSemanaText(dia: number): string {
@@ -631,19 +632,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Obtenint substitucions necessàries per any acadèmic:', activeYear.id);
 
-      // Get substitutions from sortida_substitucions table (real substitutions generated from outings)
-      const substitucions = await db.execute(sql`
+      // Get substitutions from sortida_substitucions table using pool directly
+      const query = `
         SELECT 
           ss.id,
           ss.sortida_id,
-          ss.horari_id,
+          ss.horari_original_id,
           ss.professor_original_id,
           ss.professor_substitut_id,
-          ss.data,
           ss.estat,
           ss.observacions,
-          ss.motiu,
           ss.comunicacio_enviada,
+          ss.created_at as data,
           
           -- Sortida information
           s.nom_sortida,
@@ -651,49 +651,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
           s.data_fi as sortida_data_fi,
           s.lloc as sortida_lloc,
           
-          -- Horari information (classe que cal substituir)
-          h.dia_semana,
-          h.hora_inici,
-          h.hora_fi,
-          h.assignatura,
-          
           -- Professor original information
           p_orig.nom as professor_original_nom,
           p_orig.cognoms as professor_original_cognoms,
           
           -- Professor substitut information
           p_subs.nom as professor_substitut_nom,
-          p_subs.cognoms as professor_substitut_cognoms,
-          
-          -- Grup information
-          g.nom_grup,
-          
-          -- Aula information
-          a.nom as aula_nom
+          p_subs.cognoms as professor_substitut_cognoms
           
         FROM sortida_substitucions ss
         LEFT JOIN sortides s ON ss.sortida_id = s.sortida_id
-        LEFT JOIN horaris h ON ss.horari_id = h.id
         LEFT JOIN professors p_orig ON ss.professor_original_id = p_orig.professor_id
         LEFT JOIN professors p_subs ON ss.professor_substitut_id = p_subs.professor_id
-        LEFT JOIN grups g ON h.grup_id = g.grup_id
-        LEFT JOIN aules a ON h.aula_id = a.aula_id
-        WHERE s.any_academic_id = ${activeYear.id}
-        ORDER BY ss.data DESC, h.hora_inici ASC
-      `);
+        WHERE ss.any_academic_id = $1
+        ORDER BY ss.created_at DESC
+      `;
+
+      const substitucions = await pool.query(query, [activeYear.id]);
 
       // Transform results to expected format
       const result = substitucions.rows.map((row: any) => ({
         id: row.id,
         tipus: 'Substitució',
-        data: row.data,
-        horaInici: row.hora_inici || '08:00:00',
-        horaFi: row.hora_fi || '09:00:00',
-        assignatura: row.assignatura,
-        grup: row.nom_grup,
-        aula: row.aula_nom,
-        descripcio: `Substitució per sortida: ${row.nom_sortida}`,
-        motiu: row.motiu || 'Sortida escolar',
+        data: row.data ? row.data.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        horaInici: '08:00:00',
+        horaFi: '09:00:00',
+        assignatura: row.observacions?.split(' ')[4] || 'Assignatura',
+        grup: row.observacions?.split(' ')[5] || 'Grup',
+        descripcio: row.observacions || `Substitució per sortida: ${row.nom_sortida}`,
+        motiu: 'Sortida escolar',
         estat: row.estat || 'pendent',
         professorOriginal: row.professor_original_id ? {
           id: row.professor_original_id,
@@ -711,15 +697,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           dataInici: row.sortida_data_inici,
           dataFi: row.sortida_data_fi,
           lloc: row.sortida_lloc
-        },
-        horari: {
-          id: row.horari_id,
-          diaSemana: row.dia_semana,
-          horaInici: row.hora_inici,
-          horaFi: row.hora_fi,
-          assignatura: row.assignatura,
-          grup: row.nom_grup ? { nomGrup: row.nom_grup } : null,
-          aula: row.aula_nom ? { nom: row.aula_nom } : null
         }
       }));
 
