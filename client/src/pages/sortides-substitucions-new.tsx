@@ -479,13 +479,13 @@ export default function SortidesSubstitucions() {
                               <div className="flex justify-between items-start">
                                 <div>
                                   <h4 className="font-semibold text-sm">
-                                    {getDiaSetmanaNom(classe.diaSetmana)} {classe.horaInici}-{classe.horaFi}
+                                    {classe.data} {classe.horaInici}-{classe.horaFi}
                                   </h4>
                                   <p className="text-xs text-muted-foreground">
-                                    {classe.assignatura || 'Sense assignatura'} - {classe.grup?.nomGrup || 'Sense grup'}
+                                    {classe.assignatura || 'Sense assignatura'} - {classe.grup || 'Sense grup'}
                                   </p>
                                   <p className="text-xs text-muted-foreground">
-                                    {classe.aula?.nomAula || 'Sense aula'}
+                                    {classe.aula || 'Sense aula'}
                                   </p>
                                 </div>
                                 {professorAssignat && (
