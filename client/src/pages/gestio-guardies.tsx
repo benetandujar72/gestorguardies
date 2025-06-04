@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Clock, User, Users, MapPin, Plus, Filter, Search, AlertCircle, CheckCircle, XCircle, X } from "lucide-react";
+import { Calendar, Clock, User, Users, MapPin, Plus, Filter, Search, AlertCircle, CheckCircle, XCircle, X, Edit, Trash2, Save } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from "date-fns";
@@ -81,6 +81,18 @@ export default function GestioGuardies() {
   // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedSubstitucio, setSelectedSubstitucio] = useState<Substitucio | null>(null);
+  
+  // Edit state
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<{
+    professorSubstitutId: number | null;
+    estat: string;
+    observacions: string;
+  }>({
+    professorSubstitutId: null,
+    estat: '',
+    observacions: ''
+  });
 
   // Fetch data
   const { data: substitucions = [], isLoading: isLoadingSubstitucions } = useQuery({

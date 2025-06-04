@@ -664,7 +664,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN professors p_orig ON ss.professor_original_id = p_orig.professor_id
         LEFT JOIN professors p_subs ON ss.professor_substitut_id = p_subs.professor_id
         WHERE ss.any_academic_id = $1
-        ORDER BY ss.created_at DESC
+        ORDER BY 
+          CASE ss.estat 
+            WHEN 'pendent' THEN 1 
+            WHEN 'assignada' THEN 2 
+            WHEN 'confirmada' THEN 3 
+            ELSE 4 
+          END,
+          ss.created_at DESC
       `;
 
       const substitucions = await pool.query(query, [activeYear.id]);
@@ -705,6 +712,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching substitucions necessàries:", error);
       res.status(500).json({ message: "Error intern del servidor" });
+    }
+  });
+
+  // Update substitution
+  app.put('/api/substitucions/:id', isAuthenticated, async (req, res) => {
+    try {
+      const substitucioId = parseInt(req.params.id);
+      const { professorSubstitutId, estat, observacions } = req.body;
+      
+      const query = `
+        UPDATE sortida_substitucions 
+        SET professor_substitut_id = $1, estat = $2, observacions = $3
+        WHERE id = $4
+        RETURNING *
+      `;
+      
+      const result = await pool.query(query, [professorSubstitutId, estat, observacions, substitucioId]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Substitució no trobada" });
+      }
+      
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error("Error updating substitution:", error);
+      res.status(500).json({ message: "Error actualitzant substitució" });
+    }
+  });
+
+  // Delete substitution
+  app.delete('/api/substitucions/:id', isAuthenticated, async (req, res) => {
+    try {
+      const substitucioId = parseInt(req.params.id);
+      
+      const query = `DELETE FROM sortida_substitucions WHERE id = $1 RETURNING *`;
+      const result = await pool.query(query, [substitucioId]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Substitució no trobada" });
+      }
+      
+      res.json({ message: "Substitució esborrada correctament" });
+    } catch (error) {
+      console.error("Error deleting substitution:", error);
+      res.status(500).json({ message: "Error esborrant substitució" });
     }
   });
 
