@@ -93,13 +93,6 @@ export default function GestioGuardies() {
     enabled: true
   });
 
-  // Debug: Log substitutions when they change
-  console.log('=== DEBUG SUBSTITUCIONS ===');
-  console.log('Substitucions:', substitucions);
-  console.log('Nombre:', Array.isArray(substitucions) ? substitucions.length : 'No és array');
-  console.log('Tipus:', typeof substitucions);
-  console.log('Loading:', isLoadingSubstitucions);
-
   const { data: professors = [] } = useQuery<Professor[]>({
     queryKey: ['/api/professors']
   });
