@@ -929,9 +929,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const assignacions = await engine.assignGuardAutomatically(guardiaId);
       
       // Log the assignment action
-      const activeYear = await storage.getAnysAcademics().then(years => 
-        years.find(y => y.actiu)?.id || 1
-      );
+      const activeYear = await storage.getActiveAcademicYear();
       await storage.createMetric({
         anyAcademicId: activeYear,
         timestamp: new Date(),
@@ -1028,9 +1026,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const attachments = [];
       for (const file of files) {
         // Get active academic year for attachment
-        const activeYear = await storage.getAnysAcademics().then(years => 
-          years.find(y => y.actiu)?.id || 1
-        );
+        const activeYear = await storage.getActiveAcademicYear();
         const attachment = await storage.createAttachment({
           anyAcademicId: activeYear,
           tascaId,
@@ -1349,9 +1345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateChatSession(sessionId, { missatges: messages });
       
       // Create metric
-      const activeYear = await storage.getAnysAcademics().then(years => 
-        years.find(y => y.actiu)?.id || 1
-      );
+      const activeYear = await storage.getActiveAcademicYear();
       await storage.createMetric({
         anyAcademicId: activeYear,
         timestamp: new Date(),
@@ -1722,9 +1716,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       fs.unlinkSync(file.path);
       
       // Create metric
-      const activeYear = await storage.getAnysAcademics().then(years => 
-        years.find(y => y.actiu)?.id || 1
-      );
+      const activeYear = await storage.getActiveAcademicYear();
       await storage.createMetric({
         anyAcademicId: activeYear,
         timestamp: new Date(),
