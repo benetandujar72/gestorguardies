@@ -899,6 +899,241 @@ export class DatabaseStorage implements IStorage {
       .set({ estat: "actiu" })
       .where(eq(anysAcademics.id, yearId));
   }
+
+  // Missing functions that are referenced in routes
+  async getClassesToSubstitute(params: { sortidaId: number; anyAcademicId: number }): Promise<any[]> {
+    const { sortidaId, anyAcademicId } = params;
+    
+    // Get sortida details
+    const [sortida] = await db.select().from(sortides).where(eq(sortides.id, sortidaId)).limit(1);
+    if (!sortida) return [];
+
+    // Get professor's schedule during the trip period
+    const horarisAfectats = await db.select({
+      id: horaris.id,
+      professorId: horaris.professorId,
+      grupId: horaris.grupId,
+      aulaId: horaris.aulaId,
+      materiaId: horaris.materiaId,
+      diaSetmana: horaris.diaSetmana,
+      horaInici: horaris.horaInici,
+      horaFi: horaris.horaFi,
+      assignatura: horaris.assignatura,
+      professorNom: professors.nom,
+      professorCognoms: professors.cognoms,
+      grupNom: grups.nomGrup,
+      aulaNom: aules.nomAula,
+      materiaNom: materies.nom
+    })
+    .from(horaris)
+    .leftJoin(professors, eq(horaris.professorId, professors.id))
+    .leftJoin(grups, eq(horaris.grupId, grups.id))
+    .leftJoin(aules, eq(horaris.aulaId, aules.id))
+    .leftJoin(materies, eq(horaris.materiaId, materies.id))
+    .where(and(
+      eq(horaris.professorId, sortida.responsableId),
+      eq(horaris.anyAcademicId, anyAcademicId)
+    ));
+
+    // Generate classes for each day of the trip
+    const classes: any[] = [];
+    const startDate = new Date(sortida.dataInici);
+    const endDate = new Date(sortida.dataFi);
+    
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dayOfWeek = d.getDay() === 0 ? 7 : d.getDay(); // Convert Sunday=0 to Sunday=7
+      
+      const classesForDay = horarisAfectats.filter(h => h.diaSetmana === dayOfWeek);
+      
+      for (const horari of classesForDay) {
+        classes.push({
+          data: d.toISOString().split('T')[0],
+          horaInici: horari.horaInici,
+          horaFi: horari.horaFi,
+          assignatura: horari.assignatura || 'Classe sense assignatura',
+          grup: horari.grupNom || 'Grup desconegut',
+          aula: horari.aulaNom || 'Aula no assignada',
+          professor: `${horari.professorNom} ${horari.professorCognoms}`,
+          horariId: horari.id,
+          professorId: horari.professorId
+        });
+      }
+    }
+
+    return classes;
+  }
+
+  async getTasques(): Promise<Tasca[]> {
+    return await db.select().from(tasques).orderBy(desc(tasques.createdAt));
+  }
+
+  async getTascaById(id: number): Promise<Tasca | undefined> {
+    const [tasca] = await db.select().from(tasques).where(eq(tasques.id, id)).limit(1);
+    return tasca;
+  }
+
+  async createTasca(tasca: InsertTasca): Promise<Tasca> {
+    const [newTasca] = await db.insert(tasques).values(tasca).returning();
+    return newTasca;
+  }
+
+  async updateTasca(id: number, tasca: Partial<InsertTasca>): Promise<Tasca> {
+    const [updatedTasca] = await db
+      .update(tasques)
+      .set(tasca)
+      .where(eq(tasques.id, id))
+      .returning();
+    return updatedTasca;
+  }
+
+  async deleteTasca(id: number): Promise<void> {
+    await db.delete(tasques).where(eq(tasques.id, id));
+  }
+
+  async getComunicacions(): Promise<Comunicacio[]> {
+    return await db.select().from(comunicacions).orderBy(desc(comunicacions.createdAt));
+  }
+
+  async getComunicacioById(id: number): Promise<Comunicacio | undefined> {
+    const [comunicacio] = await db.select().from(comunicacions).where(eq(comunicacions.id, id)).limit(1);
+    return comunicacio;
+  }
+
+  async createComunicacio(comunicacio: InsertComunicacio): Promise<Comunicacio> {
+    const [newComunicacio] = await db.insert(comunicacions).values(comunicacio).returning();
+    return newComunicacio;
+  }
+
+  async updateComunicacio(id: number, comunicacio: Partial<InsertComunicacio>): Promise<Comunicacio> {
+    const [updatedComunicacio] = await db
+      .update(comunicacions)
+      .set(comunicacio)
+      .where(eq(comunicacions.id, id))
+      .returning();
+    return updatedComunicacio;
+  }
+
+  async deleteComunicacio(id: number): Promise<void> {
+    await db.delete(comunicacions).where(eq(comunicacions.id, id));
+  }
+
+  async getAttachments(): Promise<Attachment[]> {
+    return await db.select().from(attachments).orderBy(desc(attachments.createdAt));
+  }
+
+  async getAttachmentById(id: number): Promise<Attachment | undefined> {
+    const [attachment] = await db.select().from(attachments).where(eq(attachments.id, id)).limit(1);
+    return attachment;
+  }
+
+  async createAttachment(attachment: InsertAttachment): Promise<Attachment> {
+    const [newAttachment] = await db.insert(attachments).values(attachment).returning();
+    return newAttachment;
+  }
+
+  async deleteAttachment(id: number): Promise<void> {
+    await db.delete(attachments).where(eq(attachments.id, id));
+  }
+
+  async getMetrics(): Promise<Metric[]> {
+    return await db.select().from(metrics).orderBy(desc(metrics.createdAt));
+  }
+
+  async createMetric(metric: any): Promise<Metric> {
+    const [newMetric] = await db.insert(metrics).values(metric).returning();
+    return newMetric;
+  }
+
+  async getPredictions(): Promise<Prediction[]> {
+    return await db.select().from(predictions).orderBy(desc(predictions.createdAt));
+  }
+
+  async createPrediction(prediction: any): Promise<Prediction> {
+    const [newPrediction] = await db.insert(predictions).values(prediction).returning();
+    return newPrediction;
+  }
+
+  async getChatSessions(): Promise<ChatSession[]> {
+    return await db.select().from(chatSessions).orderBy(desc(chatSessions.createdAt));
+  }
+
+  async createChatSession(session: any): Promise<ChatSession> {
+    const [newSession] = await db.insert(chatSessions).values(session).returning();
+    return newSession;
+  }
+
+  async updateChatSession(id: number, updates: any): Promise<ChatSession> {
+    const [updatedSession] = await db
+      .update(chatSessions)
+      .set(updates)
+      .where(eq(chatSessions.id, id))
+      .returning();
+    return updatedSession;
+  }
+
+  async deleteChatSession(id: number): Promise<void> {
+    await db.delete(chatSessions).where(eq(chatSessions.id, id));
+  }
+
+  async createSortidaProfessor(sortidaProfessor: any): Promise<any> {
+    const [newSortidaProfessor] = await db.insert(sortidaProfessors).values(sortidaProfessor).returning();
+    return newSortidaProfessor;
+  }
+
+  async getSortidaProfessorsBySortida(sortidaId: number): Promise<any[]> {
+    return await db.select().from(sortidaProfessors).where(eq(sortidaProfessors.sortidaId, sortidaId));
+  }
+
+  async deleteSortidaProfessor(sortidaId: number, professorId: number): Promise<void> {
+    await db.delete(sortidaProfessors)
+      .where(and(
+        eq(sortidaProfessors.sortidaId, sortidaId),
+        eq(sortidaProfessors.professorId, professorId)
+      ));
+  }
+
+  async createSortidaAlumne(sortidaAlumne: any): Promise<any> {
+    const [newSortidaAlumne] = await db.insert(sortidaAlumnes).values(sortidaAlumne).returning();
+    return newSortidaAlumne;
+  }
+
+  async getSortidaAlumnesBySortida(sortidaId: number): Promise<any[]> {
+    return await db.select().from(sortidaAlumnes).where(eq(sortidaAlumnes.sortidaId, sortidaId));
+  }
+
+  async deleteSortidaAlumne(sortidaId: number, alumneId: number): Promise<void> {
+    await db.delete(sortidaAlumnes)
+      .where(and(
+        eq(sortidaAlumnes.sortidaId, sortidaId),
+        eq(sortidaAlumnes.alumneId, alumneId)
+      ));
+  }
+
+  async createSortidaSubstitucio(substitucio: any): Promise<any> {
+    const [newSubstitucio] = await db.insert(sortidaSubstitucions).values(substitucio).returning();
+    return newSubstitucio;
+  }
+
+  async getSortidaSubstitucions(): Promise<any[]> {
+    return await db.select().from(sortidaSubstitucions).orderBy(desc(sortidaSubstitucions.createdAt));
+  }
+
+  async getSortidaSubstituciosBySortida(sortidaId: number): Promise<any[]> {
+    return await db.select().from(sortidaSubstitucions).where(eq(sortidaSubstitucions.sortidaId, sortidaId));
+  }
+
+  async updateSortidaSubstitucio(id: number, updates: any): Promise<any> {
+    const [updatedSubstitucio] = await db
+      .update(sortidaSubstitucions)
+      .set(updates)
+      .where(eq(sortidaSubstitucions.id, id))
+      .returning();
+    return updatedSubstitucio;
+  }
+
+  async deleteSortidaSubstitucio(id: number): Promise<void> {
+    await db.delete(sortidaSubstitucions).where(eq(sortidaSubstitucions.id, id));
+  }
 }
 
 export const storage = new DatabaseStorage();
