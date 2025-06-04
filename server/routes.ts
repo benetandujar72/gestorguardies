@@ -622,6 +622,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Temporary endpoint for testing active academic year
+  app.get('/api/any-academic-actiu-test', async (req, res) => {
+    try {
+      const activeYear = await storage.getActiveAcademicYearFull();
+      console.log('Any acadèmic actiu TEST:', activeYear);
+      res.json(activeYear);
+    } catch (error) {
+      console.error("Error obtenint any acadèmic actiu:", error);
+      res.status(500).json({ message: "Error obtenint any acadèmic actiu", details: error.message });
+    }
+  });
+
   // Temporary endpoint for testing calendar without auth
   app.get('/api/substitucions-test', async (req, res) => {
     try {
