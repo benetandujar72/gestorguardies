@@ -18,6 +18,9 @@ interface Substitucio {
   data: string;
   horaInici: string;
   horaFi: string;
+  assignatura: string;
+  grup: string;
+  aula: string;
   descripcio: string;
   motiu: string;
   estat: string;
@@ -26,27 +29,17 @@ interface Substitucio {
     nom: string;
     cognoms: string;
   } | null;
-  professorAssignat: {
+  professorSubstitut: {
     id: number;
     nom: string;
     cognoms: string;
   } | null;
   sortida: {
     id: number;
-    nom: string;
+    nomSortida: string;
+    dataInici: string;
+    dataFi: string;
     lloc: string;
-  } | null;
-  horari: {
-    id: number;
-    assignatura: string;
-    grup: {
-      id: number;
-      nomGrup: string;
-    } | null;
-    aula: {
-      id: number;
-      nom: string;
-    } | null;
   } | null;
 }
 
@@ -582,7 +575,7 @@ export default function GestioGuardies() {
                             </div>
                             <div className="flex items-center gap-2 text-sm text-gray-600">
                               <MapPin className="h-4 w-4" />
-                              {substitucio.sortida?.nomSortida}
+                              {(substitucio as any).sortida?.nomSortida}
                             </div>
                           </div>
                           
@@ -635,10 +628,10 @@ export default function GestioGuardies() {
                           <div className="space-y-2">
                             <h4 className="font-semibold text-gray-900">Classe a Substituir</h4>
                             <div className="text-sm space-y-1">
-                              <p><span className="font-medium">Assignatura:</span> {substitucio.assignatura}</p>
-                              <p><span className="font-medium">Grup:</span> {substitucio.grup}</p>
-                              {substitucio.aula && (
-                                <p><span className="font-medium">Aula:</span> {substitucio.aula}</p>
+                              <p><span className="font-medium">Assignatura:</span> {(substitucio as any).assignatura}</p>
+                              <p><span className="font-medium">Grup:</span> {(substitucio as any).grup}</p>
+                              {(substitucio as any).aula && (
+                                <p><span className="font-medium">Aula:</span> {(substitucio as any).aula}</p>
                               )}
                             </div>
                           </div>
@@ -679,12 +672,12 @@ export default function GestioGuardies() {
                                     </SelectContent>
                                   </Select>
                                 </div>
-                              ) : substitucio.professorSubstitut ? (
+                              ) : (substitucio as any).professorSubstitut ? (
                                 <div className="flex items-center gap-2 text-sm">
                                   <User className="h-4 w-4 text-green-500" />
                                   <div>
                                     <p className="font-medium text-green-600">Substitut</p>
-                                    <p>{substitucio.professorSubstitut.nom} {substitucio.professorSubstitut.cognoms}</p>
+                                    <p>{(substitucio as any).professorSubstitut.nom} {(substitucio as any).professorSubstitut.cognoms}</p>
                                   </div>
                                 </div>
                               ) : (
