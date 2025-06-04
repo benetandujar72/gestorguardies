@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,15 +9,17 @@ import { format, addDays, startOfWeek, endOfWeek, isSameDay, parseISO } from "da
 import { ca } from "date-fns/locale";
 
 export default function GuardCalendar() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [selectedWeek, setSelectedWeek] = useState(() => {
     // Start with June 2025 where substitutions are
     return startOfWeek(new Date('2025-06-02'), { weekStartsOn: 1 });
   });
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
 
-  // Fetch substitutions
+  // Fetch substitutions only when authenticated
   const { data: substitucions = [], isLoading, error } = useQuery({
     queryKey: ['/api/substitucions-necessaries'],
+    enabled: isAuthenticated, // Only fetch when authenticated
     retry: false
   });
 
@@ -26,16 +29,32 @@ export default function GuardCalendar() {
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   // Debug info
+  console.log('Auth loading:', authLoading);
+  console.log('Authenticated:', isAuthenticated);
   console.log('Substitucions loaded:', substitucions?.length);
   console.log('Loading:', isLoading);
   console.log('Error:', error);
 
-  if (isLoading) {
+  if (authLoading || (isAuthenticated && isLoading)) {
     return (
       <div className="container mx-auto p-6">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Carregant substitucions...</p>
+          <p>Carregant calendari...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center">
+          <h2 className="text-xl font-bold mb-2">No autenticat</h2>
+          <p>Cal iniciar sessió per veure el calendari de guardies.</p>
+          <Button onClick={() => window.location.href = '/api/login'} className="mt-4">
+            Iniciar sessió
+          </Button>
         </div>
       </div>
     );
