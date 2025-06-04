@@ -59,10 +59,12 @@ interface Guardia {
 
 export default function GuardCalendar() {
   const [selectedWeek, setSelectedWeek] = useState(() => {
-    // Setmana del 2-8 juny 2025 on hi ha les substitucions
-    const june2025 = new Date('2025-06-02');
-    return startOfWeek(june2025, { weekStartsOn: 1 }); // Monday start
+    const today = new Date();
+    return startOfWeek(today, { weekStartsOn: 1 }); // Monday start
   });
+
+  // Auto-navigate to week with substitutions
+  const [hasNavigatedToSubstitutions, setHasNavigatedToSubstitutions] = useState(false);
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [isMobile, setIsMobile] = useState(false);
 
@@ -89,6 +91,19 @@ export default function GuardCalendar() {
   const { data: guardies = [], isLoading: loadingGuardies } = useQuery({
     queryKey: ['/api/guardies']
   });
+
+  // Auto-navigate to first substitution date when data loads
+  useEffect(() => {
+    if (!hasNavigatedToSubstitutions && substitucions.length > 0) {
+      const firstSubstitution = substitucions[0] as any;
+      if (firstSubstitution.data) {
+        const subDate = parseISO(firstSubstitution.data);
+        const subWeek = startOfWeek(subDate, { weekStartsOn: 1 });
+        setSelectedWeek(subWeek);
+        setHasNavigatedToSubstitutions(true);
+      }
+    }
+  }, [substitucions, hasNavigatedToSubstitutions]);
 
   // Calculate week dates
   const weekStart = selectedWeek;
@@ -234,6 +249,23 @@ export default function GuardCalendar() {
               <Calendar className="h-4 w-4 mr-1" />
               Avui
             </Button>
+            
+            {substitucions.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const firstSub = (substitucions as any[])[0];
+                  if (firstSub.data) {
+                    const subDate = parseISO(firstSub.data);
+                    const subWeek = startOfWeek(subDate, { weekStartsOn: 1 });
+                    setSelectedWeek(subWeek);
+                  }
+                }}
+              >
+                Veure Substitucions
+              </Button>
+            )}
             
             <Button
               variant="outline"
