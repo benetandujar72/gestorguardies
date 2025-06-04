@@ -173,6 +173,89 @@ export default function GestioGuardies() {
     };
   }, [horaris, substitucions, professors]);
 
+  // Edit substitution mutation
+  const editSubstitucioMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const response = await fetch(`/api/substitucions/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Failed to update substitution');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/substitucions-necessaries'] });
+      setEditingId(null);
+      toast({
+        title: "Substitució actualitzada",
+        description: "La substitució ha estat actualitzada correctament.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No s'ha pogut actualitzar la substitució.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Delete substitution mutation
+  const deleteSubstitucioMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/substitucions/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to delete substitution');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/substitucions-necessaries'] });
+      toast({
+        title: "Substitució esborrada",
+        description: "La substitució ha estat esborrada correctament.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No s'ha pogut esborrar la substitució.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Handle edit functions
+  const startEdit = (substitucio: any) => {
+    setEditingId(substitucio.id);
+    setEditForm({
+      professorSubstitutId: substitucio.professorSubstitut?.id || null,
+      estat: substitucio.estat,
+      observacions: substitucio.descripcio || ''
+    });
+  };
+
+  const saveEdit = () => {
+    if (editingId) {
+      editSubstitucioMutation.mutate({
+        id: editingId,
+        data: editForm
+      });
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditForm({
+      professorSubstitutId: null,
+      estat: '',
+      observacions: ''
+    });
+  };
+
   // Assign professor mutation
   const assignProfessorMutation = useMutation({
     mutationFn: async ({ taskId, professorId }: { taskId: number; professorId: number }) => {
@@ -484,9 +567,10 @@ export default function GestioGuardies() {
                     {substitucions.map((substitucio) => (
                       <div
                         key={substitucio.id}
-                        className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                        className="border rounded-lg p-6 hover:bg-gray-50 transition-colors"
                       >
-                        <div className="flex items-start justify-between mb-3">
+                        {/* Header amb estat i accions */}
+                        <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <Badge className={`${getEstatColor(substitucio.estat)} text-white`}>
                               {getEstatIcon(substitucio.estat)}
@@ -496,56 +580,156 @@ export default function GestioGuardies() {
                               <Clock className="h-4 w-4" />
                               {substitucio.horaInici} - {substitucio.horaFi}
                             </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <MapPin className="h-4 w-4" />
+                              {substitucio.sortida?.nomSortida}
+                            </div>
                           </div>
                           
-                          {substitucio.estat === 'pendent' && (
-                            <Button
-                              onClick={() => {
-                                setSelectedSubstitucio(substitucio);
-                                setIsDialogOpen(true);
-                              }}
-                              size="sm"
-                            >
-                              Assignar Professor
-                            </Button>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <h4 className="font-medium mb-2">{substitucio.motiu}</h4>
-                            <p className="text-sm text-gray-600 mb-2">{substitucio.descripcio}</p>
-                            
-                            {substitucio.sortida && (
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <MapPin className="h-4 w-4" />
-                                {substitucio.sortida.nom} - {substitucio.sortida.lloc}
-                              </div>
+                          <div className="flex items-center gap-2">
+                            {editingId === substitucio.id ? (
+                              <>
+                                <Button
+                                  onClick={saveEdit}
+                                  size="sm"
+                                  disabled={editSubstitucioMutation.isPending}
+                                >
+                                  <Save className="h-4 w-4 mr-1" />
+                                  Desar
+                                </Button>
+                                <Button
+                                  onClick={cancelEdit}
+                                  size="sm"
+                                  variant="outline"
+                                >
+                                  Cancel·lar
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  onClick={() => startEdit(substitucio)}
+                                  size="sm"
+                                  variant="outline"
+                                >
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  Editar
+                                </Button>
+                                <Button
+                                  onClick={() => deleteSubstitucioMutation.mutate(substitucio.id)}
+                                  size="sm"
+                                  variant="destructive"
+                                  disabled={deleteSubstitucioMutation.isPending}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Esborrar
+                                </Button>
+                              </>
                             )}
                           </div>
+                        </div>
 
+                        {/* Informació principal reorganitzada */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                          {/* Classe afectada */}
                           <div className="space-y-2">
-                            {substitucio.professorOriginal && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <User className="h-4 w-4 text-red-500" />
-                                <span className="font-medium">Professor original:</span>
-                                {substitucio.professorOriginal.nom} {substitucio.professorOriginal.cognoms}
+                            <h4 className="font-semibold text-gray-900">Classe a Substituir</h4>
+                            <div className="text-sm space-y-1">
+                              <p><span className="font-medium">Assignatura:</span> {substitucio.assignatura}</p>
+                              <p><span className="font-medium">Grup:</span> {substitucio.grup}</p>
+                              {substitucio.aula && (
+                                <p><span className="font-medium">Aula:</span> {substitucio.aula}</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Professors */}
+                          <div className="space-y-2">
+                            <h4 className="font-semibold text-gray-900">Professors</h4>
+                            <div className="space-y-2">
+                              {substitucio.professorOriginal && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <User className="h-4 w-4 text-red-500" />
+                                  <div>
+                                    <p className="font-medium text-red-600">Original (Sortida)</p>
+                                    <p>{substitucio.professorOriginal.nom} {substitucio.professorOriginal.cognoms}</p>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {editingId === substitucio.id ? (
+                                <div className="space-y-2">
+                                  <Label>Professor Substitut</Label>
+                                  <Select
+                                    value={editForm.professorSubstitutId?.toString() || ""}
+                                    onValueChange={(value) => 
+                                      setEditForm({...editForm, professorSubstitutId: value ? parseInt(value) : null})
+                                    }
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Selecciona professor" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="">Sense assignar</SelectItem>
+                                      {professors.map((professor) => (
+                                        <SelectItem key={professor.id} value={professor.id.toString()}>
+                                          {professor.nom} {professor.cognoms}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              ) : substitucio.professorSubstitut ? (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <User className="h-4 w-4 text-green-500" />
+                                  <div>
+                                    <p className="font-medium text-green-600">Substitut</p>
+                                    <p>{substitucio.professorSubstitut.nom} {substitucio.professorSubstitut.cognoms}</p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-sm text-gray-500 italic">Sense professor assignat</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Estat i observacions */}
+                          <div className="space-y-2">
+                            <h4 className="font-semibold text-gray-900">Detalls</h4>
+                            {editingId === substitucio.id ? (
+                              <div className="space-y-3">
+                                <div>
+                                  <Label>Estat</Label>
+                                  <Select
+                                    value={editForm.estat}
+                                    onValueChange={(value) => setEditForm({...editForm, estat: value})}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="pendent">Pendent</SelectItem>
+                                      <SelectItem value="assignada">Assignada</SelectItem>
+                                      <SelectItem value="confirmada">Confirmada</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <Label>Observacions</Label>
+                                  <Input
+                                    value={editForm.observacions}
+                                    onChange={(e) => setEditForm({...editForm, observacions: e.target.value})}
+                                    placeholder="Observacions..."
+                                  />
+                                </div>
                               </div>
-                            )}
-                            
-                            {substitucio.professorAssignat && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <User className="h-4 w-4 text-green-500" />
-                                <span className="font-medium">Professor assignat:</span>
-                                {substitucio.professorAssignat.nom} {substitucio.professorAssignat.cognoms}
-                              </div>
-                            )}
-                            
-                            {substitucio.horari && (
-                              <div className="text-sm text-gray-600">
-                                <span className="font-medium">Classe:</span> {substitucio.horari.assignatura}
-                                {substitucio.horari.grup && ` - ${substitucio.horari.grup.nomGrup}`}
-                                {substitucio.horari.aula && ` (${substitucio.horari.aula.nom})`}
+                            ) : (
+                              <div className="text-sm space-y-1">
+                                <p><span className="font-medium">Data:</span> {format(parseISO(substitucio.data), "dd/MM/yyyy")}</p>
+                                <p><span className="font-medium">Motiu:</span> {substitucio.motiu}</p>
+                                {substitucio.descripcio && (
+                                  <p><span className="font-medium">Observacions:</span> {substitucio.descripcio}</p>
+                                )}
                               </div>
                             )}
                           </div>

@@ -98,15 +98,20 @@ export default function GuardCalendar() {
     hora: sub.horaInici || '08:00',
     tipusGuardia: 'Substitució',
     categoria: sub.estat === 'pendent' ? 'Substitució Pendent' : 
-               sub.estat === 'assignada' ? 'Substitució Assignada' : 'Substitució',
-    observacions: `${sub.sortida?.nomSortida || 'Sortida'} - ${sub.assignatura} (${sub.grup})`,
-    assignacioId: sub.professorSubstitutId,
+               sub.estat === 'assignada' ? 'Substitució Assignada' : 
+               sub.estat === 'confirmada' ? 'Substitució Confirmada' : 'Substitució',
+    observacions: `${sub.sortida?.nomSortida || 'Sortida'} - ${sub.assignatura || 'Classe'} (${sub.grup || 'Grup'})`,
+    assignacioId: sub.professorSubstitut?.id,
     professor: sub.professorSubstitut ? {
       id: sub.professorSubstitut.id,
       nom: sub.professorSubstitut.nom,
       cognoms: sub.professorSubstitut.cognoms
+    } : sub.professorOriginal ? {
+      id: sub.professorOriginal.id,
+      nom: `${sub.professorOriginal.nom} (Original)`,
+      cognoms: sub.professorOriginal.cognoms
     } : null,
-    aula: sub.aula ? { id: sub.aula.id, nom: sub.aula.nom } : null
+    aula: sub.aula ? { id: 1, nom: sub.aula } : null
   }));
 
   // Filter substitution events for current week
