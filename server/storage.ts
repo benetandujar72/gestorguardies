@@ -1134,6 +1134,48 @@ export class DatabaseStorage implements IStorage {
   async deleteSortidaSubstitucio(id: number): Promise<void> {
     await db.delete(sortidaSubstitucions).where(eq(sortidaSubstitucions.id, id));
   }
+
+  // Missing academic year functions
+  async getAnysAcademics(): Promise<any[]> {
+    return await this.getAcademicYears();
+  }
+
+  async getAnyAcademic(id: number): Promise<any> {
+    const [year] = await db.select().from(anysAcademics).where(eq(anysAcademics.id, id)).limit(1);
+    return year;
+  }
+
+  async createAnyAcademic(data: any): Promise<any> {
+    const [newYear] = await db.insert(anysAcademics).values(data).returning();
+    return newYear;
+  }
+
+  async updateAnyAcademic(id: number, data: any): Promise<any> {
+    const [updatedYear] = await db
+      .update(anysAcademics)
+      .set(data)
+      .where(eq(anysAcademics.id, id))
+      .returning();
+    return updatedYear;
+  }
+
+  async deleteAnyAcademic(id: number): Promise<void> {
+    await db.delete(anysAcademics).where(eq(anysAcademics.id, id));
+  }
+
+  async getActiveAcademicYearFull(): Promise<any> {
+    const [activeYear] = await db.select().from(anysAcademics).where(eq(anysAcademics.estat, "actiu")).limit(1);
+    return activeYear;
+  }
+
+  // Missing analytics functions
+  async getGuardAssignmentStats(): Promise<any[]> {
+    return [];
+  }
+
+  async getProfessorWorkloadBalance(): Promise<any[]> {
+    return [];
+  }
 }
 
 export const storage = new DatabaseStorage();

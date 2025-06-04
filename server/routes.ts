@@ -1132,7 +1132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Academic Years routes
   app.get('/api/anys-academics', isAuthenticated, async (req, res) => {
     try {
-      const anysAcademics = await storage.getAnysAcademics();
+      const anysAcademics = await storage.getAcademicYears();
       res.json(anysAcademics);
     } catch (error: any) {
       res.status(500).json({ message: "Failed to fetch academic years" });
