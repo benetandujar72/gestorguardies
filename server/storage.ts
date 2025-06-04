@@ -116,6 +116,7 @@ export interface IStorage {
   deleteMateria(id: number): Promise<void>;
 
   // Horari operations
+  getHorari(id: number): Promise<Horari | undefined>;
   getHoraris(): Promise<HorariWithRelations[]>;
   getHorarisByProfessor(professorId: number): Promise<Horari[]>;
   getHorarisByGrup(grupId: number): Promise<Horari[]>;
@@ -494,6 +495,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Horari operations
+  async getHorari(id: number): Promise<Horari | undefined> {
+    const [horari] = await db.select().from(horaris).where(eq(horaris.id, id));
+    return horari;
+  }
+
   async getHoraris(): Promise<HorariWithRelations[]> {
     const activeYear = await this.getActiveAcademicYear();
     console.log('Active academic year ID:', activeYear);

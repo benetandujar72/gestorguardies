@@ -2107,16 +2107,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sortidaId = parseInt(req.params.sortidaId);
       console.log('sortidaId:', sortidaId);
       
-      const activeYear = await storage.getActiveAcademicYearFull();
-      console.log('activeYear:', activeYear);
+      // Obtenir l'any acadèmic específic de la sortida directament de la base de dades
+      const sortidaResult = await db.execute(sql`
+        SELECT any_academic_id FROM sortides WHERE sortida_id = ${sortidaId}
+      `);
       
-      if (!activeYear) {
-        console.log('ERROR: No hi ha any acadèmic actiu');
-        return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });
+      if (sortidaResult.rows.length === 0) {
+        console.log('ERROR: Sortida no trobada');
+        return res.status(404).json({ message: "Sortida no trobada" });
       }
+      
+      const anyAcademicId = (sortidaResult.rows[0] as any).any_academic_id;
+      console.log('Sortida trobada - Any acadèmic:', anyAcademicId);
 
-      console.log('Cridant getClassesToSubstitute amb:', { sortidaId, anyAcademicId: activeYear.id });
-      const classesToSubstitute = await storage.getClassesToSubstitute(sortidaId, activeYear.id);
+      console.log('Cridant getClassesToSubstitute amb:', { sortidaId, anyAcademicId });
+      const classesToSubstitute = await storage.getClassesToSubstitute(sortidaId, anyAcademicId);
       console.log('Resultat getClassesToSubstitute:', classesToSubstitute);
       
       if (classesToSubstitute.length === 0) {
@@ -2138,18 +2143,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`=== INICI RUTA PROFESSORS-DISPONIBLES ===`);
       console.log(`horariId: ${horariId}`);
       
-      const activeYear = await storage.getActiveAcademicYear();
-      console.log('activeYear:', activeYear);
-      console.log('activeYear type:', typeof activeYear);
-      
-      if (!activeYear) {
-        console.log('No hi ha any acadèmic actiu');
-        return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });
+      // Obtenir l'any acadèmic específic del horari, no l'actiu global
+      const horari = await storage.getHorari(horariId);
+      if (!horari) {
+        console.log('ERROR: Horari no trobat');
+        return res.status(404).json({ message: "Horari no trobat" });
       }
-
-      // Si activeYear és només un número (ID), usar-lo directament
-      const anyAcademicId = typeof activeYear === 'number' ? activeYear : activeYear.id;
-      console.log('anyAcademicId final:', anyAcademicId);
+      
+      const anyAcademicId = horari.anyAcademicId;
+      console.log('anyAcademicId del horari:', anyAcademicId);
 
       const availableProfessors = await storage.getProfessorsAvailableForSubstitution(horariId, anyAcademicId);
       console.log(`Resultat professors disponibles: ${availableProfessors.length} professors`);
