@@ -1,6 +1,4 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,54 +7,70 @@ import { format, addDays, startOfWeek, endOfWeek, isSameDay, parseISO } from "da
 import { ca } from "date-fns/locale";
 
 export default function GuardCalendar() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [selectedWeek, setSelectedWeek] = useState(() => {
     // Start with June 2025 where substitutions are
     return startOfWeek(new Date('2025-06-02'), { weekStartsOn: 1 });
   });
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
+  const [substitucions, setSubstitucions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Fetch substitutions using test endpoint
-  const { data: substitucions = [], isLoading, error } = useQuery({
-    queryKey: ['/api/substitucions-test'],
-    retry: false
-  });
+  // Fetch substitutions directly
+  useEffect(() => {
+    const fetchSubstitucions = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        console.log('Fetching substitucions from /api/substitucions-test...');
+        
+        const response = await fetch('/api/substitucions-test', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        });
+
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Response error:', errorText);
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Substitucions data received:', data);
+        console.log('Data type:', typeof data);
+        console.log('Is array:', Array.isArray(data));
+        console.log('Length:', data?.length);
+
+        setSubstitucions(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Error fetching substitucions:', err);
+        setError(err instanceof Error ? err.message : 'Error desconegut');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSubstitucions();
+  }, []);
 
   // Calculate week dates
   const weekStart = selectedWeek;
   const weekEnd = endOfWeek(selectedWeek, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
-  // Debug info
-  console.log('Auth loading:', authLoading);
-  console.log('Authenticated:', isAuthenticated);
-  console.log('Substitucions data:', substitucions);
-  console.log('Substitucions type:', typeof substitucions);
-  console.log('Substitucions array:', Array.isArray(substitucions));
-  console.log('Substitucions length:', substitucions?.length);
-  console.log('Loading:', isLoading);
-  console.log('Error:', error);
-
-  if (authLoading || (isAuthenticated && isLoading)) {
+  if (isLoading) {
     return (
       <div className="container mx-auto p-6">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Carregant calendari...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="text-center">
-          <h2 className="text-xl font-bold mb-2">No autenticat</h2>
-          <p>Cal iniciar sessió per veure el calendari de guardies.</p>
-          <Button onClick={() => window.location.href = '/api/login'} className="mt-4">
-            Iniciar sessió
-          </Button>
+          <p>Carregant substitucions...</p>
         </div>
       </div>
     );
@@ -68,7 +82,7 @@ export default function GuardCalendar() {
         <div className="text-center text-red-600">
           <h2 className="text-xl font-bold mb-2">Error carregant dades</h2>
           <p>No s'han pogut carregar les substitucions.</p>
-          <p className="text-sm mt-2">{error.message}</p>
+          <p className="text-sm mt-2">{error}</p>
           <Button 
             onClick={() => window.location.reload()} 
             className="mt-4"
@@ -81,7 +95,7 @@ export default function GuardCalendar() {
   }
 
   // Filter substitutions for current week
-  const weekSubstitutions = (substitucions as any[]).filter((sub) => {
+  const weekSubstitutions = substitucions.filter((sub) => {
     if (!sub.data) return false;
     const subDate = parseISO(sub.data);
     return subDate >= weekStart && subDate <= weekEnd;
@@ -116,7 +130,7 @@ export default function GuardCalendar() {
             Setmana del {format(weekStart, 'dd MMM', { locale: ca })} al {format(weekEnd, 'dd MMM yyyy', { locale: ca })}
           </p>
           <p className="text-sm text-blue-600 mt-1">
-            Total substitucions: {substitucions?.length || 0} | Aquesta setmana: {weekSubstitutions.length}
+            Total substitucions: {substitucions.length} | Aquesta setmana: {weekSubstitutions.length}
           </p>
         </div>
         
@@ -326,7 +340,7 @@ export default function GuardCalendar() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-orange-600">
-                {substitucions?.length || 0}
+                {substitucions.length}
               </div>
               <div className="text-sm text-gray-600">Total Substitucions</div>
             </div>
@@ -349,6 +363,18 @@ export default function GuardCalendar() {
               <div className="text-sm text-gray-600">Pendents</div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Debug info */}
+      <Card className="bg-gray-50">
+        <CardHeader>
+          <CardTitle className="text-sm">Debug Info</CardTitle>
+        </CardHeader>
+        <CardContent className="text-xs">
+          <p>Total substitucions carregades: {substitucions.length}</p>
+          <p>Substitucions aquesta setmana: {weekSubstitutions.length}</p>
+          <p>Setmana actual: {format(weekStart, 'dd/MM/yyyy')} - {format(weekEnd, 'dd/MM/yyyy')}</p>
         </CardContent>
       </Card>
     </div>
