@@ -30,7 +30,10 @@ export default function GuardCalendar() {
   // Debug info
   console.log('Auth loading:', authLoading);
   console.log('Authenticated:', isAuthenticated);
-  console.log('Substitucions loaded:', substitucions?.length);
+  console.log('Substitucions data:', substitucions);
+  console.log('Substitucions type:', typeof substitucions);
+  console.log('Substitucions array:', Array.isArray(substitucions));
+  console.log('Substitucions length:', substitucions?.length);
   console.log('Loading:', isLoading);
   console.log('Error:', error);
 
