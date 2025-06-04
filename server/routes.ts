@@ -2035,9 +2035,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Creating professors...');
       
       // Get active academic year for professors
-      const activeYear = await storage.getAnysAcademics().then(years => 
-        years.find(y => y.actiu)?.id || 1
-      );
+      const activeYear = await storage.getActiveAcademicYear();
 
       // Profesores del centro educativo
       const profesoresData = [
@@ -2167,9 +2165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const sortidaId = parseInt(req.params.sortidaId);
       const { professorIds } = req.body;
-      const activeYear = await storage.getAnysAcademics().then(years => 
-        years.find(y => y.actiu)
-      );
+      const activeYear = await storage.getActiveAcademicYearFull();
       
       if (!activeYear) {
         return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });
