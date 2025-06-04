@@ -624,37 +624,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all substitutions needed (from sortides and other activities)
   app.get('/api/substitucions-necessaries', isAuthenticated, async (req, res) => {
     try {
-      const activeYear = await storage.getActiveAcademicYear();
+      const activeYear = await storage.getActiveAcademicYearFull();
       if (!activeYear) {
         return res.status(404).json({ message: "No hi ha cap any acadèmic actiu" });
       }
 
-      // Get all tasks that are substitutions (contain "sortida" in motiu)
-      const tasques = await storage.getTasques();
-      const substitucions = tasques.filter((tasca: any) => 
-        tasca.motiu && tasca.motiu.toLowerCase().includes('sortida')
-      );
+      console.log('Obtenint substitucions necessàries per any acadèmic:', activeYear.id);
 
-      // Transform to include additional data structure
-      const result = substitucions.map((tasca: any) => ({
-        id: tasca.id,
+      // Get substitutions from sortida_substitucions table (real substitutions generated from outings)
+      const substitucions = await db.execute(sql`
+        SELECT 
+          ss.id,
+          ss.sortida_id,
+          ss.horari_id,
+          ss.professor_original_id,
+          ss.professor_substitut_id,
+          ss.data,
+          ss.estat,
+          ss.observacions,
+          ss.motiu,
+          ss.comunicacio_enviada,
+          
+          -- Sortida information
+          s.nom_sortida,
+          s.data_inici as sortida_data_inici,
+          s.data_fi as sortida_data_fi,
+          s.lloc as sortida_lloc,
+          
+          -- Horari information (classe que cal substituir)
+          h.dia_semana,
+          h.hora_inici,
+          h.hora_fi,
+          h.assignatura,
+          
+          -- Professor original information
+          p_orig.nom as professor_original_nom,
+          p_orig.cognoms as professor_original_cognoms,
+          
+          -- Professor substitut information
+          p_subs.nom as professor_substitut_nom,
+          p_subs.cognoms as professor_substitut_cognoms,
+          
+          -- Grup information
+          g.nom_grup,
+          
+          -- Aula information
+          a.nom as aula_nom
+          
+        FROM sortida_substitucions ss
+        LEFT JOIN sortides s ON ss.sortida_id = s.sortida_id
+        LEFT JOIN horaris h ON ss.horari_id = h.id
+        LEFT JOIN professors p_orig ON ss.professor_original_id = p_orig.professor_id
+        LEFT JOIN professors p_subs ON ss.professor_substitut_id = p_subs.professor_id
+        LEFT JOIN grups g ON h.grup_id = g.grup_id
+        LEFT JOIN aules a ON h.aula_id = a.aula_id
+        WHERE s.any_academic_id = ${activeYear.id}
+        ORDER BY ss.data DESC, h.hora_inici ASC
+      `);
+
+      // Transform results to expected format
+      const result = substitucions.rows.map((row: any) => ({
+        id: row.id,
         tipus: 'Substitució',
-        data: new Date().toISOString().split('T')[0], // Use current date as placeholder
-        horaInici: '08:00:00',
-        horaFi: '09:00:00', 
-        descripcio: tasca.descripcio,
-        motiu: tasca.motiu,
-        estat: tasca.estat,
-        professorOriginal: null,
-        professorAssignat: tasca.assigna ? {
-          id: tasca.assigna.id,
-          nom: tasca.assigna.nom,
-          cognoms: tasca.assigna.cognoms
+        data: row.data,
+        horaInici: row.hora_inici || '08:00:00',
+        horaFi: row.hora_fi || '09:00:00',
+        assignatura: row.assignatura,
+        grup: row.nom_grup,
+        aula: row.aula_nom,
+        descripcio: `Substitució per sortida: ${row.nom_sortida}`,
+        motiu: row.motiu || 'Sortida escolar',
+        estat: row.estat || 'pendent',
+        professorOriginal: row.professor_original_id ? {
+          id: row.professor_original_id,
+          nom: row.professor_original_nom,
+          cognoms: row.professor_original_cognoms
         } : null,
-        sortida: null,
-        horari: null
+        professorSubstitut: row.professor_substitut_id ? {
+          id: row.professor_substitut_id,
+          nom: row.professor_substitut_nom,
+          cognoms: row.professor_substitut_cognoms
+        } : null,
+        sortida: {
+          id: row.sortida_id,
+          nomSortida: row.nom_sortida,
+          dataInici: row.sortida_data_inici,
+          dataFi: row.sortida_data_fi,
+          lloc: row.sortida_lloc
+        },
+        horari: {
+          id: row.horari_id,
+          diaSemana: row.dia_semana,
+          horaInici: row.hora_inici,
+          horaFi: row.hora_fi,
+          assignatura: row.assignatura,
+          grup: row.nom_grup ? { nomGrup: row.nom_grup } : null,
+          aula: row.aula_nom ? { nom: row.aula_nom } : null
+        }
       }));
 
+      console.log(`Trobades ${result.length} substitucions necessàries`);
       res.json(result);
     } catch (error) {
       console.error("Error fetching substitucions necessàries:", error);
