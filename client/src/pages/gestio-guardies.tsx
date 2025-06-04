@@ -654,16 +654,16 @@ export default function GestioGuardies() {
                                 <div className="space-y-2">
                                   <Label>Professor Substitut</Label>
                                   <Select
-                                    value={editForm.professorSubstitutId?.toString() || ""}
+                                    value={editForm.professorSubstitutId?.toString() || "none"}
                                     onValueChange={(value) => 
-                                      setEditForm({...editForm, professorSubstitutId: value ? parseInt(value) : null})
+                                      setEditForm({...editForm, professorSubstitutId: value === "none" ? null : parseInt(value)})
                                     }
                                   >
                                     <SelectTrigger>
                                       <SelectValue placeholder="Selecciona professor" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="">Sense assignar</SelectItem>
+                                      <SelectItem value="none">Sense assignar</SelectItem>
                                       {professors.map((professor) => (
                                         <SelectItem key={professor.id} value={professor.id.toString()}>
                                           {professor.nom} {professor.cognoms}

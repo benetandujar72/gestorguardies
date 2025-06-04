@@ -1,30 +1,60 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, CalendarDays, Clock, MapPin, User, List, Grid3x3, ChevronLeft, ChevronRight } from "lucide-react";
-import MobileGuardList from "@/components/calendar/mobile-guard-list";
+import { Calendar, ChevronLeft, ChevronRight, List, Grid, Clock, User, MapPin } from "lucide-react";
 import { format, addDays, startOfWeek, endOfWeek, isSameDay, parseISO } from "date-fns";
 import { ca } from "date-fns/locale";
 
-interface GuardEvent {
-  id: number | string;
+interface Substitucio {
+  id: number;
+  tipus: string;
   data: string;
-  hora: string;
-  tipusGuardia: string;
-  categoria: string;
-  observacions?: string;
-  assignacioId?: number;
-  professor?: {
+  horaInici: string;
+  horaFi: string;
+  assignatura: string;
+  grup: string;
+  aula: string;
+  descripcio: string;
+  motiu: string;
+  estat: string;
+  professorOriginal: {
     id: number;
     nom: string;
     cognoms: string;
   } | null;
-  aula?: {
+  professorSubstitut: {
     id: number;
     nom: string;
+    cognoms: string;
   } | null;
+  sortida: {
+    id: number;
+    nomSortida: string;
+    dataInici: string;
+    dataFi: string;
+    lloc: string;
+  } | null;
+}
+
+interface Guardia {
+  id: number;
+  data: string;
+  horaInici: string;
+  horaFi: string;
+  tipusGuardia: string;
+  estat: string;
+  observacions?: string;
+  assignacions: {
+    id: number;
+    professor: {
+      id: number;
+      nom: string;
+      cognoms: string;
+      fullName: string;
+    };
+  }[];
 }
 
 export default function GuardCalendar() {
@@ -49,154 +79,165 @@ export default function GuardCalendar() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetch guards and substitutions
-  const { data: guards = [], isLoading } = useQuery({
-    queryKey: ['/api/guardies'],
-    select: (data: any[]) => data.map(guard => ({
-      id: guard.id,
-      data: guard.data,
-      hora: guard.horaInici,
-      tipusGuardia: guard.tipusGuardia,
-      categoria: guard.estat || 'Normal',
-      observacions: guard.observacions,
-      assignacioId: guard.assignacions?.[0]?.id,
-      professor: guard.assignacions?.[0]?.professor ? {
-        id: guard.assignacions[0].professor.id,
-        nom: guard.assignacions[0].professor.nom,
-        cognoms: guard.assignacions[0].professor.cognoms,
-      } : null,
-      aula: null
-    })),
-  });
-
-  // Fetch substitutions for outings/activities
-  const { data: substitucions = [] } = useQuery({
+  // Fetch substitutions
+  const { data: substitucions = [], isLoading: loadingSubstitucions } = useQuery({
     queryKey: ['/api/substitucions-necessaries']
   });
 
-  // Week navigation
-  const navigateWeek = (direction: 'previous' | 'next') => {
-    const daysToAdd = direction === 'next' ? 7 : -7;
-    setSelectedWeek(addDays(selectedWeek, daysToAdd));
-  };
+  // Fetch regular guards
+  const { data: guardies = [], isLoading: loadingGuardies } = useQuery({
+    queryKey: ['/api/guardies']
+  });
 
-  // Generate week days
-  const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 });
+  // Calculate week dates
+  const weekStart = selectedWeek;
   const weekEnd = endOfWeek(selectedWeek, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
-  // Filter guards for current week
-  const weekGuards = guards.filter(guard => {
-    const guardDate = parseISO(guard.data);
-    return guardDate >= weekStart && guardDate <= weekEnd;
-  });
-
-  // Convert substitutions to guard events
-  const substitutionEvents: GuardEvent[] = (substitucions as any[]).map(sub => ({
-    id: `sub-${sub.id}`,
-    data: sub.data,
-    hora: sub.horaInici || '08:00',
-    tipusGuardia: 'Substitució',
-    categoria: sub.estat === 'pendent' ? 'Substitució Pendent' : 
-               sub.estat === 'assignada' ? 'Substitució Assignada' : 
-               sub.estat === 'confirmada' ? 'Substitució Confirmada' : 'Substitució',
-    observacions: `${sub.sortida?.nomSortida || 'Sortida'} - ${sub.assignatura || 'Classe'} (${sub.grup || 'Grup'})`,
-    assignacioId: sub.professorSubstitut?.id,
-    professor: sub.professorSubstitut ? {
-      id: sub.professorSubstitut.id,
-      nom: sub.professorSubstitut.nom,
-      cognoms: sub.professorSubstitut.cognoms
-    } : sub.professorOriginal ? {
-      id: sub.professorOriginal.id,
-      nom: `${sub.professorOriginal.nom} (Original)`,
-      cognoms: sub.professorOriginal.cognoms
-    } : null,
-    aula: sub.aula ? { id: 1, nom: sub.aula } : null
-  }));
-
-  // Filter substitution events for current week
-  const weekSubstitutions = substitutionEvents.filter(sub => {
+  // Filter substitutions for current week
+  const weekSubstitutions = substitucions.filter((sub: any) => {
     const subDate = parseISO(sub.data);
     return subDate >= weekStart && subDate <= weekEnd;
   });
 
-  // Combine all events
-  const allEvents = [...weekGuards, ...weekSubstitutions];
+  // Filter guards for current week
+  const weekGuards = guardies.filter((guard: any) => {
+    const guardDate = parseISO(guard.data);
+    return guardDate >= weekStart && guardDate <= weekEnd;
+  });
 
-  // Group all events by day
-  const groupedGuards = allEvents.reduce((acc, guard) => {
-    const dayKey = format(parseISO(guard.data), 'yyyy-MM-dd');
-    if (!acc[dayKey]) acc[dayKey] = [];
-    acc[dayKey].push(guard);
-    return acc;
-  }, {} as Record<string, GuardEvent[]>);
+  // Convert to unified event format
+  const allEvents = [
+    // Substitutions as events
+    ...weekSubstitutions.map((sub: any) => ({
+      id: `sub-${sub.id}`,
+      type: 'substitucio',
+      data: sub.data,
+      horaInici: sub.horaInici,
+      horaFi: sub.horaFi,
+      titol: `${sub.assignatura} - ${sub.grup}`,
+      descripcio: sub.sortida?.nomSortida || 'Sortida',
+      estat: sub.estat,
+      professorOriginal: sub.professorOriginal,
+      professorSubstitut: sub.professorSubstitut,
+      aula: sub.aula,
+      sortida: sub.sortida
+    })),
+    // Regular guards as events
+    ...weekGuards.map((guard: any) => ({
+      id: `guard-${guard.id}`,
+      type: 'guardia',
+      data: guard.data,
+      horaInici: guard.horaInici,
+      horaFi: guard.horaFi,
+      titol: guard.tipusGuardia,
+      descripcio: guard.observacions || '',
+      estat: guard.estat,
+      assignacions: guard.assignacions || []
+    }))
+  ];
 
-  if (isLoading) {
+  // Group events by date
+  const groupedEvents: Record<string, any[]> = {};
+  allEvents.forEach(event => {
+    const dateKey = format(parseISO(event.data), 'yyyy-MM-dd');
+    if (!groupedEvents[dateKey]) {
+      groupedEvents[dateKey] = [];
+    }
+    groupedEvents[dateKey].push(event);
+  });
+
+  const getEstatColor = (estat: string) => {
+    switch (estat) {
+      case 'pendent':
+        return 'bg-orange-500 hover:bg-orange-600';
+      case 'assignada':
+        return 'bg-blue-500 hover:bg-blue-600';
+      case 'confirmada':
+        return 'bg-green-500 hover:bg-green-600';
+      default:
+        return 'bg-gray-500 hover:bg-gray-600';
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'substitucio':
+        return 'border-l-4 border-l-orange-500';
+      case 'guardia':
+        return 'border-l-4 border-l-blue-500';
+      default:
+        return 'border-l-4 border-l-gray-500';
+    }
+  };
+
+  if (loadingSubstitucions || loadingGuardies) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
-        </div>
+      <div className="container mx-auto p-6">
+        <div className="text-center">Carregant calendari...</div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
+    <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Calendari de Guàrdies</h1>
-          <p className="text-text-secondary">
-            Visualització setmanal de les guàrdies assignades
+          <h1 className="text-3xl font-bold">Calendari de Guardies</h1>
+          <p className="text-gray-600">
+            Setmana del {format(weekStart, 'dd MMM', { locale: ca })} al {format(weekEnd, 'dd MMM yyyy', { locale: ca })}
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-          {!isMobile && (
-            <div className="flex bg-gray-100 rounded-lg p-1">
-              <Button
-                variant={viewMode === 'calendar' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('calendar')}
-              >
-                <Grid3x3 className="w-4 h-4 mr-2" />
-                Calendari
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-              >
-                <List className="w-4 h-4 mr-2" />
-                Llista
-              </Button>
-            </div>
-          )}
-        </div>
+        
+        {!isMobile && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant={viewMode === 'calendar' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('calendar')}
+            >
+              <Grid className="h-4 w-4 mr-1" />
+              Calendari
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+            >
+              <List className="h-4 w-4 mr-1" />
+              Llista
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Week Navigation */}
-      <Card className="mb-6">
-        <CardHeader>
+      <Card>
+        <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <Button 
-              variant="outline" 
-              onClick={() => navigateWeek('previous')}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedWeek(addDays(selectedWeek, -7))}
             >
-              ← Setmana anterior
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Setmana anterior
             </Button>
-            <div className="text-center">
-              <CardTitle className="text-lg">
-                {format(weekStart, 'dd MMM', { locale: ca })} - {format(weekEnd, 'dd MMM yyyy', { locale: ca })}
-              </CardTitle>
-              <CardDescription>
-                Setmana {format(weekStart, 'wo', { locale: ca })} de l'any
-              </CardDescription>
-            </div>
-            <Button 
-              variant="outline" 
-              onClick={() => navigateWeek('next')}
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedWeek(startOfWeek(new Date(), { weekStartsOn: 1 }))}
+            >
+              <Calendar className="h-4 w-4 mr-1" />
+              Avui
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedWeek(addDays(selectedWeek, 7))}
             >
               Setmana següent →
             </Button>
@@ -204,115 +245,153 @@ export default function GuardCalendar() {
         </CardHeader>
       </Card>
 
-      {/* Vista condicional: llista per mòbil, calendari per desktop */}
-      {isMobile || viewMode === 'list' ? (
-        <MobileGuardList 
-          guardies={guards.map(guard => ({
-            id: guard.id,
-            data: guard.data,
-            horaInici: guard.hora,
-            horaFi: guard.hora,
-            tipusGuardia: guard.tipusGuardia,
-            estat: guard.categoria,
-            lloc: guard.aula?.nom || null,
-            observacions: guard.observacions || undefined,
-            assignacions: guard.professor ? [{
-              id: guard.assignacioId || 0,
-              professor: {
-                id: guard.professor.id,
-                nom: guard.professor.nom,
-                cognoms: guard.professor.cognoms,
-                fullName: `${guard.professor.nom} ${guard.professor.cognoms}`
-              }
-            }] : []
-          }))}
-          onEditGuard={(guard) => {
-            console.log('Edit guard:', guard);
-          }}
-          onViewAssignments={(guard) => {
-            console.log('View assignments:', guard);
-          }}
-        />
-      ) : (
-        /* Vista de calendari per desktop */
-        <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-          {weekDays.map((day, index) => {
+      {/* Main Content */}
+      {viewMode === 'list' || isMobile ? (
+        /* Vista de llista per mòbil */
+        <div className="space-y-4">
+          {weekDays.map((day) => {
             const dayKey = format(day, 'yyyy-MM-dd');
-            const dayGuards = groupedGuards[dayKey] || [];
+            const dayEvents = groupedEvents[dayKey] || [];
             const isToday = isSameDay(day, new Date());
 
             return (
-              <Card key={dayKey} className={`min-h-[300px] ${isToday ? 'ring-2 ring-primary' : ''}`}>
+              <Card key={dayKey} className={isToday ? 'ring-2 ring-primary' : ''}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center justify-between">
+                    <span>{format(day, 'EEEE, dd MMMM', { locale: ca })}</span>
+                    <Badge variant="secondary">{dayEvents.length}</Badge>
+                  </CardTitle>
+                </CardHeader>
+                
+                {dayEvents.length > 0 ? (
+                  <CardContent className="space-y-3">
+                    {dayEvents.map((event) => (
+                      <div key={event.id} className={`p-3 rounded-lg border ${getTypeColor(event.type)}`}>
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Badge className={getEstatColor(event.estat)}>
+                              {event.estat}
+                            </Badge>
+                            <div className="flex items-center gap-1 text-sm text-gray-600">
+                              <Clock className="h-3 w-3" />
+                              {event.horaInici} - {event.horaFi}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <h4 className="font-medium">{event.titol}</h4>
+                        <p className="text-sm text-gray-600">{event.descripcio}</p>
+                        
+                        {event.type === 'substitucio' && (
+                          <div className="mt-2 space-y-1 text-sm">
+                            {event.professorOriginal && (
+                              <div className="flex items-center gap-1">
+                                <User className="h-3 w-3 text-red-500" />
+                                <span className="font-medium">Original:</span>
+                                {event.professorOriginal.nom} {event.professorOriginal.cognoms}
+                              </div>
+                            )}
+                            {event.professorSubstitut && (
+                              <div className="flex items-center gap-1">
+                                <User className="h-3 w-3 text-green-500" />
+                                <span className="font-medium">Substitut:</span>
+                                {event.professorSubstitut.nom} {event.professorSubstitut.cognoms}
+                              </div>
+                            )}
+                            {event.aula && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                <span className="font-medium">Aula:</span>
+                                {event.aula}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {event.type === 'guardia' && event.assignacions?.length > 0 && (
+                          <div className="mt-2 text-sm">
+                            <span className="font-medium">Assignat:</span>
+                            {event.assignacions.map((ass: any) => (
+                              <span key={ass.id} className="ml-1">
+                                {ass.professor.fullName}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </CardContent>
+                ) : (
+                  <CardContent>
+                    <p className="text-gray-500 text-center py-4">Cap esdeveniment</p>
+                  </CardContent>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        /* Vista de calendari per desktop */
+        <div className="grid grid-cols-7 gap-4">
+          {weekDays.map((day) => {
+            const dayKey = format(day, 'yyyy-MM-dd');
+            const dayEvents = groupedEvents[dayKey] || [];
+            const isToday = isSameDay(day, new Date());
+
+            return (
+              <Card key={dayKey} className={`min-h-[400px] ${isToday ? 'ring-2 ring-primary' : ''}`}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle className="text-sm font-medium">
                         {format(day, 'EEEE', { locale: ca })}
                       </CardTitle>
-                      <div className="flex items-center space-x-1 mt-1">
-                        <CalendarDays className="w-3 h-3 text-text-secondary" />
-                        <span className="text-xs text-text-secondary">
-                          {format(day, 'dd MMM', { locale: ca })}
-                        </span>
-                      </div>
+                      <p className="text-xs text-gray-600">
+                        {format(day, 'dd MMM', { locale: ca })}
+                      </p>
                     </div>
-                    {dayGuards.length > 0 && (
-                      <Badge variant="outline" className="text-xs">
-                        {dayGuards.length} guàrdies
+                    {dayEvents.length > 0 && (
+                      <Badge variant="secondary" className="text-xs">
+                        {dayEvents.length}
                       </Badge>
                     )}
                   </div>
                 </CardHeader>
+                
                 <CardContent className="space-y-2">
-                  {dayGuards.length === 0 ? (
-                    <div className="text-center py-8 text-text-secondary">
-                      <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">Sense guàrdies</p>
-                    </div>
-                  ) : (
-                    dayGuards
-                      .sort((a, b) => a.hora.localeCompare(b.hora))
-                      .map(guard => (
-                        <div key={guard.id} className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                          <div className="flex items-center justify-between mb-2">
-                            <Badge variant="secondary" className="text-xs">
-                              {guard.tipusGuardia}
-                            </Badge>
-                            <div className="flex items-center text-xs text-text-secondary">
-                              <Clock className="w-3 h-3 mr-1" />
-                              {guard.hora}
-                            </div>
-                          </div>
-                          
-                          {guard.professor && (
-                            <div className="flex items-center text-sm mb-1">
-                              <User className="w-3 h-3 mr-1 text-text-secondary" />
-                              <span className="font-medium">
-                                {guard.professor.nom} {guard.professor.cognoms}
-                              </span>
-                            </div>
-                          )}
-                          
-                          {guard.aula && (
-                            <div className="flex items-center text-sm mb-1">
-                              <MapPin className="w-3 h-3 mr-1 text-text-secondary" />
-                              <span>{guard.aula.nom}</span>
-                            </div>
-                          )}
-                          
-                          {guard.categoria && (
-                            <div className="text-xs text-text-secondary mt-1">
-                              Categoria: {guard.categoria}
-                            </div>
-                          )}
-                          
-                          {guard.observacions && (
-                            <div className="text-xs text-text-secondary mt-1 italic">
-                              {guard.observacions}
-                            </div>
-                          )}
+                  {dayEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className={`p-2 rounded text-xs ${getTypeColor(event.type)} bg-gray-50 hover:bg-gray-100 transition-colors`}
+                    >
+                      <div className="flex items-center gap-1 mb-1">
+                        <Badge className={`text-xs ${getEstatColor(event.estat)}`}>
+                          {event.estat}
+                        </Badge>
+                        <span className="text-gray-600">{event.horaInici}</span>
+                      </div>
+                      
+                      <div className="font-medium truncate">{event.titol}</div>
+                      <div className="text-gray-600 truncate">{event.descripcio}</div>
+                      
+                      {event.type === 'substitucio' && event.professorSubstitut && (
+                        <div className="text-green-600 font-medium truncate">
+                          {event.professorSubstitut.nom} {event.professorSubstitut.cognoms}
                         </div>
-                      ))
+                      )}
+                      
+                      {event.type === 'guardia' && event.assignacions?.length > 0 && (
+                        <div className="text-blue-600 font-medium truncate">
+                          {event.assignacions[0].professor.fullName}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {dayEvents.length === 0 && (
+                    <p className="text-gray-400 text-center py-8 text-xs">
+                      Cap esdeveniment
+                    </p>
                   )}
                 </CardContent>
               </Card>
@@ -321,36 +400,36 @@ export default function GuardCalendar() {
         </div>
       )}
 
-      {/* Summary Stats */}
-      <Card className="mt-6">
+      {/* Summary */}
+      <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Resum de la Setmana</CardTitle>
+          <CardTitle>Resum de la Setmana</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-orange-600">
+                {weekSubstitutions.length}
+              </div>
+              <div className="text-sm text-gray-600">Substitucions</div>
+            </div>
+            <div>
               <div className="text-2xl font-bold text-blue-600">
                 {weekGuards.length}
               </div>
-              <div className="text-sm text-text-secondary">Total Guàrdies</div>
+              <div className="text-sm text-gray-600">Guardies</div>
             </div>
-            <div className="text-center">
+            <div>
               <div className="text-2xl font-bold text-green-600">
-                {weekGuards.filter(g => g.professor).length}
+                {weekSubstitutions.filter((s: any) => s.estat === 'confirmada').length}
               </div>
-              <div className="text-sm text-text-secondary">Assignades</div>
+              <div className="text-sm text-gray-600">Confirmades</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">
-                {weekGuards.filter(g => !g.professor).length}
+            <div>
+              <div className="text-2xl font-bold text-red-600">
+                {weekSubstitutions.filter((s: any) => s.estat === 'pendent').length}
               </div>
-              <div className="text-sm text-text-secondary">Pendents</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
-                {weekGuards.filter(g => g.categoria === 'Especial').length}
-              </div>
-              <div className="text-sm text-text-secondary">Especials</div>
+              <div className="text-sm text-gray-600">Pendents</div>
             </div>
           </div>
         </CardContent>
