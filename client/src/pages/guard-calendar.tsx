@@ -16,10 +16,9 @@ export default function GuardCalendar() {
   });
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
 
-  // Fetch substitutions only when authenticated
+  // Fetch substitutions using test endpoint
   const { data: substitucions = [], isLoading, error } = useQuery({
-    queryKey: ['/api/substitucions-necessaries'],
-    enabled: isAuthenticated, // Only fetch when authenticated
+    queryKey: ['/api/substitucions-test'],
     retry: false
   });
 
