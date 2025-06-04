@@ -2124,7 +2124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Sortida trobada - Any acadèmic:', anyAcademicId);
 
       console.log('Cridant getClassesToSubstitute amb:', { sortidaId, anyAcademicId });
-      const classesToSubstitute = await storage.getClassesToSubstitute(sortidaId, anyAcademicId);
+      const classesToSubstitute = await storage.getClassesToSubstitute({ sortidaId, anyAcademicId });
       console.log('Resultat getClassesToSubstitute:', classesToSubstitute);
       
       if (classesToSubstitute.length === 0) {
