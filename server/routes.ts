@@ -690,6 +690,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Function to auto-generate missing substitutions for sortides
+  async function generateMissingSubstitutions(anyAcademicId: number) {
+    try {
+      console.log('Generant substitucions automàtiques per sortides...');
+      
+      // Get all sortides that don't have substitutions yet
+      const sortidesSenseSubstitucions = await pool.query(`
+        SELECT s.sortida_id, s.responsable_id, s.data_inici, s.data_fi, s.nom_sortida
+        FROM sortides s
+        WHERE s.any_academic_id = $1
+        AND NOT EXISTS (
+          SELECT 1 FROM sortida_substitucions ss 
+          WHERE ss.sortida_id = s.sortida_id AND ss.any_academic_id = $1
+        )
+        AND s.responsable_id IS NOT NULL
+      `, [anyAcademicId]);
+
+      console.log(`Trobades ${sortidesSenseSubstitucions.rows.length} sortides sense substitucions`);
+
+      for (const sortida of sortidesSenseSubstitucions.rows) {
+        // Get classes to substitute for this sortida
+        const classesToSubstitute = await storage.getClassesToSubstitute({
+          sortidaId: sortida.sortida_id,
+          anyAcademicId: anyAcademicId
+        });
+
+        console.log(`Sortida ${sortida.nom_sortida}: ${classesToSubstitute.length} classes a substituir`);
+
+        // Create substitutions for each class
+        for (const classe of classesToSubstitute) {
+          await pool.query(`
+            INSERT INTO sortida_substitucions (
+              sortida_id, horari_original_id, professor_original_id, 
+              any_academic_id, estat, observacions, created_at
+            ) VALUES ($1, $2, $3, $4, 'pendent', $5, NOW())
+            ON CONFLICT DO NOTHING
+          `, [
+            sortida.sortida_id,
+            classe.horariId,
+            classe.professorId,
+            anyAcademicId,
+            `Classe ${classe.assignatura} del ${classe.data} (${classe.horaInici}-${classe.horaFi}) - Grup: ${classe.grup}`
+          ]);
+        }
+      }
+    } catch (error) {
+      console.error('Error generant substitucions automàtiques:', error);
+    }
+  }
+
   // Get all substitutions needed (from sortides and other activities)
   app.get('/api/substitucions-necessaries', isAuthenticated, async (req, res) => {
     try {
@@ -699,6 +749,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('Obtenint substitucions necessàries per any acadèmic:', activeYear.id);
+
+      // PRIMER: Auto-generar substitucions per sortides sense substitucions creades
+      await generateMissingSubstitutions(activeYear.id);
 
       // Get substitutions from sortida_substitucions table using pool directly
       const query = `
@@ -719,6 +772,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           s.data_fi as sortida_data_fi,
           s.lloc as sortida_lloc,
           
+          -- Horari information
+          h.assignatura,
+          h.hora_inici,
+          h.hora_fi,
+          h.dia_setmana,
+          g.nom_grup,
+          a.nom_aula,
+          
           -- Professor original information
           p_orig.nom as professor_original_nom,
           p_orig.cognoms as professor_original_cognoms,
@@ -729,17 +790,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
         FROM sortida_substitucions ss
         LEFT JOIN sortides s ON ss.sortida_id = s.sortida_id
+        LEFT JOIN horaris h ON ss.horari_original_id = h.horari_id
+        LEFT JOIN grups g ON h.grup_id = g.grup_id
+        LEFT JOIN aules a ON h.aula_id = a.aula_id
         LEFT JOIN professors p_orig ON ss.professor_original_id = p_orig.professor_id
         LEFT JOIN professors p_subs ON ss.professor_substitut_id = p_subs.professor_id
         WHERE ss.any_academic_id = $1
         ORDER BY 
+          s.data_inici, h.hora_inici,
           CASE ss.estat 
             WHEN 'pendent' THEN 1 
             WHEN 'assignada' THEN 2 
             WHEN 'confirmada' THEN 3 
             ELSE 4 
-          END,
-          ss.created_at DESC
+          END
       `;
 
       const substitucions = await pool.query(query, [activeYear.id]);
@@ -749,11 +813,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: row.id,
         tipus: 'Substitució',
         data: row.sortida_data_inici ? row.sortida_data_inici.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        horaInici: '08:00:00',
-        horaFi: '09:00:00',
-        assignatura: row.observacions?.split(' ')[4] || 'Assignatura',
-        grup: row.observacions?.split(' ')[5] || 'Grup',
-        aula: row.observacions?.split(' ')[7] || '',
+        horaInici: row.hora_inici || '08:00:00',
+        horaFi: row.hora_fi || '09:00:00',
+        assignatura: row.assignatura || 'Assignatura',
+        grup: row.nom_grup || 'Grup',
+        aula: row.nom_aula || 'Aula',
         descripcio: row.observacions || `Substitució per sortida: ${row.nom_sortida}`,
         motiu: 'Sortida escolar',
         estat: row.estat || 'pendent',
