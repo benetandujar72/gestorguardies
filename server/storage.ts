@@ -904,9 +904,22 @@ export class DatabaseStorage implements IStorage {
   async getClassesToSubstitute(params: { sortidaId: number; anyAcademicId: number }): Promise<any[]> {
     const { sortidaId, anyAcademicId } = params;
     
+    console.log(`DEBUG getClassesToSubstitute: sortidaId=${sortidaId}, anyAcademicId=${anyAcademicId}`);
+    
     // Get sortida details
     const [sortida] = await db.select().from(sortides).where(eq(sortides.id, sortidaId)).limit(1);
-    if (!sortida) return [];
+    if (!sortida) {
+      console.log('DEBUG: Sortida no trobada');
+      return [];
+    }
+    
+    console.log(`DEBUG: Sortida trobada - responsableId=${sortida.responsableId}, dataInici=${sortida.dataInici}, dataFi=${sortida.dataFi}`);
+
+    // Check if professor exists
+    if (!sortida.responsableId) {
+      console.log('DEBUG: No hi ha professor responsable assignat');
+      return [];
+    }
 
     // Get professor's schedule during the trip period
     const horarisAfectats = await db.select({
@@ -935,18 +948,25 @@ export class DatabaseStorage implements IStorage {
       eq(horaris.anyAcademicId, anyAcademicId)
     ));
 
+    console.log(`DEBUG: Horaris trobats per professor ${sortida.responsableId}: ${horarisAfectats.length}`);
+
     // Generate classes for each day of the trip
     const classes: any[] = [];
     const startDate = new Date(sortida.dataInici);
     const endDate = new Date(sortida.dataFi);
     
+    console.log(`DEBUG: Període sortida - ${startDate.toISOString().split('T')[0]} a ${endDate.toISOString().split('T')[0]}`);
+    
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
       const dayOfWeek = d.getDay() === 0 ? 7 : d.getDay(); // Convert Sunday=0 to Sunday=7
       
+      console.log(`DEBUG: Processant dia ${d.toISOString().split('T')[0]} (dia setmana: ${dayOfWeek})`);
+      
       const classesForDay = horarisAfectats.filter(h => h.diaSetmana === dayOfWeek);
+      console.log(`DEBUG: Classes trobades per dia ${dayOfWeek}: ${classesForDay.length}`);
       
       for (const horari of classesForDay) {
-        classes.push({
+        const classe = {
           data: d.toISOString().split('T')[0],
           horaInici: horari.horaInici,
           horaFi: horari.horaFi,
@@ -956,10 +976,13 @@ export class DatabaseStorage implements IStorage {
           professor: `${horari.professorNom} ${horari.professorCognoms}`,
           horariId: horari.id,
           professorId: horari.professorId
-        });
+        };
+        console.log(`DEBUG: Afegint classe - ${classe.assignatura} a les ${classe.horaInici}`);
+        classes.push(classe);
       }
     }
 
+    console.log(`DEBUG: Total classes a substituir: ${classes.length}`);
     return classes;
   }
 
