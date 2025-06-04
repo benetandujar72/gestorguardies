@@ -810,6 +810,94 @@ export class DatabaseStorage implements IStorage {
     .orderBy(desc(guardies.data), guardies.horaInici);
   }
 
+  async getGuardiesWithDetails(): Promise<any[]> {
+    // Obtenir guardies regulars
+    const guardiesRegulars = await db
+      .select({
+        id: guardies.id,
+        data: guardies.data,
+        hora: guardies.horaInici,
+        tipusGuardia: guardies.tipusGuardia,
+        categoria: guardies.estat,
+        observacions: guardies.observacions,
+        assignacioId: assignacionsGuardia.id,
+        professor: sql`
+          CASE 
+            WHEN ${professors.id} IS NOT NULL THEN 
+              json_build_object(
+                'id', ${professors.id},
+                'nom', ${professors.nom},
+                'cognoms', ${professors.cognoms}
+              )
+            ELSE NULL
+          END
+        `,
+        aula: sql`
+          CASE 
+            WHEN ${aules.id} IS NOT NULL THEN 
+              json_build_object(
+                'id', ${aules.id},
+                'nom', ${aules.nomAula}
+              )
+            ELSE NULL
+          END
+        `
+      })
+      .from(guardies)
+      .leftJoin(assignacionsGuardia, eq(guardies.id, assignacionsGuardia.guardiaId))
+      .leftJoin(professors, eq(assignacionsGuardia.professorId, professors.id))
+      .leftJoin(aules, eq(guardies.id, aules.id))
+      .where(gte(guardies.data, new Date().toISOString().split('T')[0]))
+      .orderBy(guardies.data, guardies.horaInici);
+
+    // Obtenir substitucions actives (assignacions sense guardiaId)
+    const substitucions = await db.execute(sql`
+      SELECT 
+        ag.assigna_id as id,
+        COALESCE(s.data_inici::date, CURRENT_DATE) as data,
+        COALESCE(
+          SUBSTRING(t.descripcio FROM 'de ([0-9]{2}:[0-9]{2}:[0-9]{2})'),
+          '09:00:00'
+        ) as hora,
+        'Substitució' as "tipusGuardia",
+        ag.estat as categoria,
+        CONCAT('Substitució - ', COALESCE(s.nom_sortida, t.titol)) as observacions,
+        ag.assigna_id as "assignacioId",
+        json_build_object(
+          'id', p.professor_id,
+          'nom', p.nom,
+          'cognoms', p.cognoms
+        ) as professor,
+        NULL as aula
+      FROM assignacions_guardia ag
+      LEFT JOIN professors p ON ag.professor_id = p.professor_id
+      LEFT JOIN tasques t ON t.assigna_id = ag.assigna_id
+      LEFT JOIN sortides s ON t.descripcio LIKE CONCAT('%', s.nom_sortida, '%')
+      WHERE ag.guardia_id IS NULL 
+        AND ag.motiu = 'substitucio'
+        AND ag.estat = 'assignada'
+        AND ag.any_academic_id = (
+          SELECT any_academic_id FROM anys_academics WHERE estat = 'actiu' LIMIT 1
+        )
+      ORDER BY ag.assigna_id DESC
+    `);
+
+    // Combinar resultats
+    const substitucionsFormatted = substitucions.rows.map((sub: any) => ({
+      id: `sub_${sub.id}`,
+      data: sub.data,
+      hora: sub.hora,
+      tipusGuardia: sub.tipusGuardia,
+      categoria: sub.categoria,
+      observacions: sub.observacions,
+      assignacioId: sub.assignacioId,
+      professor: sub.professor,
+      aula: sub.aula
+    }));
+
+    return [...guardiesRegulars, ...substitucionsFormatted];
+  }
+
   async getGuardiesAvui(): Promise<Guardia[]> {
     const today = new Date().toISOString().split('T')[0];
     return await db.select().from(guardies).where(eq(guardies.data, today));
@@ -870,34 +958,493 @@ export class DatabaseStorage implements IStorage {
     await db.delete(assignacionsGuardia).where(eq(assignacionsGuardia.id, id));
   }
 
-  // Academic year operations
-  async getAcademicYears(): Promise<any[]> {
-    return await db.select().from(anysAcademics).orderBy(desc(anysAcademics.dataInici));
+  // Tasca operations
+  async getTasques(): Promise<Tasca[]> {
+    const activeYear = await this.getActiveAcademicYear();
+    return await db.select().from(tasques)
+      .where(eq(tasques.anyAcademicId, activeYear))
+      .orderBy(desc(tasques.dataCreacio));
   }
 
-  async getActiveAcademicYear(): Promise<number> {
-    const [activeYear] = await db
-      .select({ id: anysAcademics.id })
-      .from(anysAcademics)
-      .where(eq(anysAcademics.estat, "actiu"))
+  async getTasquesByAssignacio(assignacioId: number): Promise<Tasca[]> {
+    return await db.select().from(tasques).where(eq(tasques.assignaId, assignacioId));
+  }
+
+  async getTasquesPendents(): Promise<Tasca[]> {
+    return await db.select().from(tasques).where(eq(tasques.estat, 'pendent'));
+  }
+
+  async createTasca(tasca: InsertTasca): Promise<Tasca> {
+    const [newTasca] = await db.insert(tasques).values(tasca).returning();
+    return newTasca;
+  }
+
+  async updateTasca(id: number, tasca: Partial<InsertTasca>): Promise<Tasca> {
+    const [updatedTasca] = await db
+      .update(tasques)
+      .set(tasca)
+      .where(eq(tasques.id, id))
+      .returning();
+    return updatedTasca;
+  }
+
+  async deleteTasca(id: number): Promise<void> {
+    await db.delete(tasques).where(eq(tasques.id, id));
+  }
+
+  // Comunicacio operations
+  async getComunicacions(): Promise<Comunicacio[]> {
+    const activeYear = await this.getActiveAcademicYear();
+    return await db.select().from(comunicacions)
+      .where(eq(comunicacions.anyAcademicId, activeYear))
+      .orderBy(desc(comunicacions.dataEnviament));
+  }
+
+  async getComunicacionsNoLlegides(userId: string): Promise<Comunicacio[]> {
+    // This would need proper user linking logic
+    return await db.select().from(comunicacions).where(eq(comunicacions.llegit, false));
+  }
+
+  async createComunicacio(comunicacio: InsertComunicacio): Promise<Comunicacio> {
+    const [newComunicacio] = await db.insert(comunicacions).values(comunicacio).returning();
+    return newComunicacio;
+  }
+
+  async markComunicacioAsRead(id: number): Promise<void> {
+    await db.update(comunicacions).set({ llegit: true }).where(eq(comunicacions.id, id));
+  }
+
+  // File attachment operations
+  async createAttachment(attachment: InsertAttachment): Promise<Attachment> {
+    const [newAttachment] = await db.insert(attachments).values(attachment).returning();
+    return newAttachment;
+  }
+
+  async getAttachmentsByTasca(tascaId: number): Promise<Attachment[]> {
+    return await db.select().from(attachments).where(eq(attachments.tascaId, tascaId));
+  }
+
+  async deleteAttachment(id: number): Promise<void> {
+    await db.delete(attachments).where(eq(attachments.id, id));
+  }
+
+  // Analytics and metrics
+  async createMetric(metric: Omit<Metric, 'id' | 'createdAt'>): Promise<void> {
+    await db.insert(metrics).values(metric);
+  }
+
+  async getGuardAssignmentStats(): Promise<any> {
+    const activeYear = await this.getActiveAcademicYear();
+    
+    const stats = await db
+      .select({
+        professorId: assignacionsGuardia.professorId,
+        count: count(assignacionsGuardia.id),
+      })
+      .from(assignacionsGuardia)
+      .where(eq(assignacionsGuardia.anyAcademicId, activeYear))
+      .groupBy(assignacionsGuardia.professorId);
+    
+    return stats;
+  }
+
+  async getProfessorWorkloadBalance(): Promise<any> {
+    const activeYear = await this.getActiveAcademicYear();
+    
+    const balance = await db
+      .select({
+        professorId: assignacionsGuardia.professorId,
+        guardCount: count(assignacionsGuardia.id),
+      })
+      .from(assignacionsGuardia)
+      .leftJoin(guardies, eq(assignacionsGuardia.guardiaId, guardies.id))
+      .where(eq(assignacionsGuardia.anyAcademicId, activeYear))
+      .groupBy(assignacionsGuardia.professorId);
+    
+    return balance;
+  }
+
+  // AI predictions
+  async createPrediction(prediction: Omit<Prediction, 'id' | 'createdAt'>): Promise<Prediction> {
+    const [newPrediction] = await db.insert(predictions).values(prediction).returning();
+    return newPrediction;
+  }
+
+  async getLatestPredictions(tipus: string, limit: number = 10): Promise<Prediction[]> {
+    return await db.select().from(predictions)
+      .where(eq(predictions.tipus, tipus))
+      .orderBy(desc(predictions.createdAt))
+      .limit(limit);
+  }
+
+  // Chat sessions
+  async createChatSession(userId: string): Promise<ChatSession> {
+    const activeYear = await this.getActiveAcademicYear();
+    const [session] = await db.insert(chatSessions).values({
+      anyAcademicId: activeYear,
+      usuariId: userId,
+      missatges: [],
+    }).returning();
+    return session;
+  }
+
+  async getChatSession(id: number): Promise<ChatSession | undefined> {
+    const [session] = await db.select().from(chatSessions).where(eq(chatSessions.id, id));
+    return session;
+  }
+
+  async updateChatSession(id: number, session: Partial<ChatSession>): Promise<ChatSession> {
+    const [updatedSession] = await db
+      .update(chatSessions)
+      .set({...session, lastActivity: new Date()})
+      .where(eq(chatSessions.id, id))
+      .returning();
+    return updatedSession;
+  }
+
+  async getUserActiveChatSession(userId: string): Promise<ChatSession | undefined> {
+    const [session] = await db.select().from(chatSessions)
+      .where(and(eq(chatSessions.usuariId, userId), eq(chatSessions.tancada, false)))
+      .orderBy(desc(chatSessions.lastActivity))
       .limit(1);
-    
-    if (!activeYear) {
-      throw new Error("No active academic year found");
-    }
-    
-    return activeYear.id;
+    return session;
   }
 
-  async setActiveAcademicYear(yearId: number): Promise<void> {
-    await db
+  // Academic Year operations
+  async getAnysAcademics(): Promise<any[]> {
+    return await db.select().from(anysAcademics).orderBy(desc(anysAcademics.createdAt));
+  }
+
+  async getAnyAcademic(id: number): Promise<any | undefined> {
+    const [anyAcademic] = await db.select().from(anysAcademics).where(eq(anysAcademics.id, id));
+    return anyAcademic;
+  }
+
+  async createAnyAcademic(anyAcademicData: any): Promise<any> {
+    const [newAnyAcademic] = await db.insert(anysAcademics).values(anyAcademicData).returning();
+    return newAnyAcademic;
+  }
+
+  async updateAnyAcademic(id: number, anyAcademicData: any): Promise<any> {
+    // Si el nuevo estado es "actiu", primero cambiar el año académico activo anterior a "finalitzat"
+    if (anyAcademicData.estat === 'actiu') {
+      // Buscar el año académico actualmente activo (si existe)
+      const currentActiveYear = await db
+        .select()
+        .from(anysAcademics)
+        .where(eq(anysAcademics.estat, 'actiu'))
+        .limit(1);
+
+      // Si hay un año académico activo y no es el mismo que estamos actualizando
+      if (currentActiveYear.length > 0 && currentActiveYear[0].id !== id) {
+        // Cambiar el año académico anterior a "finalitzat"
+        await db
+          .update(anysAcademics)
+          .set({ estat: 'finalitzat' })
+          .where(eq(anysAcademics.id, currentActiveYear[0].id));
+        
+        console.log(`Any acadèmic ${currentActiveYear[0].nom} (ID: ${currentActiveYear[0].id}) canviat a "finalitzat"`);
+      }
+    }
+
+    // Actualizar el año académico solicitado
+    const [updatedAnyAcademic] = await db
       .update(anysAcademics)
-      .set({ estat: "inactiu" });
+      .set(anyAcademicData)
+      .where(eq(anysAcademics.id, id))
+      .returning();
     
-    await db
-      .update(anysAcademics)
-      .set({ estat: "actiu" })
-      .where(eq(anysAcademics.id, yearId));
+    console.log(`Any acadèmic ${updatedAnyAcademic.nom} (ID: ${id}) actualitzat a estat "${updatedAnyAcademic.estat}"`);
+    return updatedAnyAcademic;
+  }
+
+  async deleteAnyAcademic(id: number): Promise<void> {
+    await db.delete(anysAcademics).where(eq(anysAcademics.id, id));
+  }
+
+  // Mètodes per gestionar substitucions de sortides
+  async getSortidaProfessors(sortidaId: number): Promise<SortidaProfessor[]> {
+    return await db
+      .select()
+      .from(sortidaProfessors)
+      .where(eq(sortidaProfessors.sortidaId, sortidaId));
+  }
+
+  async createSortidaProfessor(data: InsertSortidaProfessor): Promise<SortidaProfessor> {
+    const [newRecord] = await db.insert(sortidaProfessors).values(data).returning();
+    return newRecord;
+  }
+
+  async getSortidaAlumnes(sortidaId: number): Promise<SortidaAlumne[]> {
+    return await db
+      .select()
+      .from(sortidaAlumnes)
+      .where(eq(sortidaAlumnes.sortidaId, sortidaId));
+  }
+
+  async createSortidaAlumne(data: InsertSortidaAlumne): Promise<SortidaAlumne> {
+    const [newRecord] = await db.insert(sortidaAlumnes).values(data).returning();
+    return newRecord;
+  }
+
+  async getSortidaSubstitucions(sortidaId: number): Promise<SortidaSubstitucio[]> {
+    return await db
+      .select()
+      .from(sortidaSubstitucions)
+      .where(eq(sortidaSubstitucions.sortidaId, sortidaId));
+  }
+
+  async createSortidaSubstitucio(data: InsertSortidaSubstitucio): Promise<SortidaSubstitucio> {
+    const [newRecord] = await db.insert(sortidaSubstitucions).values(data).returning();
+    return newRecord;
+  }
+
+  async updateSortidaSubstitucio(id: number, data: Partial<InsertSortidaSubstitucio>): Promise<SortidaSubstitucio> {
+    const [updated] = await db
+      .update(sortidaSubstitucions)
+      .set(data)
+      .where(eq(sortidaSubstitucions.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Mètode per obtenir classes que cal substituir per una sortida
+  async getClassesToSubstitute(sortidaId: number, anyAcademicId: number) {
+    try {
+      console.log(`Buscant substitucions per sortida ${sortidaId}, any acadèmic ${anyAcademicId}`);
+      
+      // Primer obtenir la informació de la sortida
+      const sortidaResult = await db.execute(sql`
+        SELECT responsable_id, data_inici, data_fi, nom_sortida
+        FROM sortides 
+        WHERE sortida_id = ${sortidaId}
+      `);
+
+      if (sortidaResult.rows.length === 0) {
+        console.log('Sortida no trobada');
+        return [];
+      }
+
+      const sortida = sortidaResult.rows[0] as any;
+      console.log(`Sortida trobada: ${sortida.nom_sortida}, responsable: ${sortida.responsable_id}`);
+      console.log(`Dates: ${sortida.data_inici} - ${sortida.data_fi}`);
+
+      // Calcular els dies de la setmana afectats
+      const dataInici = new Date(sortida.data_inici);
+      const dataFi = new Date(sortida.data_fi);
+      
+      // Obtenir dia de la setmana (1=dilluns, 7=diumenge)
+      const diaSetmana = dataInici.getDay() === 0 ? 7 : dataInici.getDay();
+      console.log(`Dia de la setmana afectat: ${diaSetmana}`);
+      
+      // Obtenir hora d'inici i fi en format HH:MM:SS mantenint la zona horària local
+      const horaInici = String(dataInici.getHours()).padStart(2, '0') + ':' + 
+                       String(dataInici.getMinutes()).padStart(2, '0') + ':' + 
+                       String(dataInici.getSeconds()).padStart(2, '0');
+      const horaFi = String(dataFi.getHours()).padStart(2, '0') + ':' + 
+                    String(dataFi.getMinutes()).padStart(2, '0') + ':' + 
+                    String(dataFi.getSeconds()).padStart(2, '0');
+      console.log(`Horari afectat: ${horaInici} - ${horaFi}`);
+
+      // Buscar classes del professor responsable que coincideixin amb les dates/hores de la sortida
+      // EXCLOENT les que ja tenen substitut assignat
+      const result = await db.execute(sql`
+        SELECT 
+          h.horari_id as id,
+          h.professor_id as "professorId",
+          h.grup_id as "grupId", 
+          h.aula_id as "aulaId",
+          h.dia_setmana as "diaSetmana",
+          h.hora_inici as "horaInici",
+          h.hora_fi as "horaFi",
+          h.assignatura,
+          p.professor_id as professor_id,
+          p.nom as professor_nom,
+          p.cognoms as professor_cognoms,
+          g.grup_id as grup_id,
+          g.nom_grup as grup_nom,
+          a.aula_id as aula_id,
+          a.nom_aula as aula_nom
+        FROM horaris h
+        LEFT JOIN professors p ON h.professor_id = p.professor_id
+        LEFT JOIN grups g ON h.grup_id = g.grup_id
+        LEFT JOIN aules a ON h.aula_id = a.aula_id
+        WHERE h.any_academic_id = ${anyAcademicId}
+          AND h.professor_id = ${sortida.responsable_id}
+          AND h.dia_setmana = ${diaSetmana}
+          AND (
+            (h.hora_inici >= ${horaInici} AND h.hora_inici < ${horaFi})
+            OR (h.hora_fi > ${horaInici} AND h.hora_fi <= ${horaFi})
+            OR (h.hora_inici <= ${horaInici} AND h.hora_fi >= ${horaFi})
+          )
+          AND (h.assignatura IS NULL OR h.assignatura = '' OR h.assignatura != 'G')
+          AND NOT EXISTS (
+            SELECT 1 FROM tasques t 
+            WHERE t.descripcio LIKE CONCAT('%', h.horari_id, '%')
+              AND t.estat IN ('pendent', 'en_curs', 'completada')
+              AND t.data_creacio >= CURRENT_DATE - INTERVAL '7 days'
+          )
+          AND NOT EXISTS (
+            SELECT 1 FROM sortida_substitucions ss
+            WHERE ss.horari_original_id = h.horari_id
+              AND ss.estat = 'confirmada'
+          )
+      `);
+
+      console.log(`Consulta SQL executada per professor ${sortida.responsable_id}, dia ${diaSetmana}, ${horaInici}-${horaFi}`);
+
+      const classesASubstituir = result.rows.map((row: any) => ({
+        id: row.id,
+        professorId: row.professorId,
+        grupId: row.grupId,
+        aulaId: row.aulaId,
+        diaSetmana: row.diaSetmana,
+        horaInici: row.horaInici,
+        horaFi: row.horaFi,
+        assignatura: row.assignatura,
+        professor: {
+          id: row.professor_id,
+          nom: row.professor_nom,
+          cognoms: row.professor_cognoms,
+        },
+        grup: row.grup_id ? {
+          id: row.grup_id,
+          nomGrup: row.grup_nom,
+        } : null,
+        aula: row.aula_id ? {
+          id: row.aula_id,
+          nomAula: row.aula_nom,
+        } : null,
+      }));
+
+      console.log(`Trobades ${classesASubstituir.length} classes a substituir`);
+      return classesASubstituir;
+
+    } catch (error) {
+      console.error('Error en getClassesToSubstitute:', error);
+      return [];
+    }
+  }
+
+  // Mètode per obtenir professors disponibles per substitució segons criteris correctes
+  async getProfessorsAvailableForSubstitution(horariId: number, anyAcademicId: number) {
+    try {
+      console.log(`=== BÚSQUEDA OPTIMITZADA ===`);
+      console.log(`Horari: ${horariId}, Any: ${anyAcademicId}`);
+
+      if (!anyAcademicId) {
+        console.log('Any acadèmic no definit');
+        return [];
+      }
+
+      // QUERY ÚNICA OPTIMITZADA - Combina totes les cerques en una sola consulta CTE
+      const candidatsResult = await db.execute(sql`
+        WITH classe_info AS (
+          SELECT h.dia_setmana, h.hora_inici, h.hora_fi, h.professor_id as professor_original,
+                 g.nom_grup, p.nom as professor_nom, p.cognoms as professor_cognoms
+          FROM horaris h
+          LEFT JOIN grups g ON h.grup_id = g.grup_id
+          LEFT JOIN professors p ON h.professor_id = p.professor_id
+          WHERE h.horari_id = ${horariId}
+        ),
+        professors_guardia AS (
+          SELECT p.professor_id as id, p.nom, p.cognoms, 1 as prioritat, 'Guàrdia' as motiu,
+                 '#10B981' as color, 'guardia' as tipus
+          FROM professors p
+          INNER JOIN horaris h ON p.professor_id = h.professor_id
+          CROSS JOIN classe_info ci
+          WHERE p.any_academic_id = ${anyAcademicId}
+            AND h.dia_setmana = ci.dia_setmana
+            AND h.hora_inici = ci.hora_inici
+            AND h.hora_fi = ci.hora_fi
+            AND h.assignatura = 'G'
+            AND p.professor_id != ci.professor_original
+            AND h.any_academic_id = ${anyAcademicId}
+        ),
+        tots_candidats AS (
+          SELECT * FROM professors_guardia
+        ),
+        candidats_amb_guardies AS (
+          SELECT tc.*, 
+                 COALESCE(ag_stats.total_guardies, 0) as guardiesRealiitzades
+          FROM tots_candidats tc
+          LEFT JOIN (
+            SELECT professor_id, COUNT(*) as total_guardies
+            FROM assignacions_guardia
+            WHERE any_academic_id = ${anyAcademicId}
+            GROUP BY professor_id
+          ) ag_stats ON tc.id = ag_stats.professor_id
+        )
+        SELECT * FROM candidats_amb_guardies
+        ORDER BY prioritat ASC, guardiesRealiitzades ASC, nom ASC
+        LIMIT 100
+      `);
+
+      const candidats = candidatsResult.rows.map((row: any) => ({
+        id: row.id,
+        nom: row.nom,
+        cognoms: row.cognoms,
+        prioritat: row.prioritat,
+        motiu: row.motiu,
+        color: row.color,
+        guardiesRealiitzades: Number(row.guardiesrealiitzades || 0),
+        tipus: row.tipus
+      }));
+
+      console.log(`=== RESULTAT OPTIMITZAT: ${candidats.length} candidats ===`);
+      
+      // Mostrar només els primers per no sobrecarregar logs
+      candidats.slice(0, 5).forEach(c => {
+        console.log(`- ${c.nom} ${c.cognoms} (P:${c.prioritat}, G:${c.guardiesRealiitzades}) - ${c.motiu}`);
+      });
+
+      if (candidats.length > 5) {
+        console.log(`... i ${candidats.length - 5} més`);
+      }
+
+      return candidats;
+
+    } catch (error) {
+      console.error('Error en getProfessorsAvailableForSubstitution:', error);
+      return [];
+    }
+  }
+
+  private getPriorityColor(percentatgeRealitzat: number): string {
+    // Escala de colors degradant: menys guàrdies realitzades = més prioritari (verd)
+    // Més guàrdies realitzades = menys prioritari (vermell/negre)
+    if (percentatgeRealitzat <= 10) return 'emerald'; // Molt prioritari
+    if (percentatgeRealitzat <= 25) return 'green';   // Alta prioritat
+    if (percentatgeRealitzat <= 40) return 'lime';    // Bona prioritat
+    if (percentatgeRealitzat <= 55) return 'yellow';  // Mitjana prioritat
+    if (percentatgeRealitzat <= 70) return 'amber';   // Baixa prioritat
+    if (percentatgeRealitzat <= 85) return 'orange';  // Molt baixa prioritat
+    if (percentatgeRealitzat <= 95) return 'red';     // Crítica prioritat
+    return 'slate'; // Sobrecàrregat (equivalent a negre)
+  }
+
+  // Crear nova tasca
+  async createTasca(tascaData: any): Promise<any> {
+    const [newTasca] = await db.insert(tasques).values(tascaData).returning();
+    return newTasca;
+  }
+
+  // Crear nova comunicació
+  async createComunicacio(comunicacioData: any): Promise<any> {
+    const [newComunicacio] = await db.insert(comunicacions).values(comunicacioData).returning();
+    return newComunicacio;
+  }
+
+  // Obtenir professor per ID
+  async getProfessor(id: number): Promise<any | undefined> {
+    const [professor] = await db.select().from(professors).where(eq(professors.id, id));
+    return professor;
+  }
+
+  // Crear assignació de guàrdia
+  async createAssignacioGuardia(assignacioData: any): Promise<any> {
+    const [newAssignacio] = await db.insert(assignacionsGuardia).values(assignacioData).returning();
+    return newAssignacio;
   }
 }
 
