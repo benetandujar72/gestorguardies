@@ -680,11 +680,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = substitucions.rows.map((row: any) => ({
         id: row.id,
         tipus: 'Substitució',
-        data: row.data ? row.data.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        data: row.sortida_data_inici ? row.sortida_data_inici.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         horaInici: '08:00:00',
         horaFi: '09:00:00',
         assignatura: row.observacions?.split(' ')[4] || 'Assignatura',
         grup: row.observacions?.split(' ')[5] || 'Grup',
+        aula: row.observacions?.split(' ')[7] || '',
         descripcio: row.observacions || `Substitució per sortida: ${row.nom_sortida}`,
         motiu: 'Sortida escolar',
         estat: row.estat || 'pendent',
