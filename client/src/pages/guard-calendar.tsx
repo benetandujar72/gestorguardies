@@ -31,6 +31,7 @@ export default function GuardCalendar() {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
+          credentials: 'include', // Include cookies for authentication
         });
 
         console.log('Response status:', response.status);
