@@ -1191,9 +1191,13 @@ export class DatabaseStorage implements IStorage {
       const diaSetmana = dataInici.getDay() === 0 ? 7 : dataInici.getDay();
       console.log(`Dia de la setmana afectat: ${diaSetmana}`);
       
-      // Obtenir hora d'inici i fi en format HH:MM:SS
-      const horaInici = dataInici.toISOString().split('T')[1].substring(0, 8);
-      const horaFi = dataFi.toISOString().split('T')[1].substring(0, 8);
+      // Obtenir hora d'inici i fi en format HH:MM:SS mantenint la zona horària local
+      const horaInici = String(dataInici.getHours()).padStart(2, '0') + ':' + 
+                       String(dataInici.getMinutes()).padStart(2, '0') + ':' + 
+                       String(dataInici.getSeconds()).padStart(2, '0');
+      const horaFi = String(dataFi.getHours()).padStart(2, '0') + ':' + 
+                    String(dataFi.getMinutes()).padStart(2, '0') + ':' + 
+                    String(dataFi.getSeconds()).padStart(2, '0');
       console.log(`Horari afectat: ${horaInici} - ${horaFi}`);
 
       // Buscar classes del professor responsable que coincideixin amb les dates/hores de la sortida
