@@ -83,14 +83,24 @@ export default function GuardCalendar() {
   }, []);
 
   // Fetch substitutions
-  const { data: substitucions = [], isLoading: loadingSubstitucions } = useQuery({
-    queryKey: ['/api/substitucions-necessaries']
+  const { data: substitucions = [], isLoading: loadingSubstitucions, error: errorSubstitucions } = useQuery({
+    queryKey: ['/api/substitucions-necessaries'],
+    retry: false
   });
 
   // Fetch regular guards
-  const { data: guardies = [], isLoading: loadingGuardies } = useQuery({
-    queryKey: ['/api/guardies']
+  const { data: guardies = [], isLoading: loadingGuardies, error: errorGuardies } = useQuery({
+    queryKey: ['/api/guardies'],
+    retry: false
   });
+
+  // Debug logging
+  console.log('Substitucions data:', substitucions);
+  console.log('Substitucions loading:', loadingSubstitucions);
+  console.log('Substitucions error:', errorSubstitucions);
+  console.log('Guardies data:', guardies);
+  console.log('Guardies loading:', loadingGuardies);
+  console.log('Guardies error:', errorGuardies);
 
   // Auto-navigate to first substitution date when data loads
   useEffect(() => {
@@ -191,6 +201,19 @@ export default function GuardCalendar() {
     return (
       <div className="container mx-auto p-6">
         <div className="text-center">Carregant calendari...</div>
+      </div>
+    );
+  }
+
+  if (errorSubstitucions || errorGuardies) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center text-red-600">
+          <h2 className="text-xl font-bold mb-2">Error carregant dades</h2>
+          <p>No s'han pogut carregar les substitucions o guardies.</p>
+          <p className="text-sm mt-2">Error substitucions: {errorSubstitucions?.message}</p>
+          <p className="text-sm">Error guardies: {errorGuardies?.message}</p>
+        </div>
       </div>
     );
   }
