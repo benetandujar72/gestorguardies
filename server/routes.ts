@@ -656,10 +656,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           h.hora_inici,
           h.hora_fi,
           h.assignatura,
-          h.aula,
           
           -- Grup information
-          g.nom as grup,
+          g.nom_grup as grup,
           
           -- Professor original information
           po.nom as professor_original_nom,
@@ -672,9 +671,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ps.email as professor_substitut_email
           
         FROM sortida_substitucions ss
-        JOIN sortides s ON ss.sortida_id = s.id
-        JOIN horaris h ON ss.horari_original_id = h.id
-        LEFT JOIN grups g ON h.grup_id = g.id
+        JOIN sortides s ON ss.sortida_id = s.sortida_id
+        JOIN horaris h ON ss.horari_original_id = h.horari_id
+        LEFT JOIN grups g ON h.grup_id = g.grup_id
         LEFT JOIN professors po ON ss.professor_original_id = po.id
         LEFT JOIN professors ps ON ss.professor_substitut_id = ps.id
         WHERE s.any_academic_id = $1
