@@ -291,7 +291,7 @@ export default function Students() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="">Sense grup</SelectItem>
-                          {grups.map((grup) => (
+                          {grups.filter(grup => grup.id).map((grup) => (
                             <SelectItem key={grup.id} value={String(grup.id)}>
                               {grup.nomGrup}
                             </SelectItem>
@@ -382,7 +382,7 @@ export default function Students() {
                 <SelectContent>
                   <SelectItem value="all">Tots els grups</SelectItem>
                   <SelectItem value="none">Sense grup</SelectItem>
-                  {grups.map((grup) => (
+                  {grups.filter(grup => grup.id).map((grup) => (
                     <SelectItem key={grup.id} value={String(grup.id)}>
                       {grup.nomGrup}
                     </SelectItem>
@@ -563,7 +563,7 @@ export default function Students() {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="">Sense grup</SelectItem>
-                        {grups.map((grup) => (
+                        {grups.filter(grup => grup.id).map((grup) => (
                           <SelectItem key={grup.id} value={String(grup.id)}>
                             {grup.nomGrup}
                           </SelectItem>
