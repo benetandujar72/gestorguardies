@@ -423,7 +423,7 @@ export default function GestioGuardies() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="tots">Tots els professors</SelectItem>
-                    {professors.map((professor) => (
+                    {professors.filter(professor => professor.id).map((professor) => (
                       <SelectItem key={professor.id} value={professor.id.toString()}>
                         {professor.nom} {professor.cognoms}
                       </SelectItem>
@@ -664,7 +664,7 @@ export default function GestioGuardies() {
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="none">Sense assignar</SelectItem>
-                                      {professors.map((professor) => (
+                                      {professors.filter(professor => professor.id).map((professor) => (
                                         <SelectItem key={professor.id} value={professor.id.toString()}>
                                           {professor.nom} {professor.cognoms}
                                         </SelectItem>
@@ -764,7 +764,7 @@ export default function GestioGuardies() {
                       <SelectValue placeholder="Selecciona un professor" />
                     </SelectTrigger>
                     <SelectContent>
-                      {professors.map((professor) => (
+                      {professors.filter(professor => professor.id).map((professor) => (
                         <SelectItem key={professor.id} value={professor.id.toString()}>
                           {professor.nom} {professor.cognoms}
                         </SelectItem>
