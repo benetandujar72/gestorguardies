@@ -90,6 +90,39 @@ export default function GestioGuardies() {
   // Fetch data
   const { data: substitucions = [], isLoading: isLoadingSubstitucions } = useQuery({
     queryKey: ['/api/substitucions-necessaries', filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      
+      // Add filters to query params
+      if (filters.sortidaId && filters.sortidaId !== 'tots') {
+        params.append('sortidaId', filters.sortidaId);
+      }
+      
+      if (filters.professorId && filters.professorId !== 'tots') {
+        params.append('professorId', filters.professorId);
+      }
+      
+      if (filters.estat && filters.estat !== 'tots') {
+        params.append('estat', filters.estat);
+      }
+      
+      if (filters.dataInici) {
+        params.append('dataInici', filters.dataInici);
+      }
+      
+      if (filters.dataFi) {
+        params.append('dataFi', filters.dataFi);
+      }
+      
+      const url = `/api/substitucions-necessaries${params.toString() ? `?${params.toString()}` : ''}`;
+      const response = await fetch(url, { credentials: 'include' });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      return response.json();
+    },
     enabled: true
   });
 
@@ -111,15 +144,8 @@ export default function GestioGuardies() {
     queryKey: ['/api/assignacions-guardia']
   });
 
-  // Filter substitutions
-  const filteredSubstitucions = useMemo(() => {
-    return (substitucions as Substitucio[]).filter((substitucio: Substitucio) => {
-      if (filters.estat !== 'tots' && substitucio.estat !== filters.estat) {
-        return false;
-      }
-      return true;
-    });
-  }, [substitucions, filters]);
+  // Since filtering is now done on the backend, we use substitucions directly
+  const filteredSubstitucions = substitucions as Substitucio[];
 
   // Group by date
   const substitucionsPerData = useMemo(() => {
@@ -385,9 +411,25 @@ export default function GestioGuardies() {
         {/* Filters */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filtres
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Filter className="h-5 w-5" />
+                Filtres
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFilters({
+                  sortidaId: 'tots',
+                  professorId: 'tots',
+                  dataInici: '',
+                  dataFi: '',
+                  estat: 'tots'
+                })}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Netejar filtres
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>

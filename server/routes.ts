@@ -749,9 +749,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('Obtenint substitucions necessàries per any acadèmic:', activeYear.id);
+      
+      // Extract filters from query parameters
+      const { sortidaId, professorId, dataInici, dataFi, estat } = req.query;
 
       // PRIMER: Auto-generar substitucions per sortides sense substitucions creades
       await generateMissingSubstitutions(activeYear.id);
+
+      // Build WHERE clause based on filters
+      let whereClause = 'WHERE ss.any_academic_id = $1';
+      const queryParams = [activeYear.id];
+      let paramIndex = 2;
+
+      // Add filters to WHERE clause
+      if (sortidaId && sortidaId !== 'tots') {
+        whereClause += ` AND ss.sortida_id = $${paramIndex}`;
+        queryParams.push(parseInt(sortidaId as string));
+        paramIndex++;
+      }
+
+      if (professorId && professorId !== 'tots') {
+        whereClause += ` AND (ss.professor_original_id = $${paramIndex} OR ss.professor_substitut_id = $${paramIndex})`;
+        queryParams.push(parseInt(professorId as string));
+        paramIndex++;
+      }
+
+      if (estat && estat !== 'tots') {
+        whereClause += ` AND ss.estat = $${paramIndex}`;
+        queryParams.push(estat as string);
+        paramIndex++;
+      }
+
+      if (dataInici) {
+        whereClause += ` AND s.data_inici >= $${paramIndex}`;
+        queryParams.push(dataInici as string);
+        paramIndex++;
+      }
+
+      if (dataFi) {
+        whereClause += ` AND s.data_inici <= $${paramIndex}`;
+        queryParams.push(dataFi as string);
+        paramIndex++;
+      }
 
       // Get substitutions from sortida_substitucions table using pool directly
       const query = `
@@ -795,7 +834,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN aules a ON h.aula_id = a.aula_id
         LEFT JOIN professors p_orig ON ss.professor_original_id = p_orig.professor_id
         LEFT JOIN professors p_subs ON ss.professor_substitut_id = p_subs.professor_id
-        WHERE ss.any_academic_id = $1
+        ${whereClause}
         ORDER BY 
           s.data_inici, h.hora_inici,
           CASE ss.estat 
@@ -806,7 +845,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           END
       `;
 
-      const substitucions = await pool.query(query, [activeYear.id]);
+      console.log('Query executed with filters:', { sortidaId, professorId, estat, dataInici, dataFi });
+      const substitucions = await pool.query(query, queryParams);
 
       // Transform results to expected format
       const result = substitucions.rows.map((row: any) => ({
