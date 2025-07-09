@@ -141,7 +141,7 @@ export default function DashboardGuardiesVisual() {
                 </Link>
               </Button>
               <Button asChild className="bg-white text-blue-600 hover:bg-blue-50 font-semibold">
-                <Link href="/sortides-substitucions">
+                <Link href="/sortides-substitucions-new">
                   <UserCheck className="h-4 w-4 mr-2" />
                   Gestionar Substitucions
                 </Link>

@@ -1,0 +1,117 @@
+Prompt per a l'Assistent d'IA de Replit
+
+
+  Rol: Ets un enginyer de software full-stack expert, especialitzat en la refactorització i desenvolupament
+  d'aplicacions web amb el stack tecnològic React, TypeScript, Node.js, Express, PostgreSQL i Drizzle ORM.
+
+
+  Objectiu Principal: Analitzar el projecte "BitAi" existent i transformar-lo per implementar completament
+  les funcionalitats i l'esquema de dades descrits en el document d'anàlisi funcional i de base de dades
+  d'"Assistatut". L'objectiu final és que "BitAi" sigui una implementació fidel i robusta d'aquestes
+  especificacions.
+
+
+  Document de Referència Principal: El text proporcionat que detalla l'Anàlisi Funcional i l'Esquema de la
+  Base de Dades d'"Assistatut". Aquest document és la única font de veritat per a tots els canvis.
+
+  ---
+
+
+  Pla d'Implementació Detallat:
+
+  Realitza les següents tasques en ordre seqüencial per garantir la integritat del sistema.
+
+  Fase 1: Refactorització de la Base de Dades (El Fonament)
+
+
+   1. Analitzar i Modificar l'Esquema de Drizzle:
+       * Obre el fitxer shared/schema.ts.
+       * Compara l'esquema actual amb el detallat a la Secció 2: Esquema i Relacions de la Base de Dades del
+         document de referència.
+       * Modifica, crea o elimina les taules i columnes necessàries per alinear-les exactament amb
+         l'especificació. Presta especial atenció a:
+           * Taules a crear/modificar: anys_academics, professors, grups, alumnes, aules, materies, horaris,
+             sortides, guardies, assignacions_guardia, tasques, comunicacions, users, system_settings.
+           * Tipus de Dades: Assegura't que els tipus de dades (SERIAL, VARCHAR, INTEGER, DATE, TIMESTAMP,
+             BOOLEAN, TEXT) coincideixen amb la definició.
+           * Restriccions: Implementa PRIMARY KEY, FOREIGN KEY, NOT NULL, DEFAULT i UNIQUE tal com
+             s'especifica.
+           * Relacions: Defineix correctament les relacions (one-to-many, many-to-one) entre les taules
+             utilitzant la sintaxi de Drizzle. La clau any_academic_id és fonamental i ha d'estar present a
+             gairebé totes les taules principals.
+
+
+   2. Generar i Aplicar la Migració:
+       * Un cop l'esquema a shared/schema.ts estigui actualitzat, executa l'ordre npm run db:push (o
+         l'equivalent a drizzle-kit push) per generar i aplicar la migració a la base de dades PostgreSQL.
+       * Verifica que la migració s'executa sense errors.
+
+  Fase 2: Desenvolupament del Backend (API i Lògica de Negoci)
+
+
+   1. Actualitzar Endpoints de l'API:
+       * Modifica el fitxer server/routes.ts per implementar tots els endpoints de l'API definits a la Secció
+         1: Anàlisi Funcional. Això inclou:
+           * GET, POST /api/anys-academics
+           * POST /api/anys-academics/:id/activate
+           * Rutes CRUD per a professors, grups, alumnes, aules, materies.
+           * GET, POST, PATCH, DELETE /api/horaris/:id
+           * GET, POST /api/sortides
+           * POST /api/assignacions-guardia/auto-assign
+           * Totes les altres rutes especificades.
+
+
+   2. Implementar la Lògica de Negoci:
+       * Crea o modifica els fitxers de servei necessaris (ex: server/academic-service.ts,
+         server/schedule-service.ts, etc.) per contenir la lògica de cada funcionalitat.
+       * Lògica Crítica - Motor d'Assignació de Guàrdies:
+           * Crea un nou fitxer server/guard-assignment-engine.ts.
+           * Implementa l'algorisme de cerca de substituts seguint exactament les 4 prioritats definides a la
+             secció "Gestió de Guardias y Sustituciones".
+           * Assegura't que la lògica consulta correctament les taules horaris (per trobar hores de guàrdia
+             "G"), sortides (per identificar professors alliberats) i professors (per càrrecs i càrrega de
+             treball).
+       * Lògica Crítica - Creació de `guardies` a partir de `sortides`:
+           * Quan es crea una sortida, el sistema ha de buscar a horaris les classes del professor afectat i
+             crear automàticament els registres corresponents a la taula guardies amb estat 'pendent'.
+
+  Fase 3: Desenvolupament del Frontend (Interfície d'Usuari)
+
+
+   1. Crear o Modificar Pàgines de React:
+       * Basant-te en la Secció 1: Anàlisi Funcional, desenvolupa les interfícies d'usuari necessàries dins de
+          client/src/pages/.
+       * Gestió de Dades Mestres: Crea formularis i taules per a la gestió de professors, grups, alumnes,
+         aules i matèries. Implementa la funcionalitat d'importació/exportació CSV.
+       * Gestió d'Horaris: Desenvolupa una vista de graella setmanal (/horaris) que permeti visualitzar i
+         afegir classes.
+       * Gestió de Guardies: Crea la interfície per registrar sortides i visualitzar les assignacions de
+         guàrdies.
+       * Dashboard i Analítiques: Implementa la pàgina /analytics-real amb gràfics sobre la distribució de
+         guàrdies.
+       * Assistent de Xat: Crea la interfície /ai-chat per interactuar amb el backend d'IA.
+
+  Fase 4: Actualització de Dades de Prova (Seeding)
+
+
+   1. Modificar Scripts de Seed:
+       * Actualitza els fitxers de seeding (com server/seed-*.ts) per reflectir la nova estructura de la base
+         de dades.
+       * Assegura't que les dades generades siguin coherents i respectin les noves relacions i restriccions
+         (ex: crear grups abans d'assignar-hi alumnes).
+
+  Punts Clau a Considerar:
+
+
+   * Consistència: Mantingues l'estil de codi, les convencions de nomenclatura i l'arquitectura existents.
+   * Modularitat: Escriu codi net i modular, separant la lògica de negoci (serveis) de la gestió de rutes
+     (controladors).
+   * Gestió d'Errors: Implementa una gestió d'errors robusta tant al backend com al frontend.
+   * Seguretat: Assegura't que tots els endpoints de l'API tinguin la validació de rols i permisos adequada.
+
+  Objectiu Final:
+
+
+  Un cop completades totes les fases, el projecte "BitAi" ha de ser una aplicació completament funcional que
+   implementi totes les característiques descrites al document "Assistatut", amb una base de dades robusta,
+  una API coherent i una interfície d'usuari intuïtiva.

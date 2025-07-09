@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -77,6 +78,7 @@ export default function SortidesSubstitucions() {
   const [professorPerClasse, setProfessorPerClasse] = useState<{ [key: number]: number }>({});
   const [observacionsPerClasse, setObservacionsPerClasse] = useState<{ [key: number]: string }>({});
   const [classeSeleccionada, setClasseSeleccionada] = useState<number | null>(null);
+  const [classesSeleccionades, setClassesSeleccionades] = useState<Set<number>>(new Set());
   const [modalConfirmacio, setModalConfirmacio] = useState(false);
   const [assignacioTemporal, setAssignacioTemporal] = useState<{
     classeId: number;
@@ -206,12 +208,12 @@ export default function SortidesSubstitucions() {
       return false;
     }
 
-    // Verificar que totes les classes tenen professor assignat
+    // Verificar que totes les classes seleccionades tenen professor assignat
     const classesAmbProfessor = substitucions.filter(s => s.professorSubstitutId);
-    if (classesAmbProfessor.length !== classesToUse.length) {
+    if (classesAmbProfessor.length !== classesSeleccionadesArray.length) {
       toast({
         title: "Error de validació",
-        description: "Falten professors per assignar a algunes classes.",
+        description: "Falten professors per assignar a algunes classes seleccionades.",
         variant: "destructive",
       });
       return false;
@@ -317,6 +319,25 @@ export default function SortidesSubstitucions() {
     setProfessorPerClasse({});
     setObservacionsPerClasse({});
     setClasseSeleccionada(null);
+    setClassesSeleccionades(new Set());
+  };
+
+  const handleToggleClasseSeleccionada = (classeId: number) => {
+    setClassesSeleccionades(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(classeId)) {
+        newSet.delete(classeId);
+        // Eliminar també el professor assignat si es deselecciona
+        setProfessorPerClasse(prevProf => {
+          const newProfessorPerClasse = { ...prevProf };
+          delete newProfessorPerClasse[classeId];
+          return newProfessorPerClasse;
+        });
+      } else {
+        newSet.add(classeId);
+      }
+      return newSet;
+    });
   };
 
   const handleAssignarProfessor = (horariId: number, professorId: number, professorOriginalId: number) => {
@@ -366,8 +387,9 @@ export default function SortidesSubstitucions() {
     return colorMap[color] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
-  const totesClassesAssignades = classesToUse.length > 0 && 
-    classesToUse.every(classe => professorPerClasse[classe.id]);
+  const classesSeleccionadesArray = classesToUse.filter(classe => classesSeleccionades.has(classe.id));
+  const totesClassesAssignades = classesSeleccionadesArray.length > 0 && 
+    classesSeleccionadesArray.every(classe => professorPerClasse[classe.id]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -452,7 +474,30 @@ export default function SortidesSubstitucions() {
 
               {/* Classes en horitzontal */}
               <div className="p-6">
-                <h2 className="text-lg font-semibold mb-4">Classes a Substituir</h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold">Classes a Substituir</h2>
+                  {classesToUse.length > 0 && (
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (classesSeleccionades.size === classesToUse.length) {
+                            setClassesSeleccionades(new Set());
+                            setProfessorPerClasse({});
+                          } else {
+                            setClassesSeleccionades(new Set(classesToUse.map(c => c.id)));
+                          }
+                        }}
+                      >
+                        {classesSeleccionades.size === classesToUse.length ? 'Deseleccionar totes' : 'Seleccionar totes'}
+                      </Button>
+                      <span className="text-sm text-gray-600">
+                        {classesSeleccionades.size} de {classesToUse.length} seleccionades
+                      </span>
+                    </div>
+                  )}
+                </div>
                 
                 {loadingClasses ? (
                   <div className="text-center py-8">Carregant classes...</div>
@@ -465,34 +510,55 @@ export default function SortidesSubstitucions() {
                     {classesToUse.map((classe) => {
                       const professorAssignat = professorPerClasse[classe.id];
                       const isSelected = classeSeleccionada === classe.id;
+                      const isChecked = classesSeleccionades.has(classe.id);
                       
                       return (
                         <Card 
                           key={classe.id}
-                          className={`cursor-pointer transition-all hover:shadow-md ${
+                          className={`transition-all hover:shadow-md ${
                             isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''
-                          } ${professorAssignat ? 'border-green-500 bg-green-50' : ''}`}
-                          onClick={() => setClasseSeleccionada(classe.id)}
+                          } ${professorAssignat ? 'border-green-500 bg-green-50' : ''} ${
+                            isChecked ? 'border-orange-500 bg-orange-50' : ''
+                          }`}
                         >
                           <CardContent className="p-4">
                             <div className="space-y-3">
                               <div className="flex justify-between items-start">
-                                <div>
-                                  <h4 className="font-semibold text-sm">
-                                    {classe.data} {classe.horaInici}-{classe.horaFi}
-                                  </h4>
-                                  <p className="text-xs text-muted-foreground">
-                                    {classe.assignatura || 'Sense assignatura'} - {classe.grup || 'Sense grup'}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {classe.aula || 'Sense aula'}
-                                  </p>
+                                <div className="flex items-center space-x-3">
+                                  <Checkbox
+                                    id={`classe-${classe.id}`}
+                                    checked={isChecked}
+                                    onCheckedChange={() => handleToggleClasseSeleccionada(classe.id)}
+                                  />
+                                  <div className="flex-1">
+                                    <h4 className="font-semibold text-sm">
+                                      {classe.data} {classe.horaInici}-{classe.horaFi}
+                                    </h4>
+                                    <p className="text-xs text-muted-foreground">
+                                      {classe.assignatura || 'Sense assignatura'} - {classe.grup || 'Sense grup'}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {classe.aula || 'Sense aula'}
+                                    </p>
+                                  </div>
                                 </div>
-                                {professorAssignat && (
-                                  <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
-                                    Assignada
-                                  </Badge>
-                                )}
+                                <div className="flex flex-col items-end space-y-1">
+                                  {professorAssignat && (
+                                    <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                                      Assignada
+                                    </Badge>
+                                  )}
+                                  {isChecked && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => setClasseSeleccionada(classe.id)}
+                                      className="text-xs"
+                                    >
+                                      Assignar Professor
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                               
                               <div className="pt-2 border-t">
