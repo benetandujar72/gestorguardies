@@ -6,5 +6,10 @@ export async function sendSubstitutionEmails(data: SubstitutionEmailData): Promi
 
 // Verificar la configuració del Gmail API
 export async function verifyEmailConfiguration(): Promise<boolean> {
-  return await gmailService.verifyConfiguration();
+  try {
+    return await gmailService.verifyConfiguration();
+  } catch (error) {
+    console.error('Error verificant configuració Gmail API:', error);
+    return false; // No bloquear l'aplicació
+  }
 }

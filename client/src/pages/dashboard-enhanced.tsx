@@ -7,7 +7,7 @@ import { Calendar, Users, Shield, Clock, AlertCircle, CheckCircle, ArrowRight, S
 import { format } from "date-fns";
 import { ca } from "date-fns/locale";
 import { Link } from "wouter";
-import TutorialOverlay from "@/components/common/tutorial-overlay";
+import TutorialOverlaySimple from "@/components/common/tutorial-overlay-simple";
 import { motion } from "framer-motion";
 
 // DASHBOARD ENHANCED AMB TUTORIAL INTEGRAT I UX MILLORADA
@@ -330,11 +330,10 @@ export default function DashboardEnhanced() {
       </motion.div>
 
       {/* Tutorial overlay */}
-      <TutorialOverlay
+      <TutorialOverlaySimple
         isVisible={showTutorial}
         onClose={() => setShowTutorial(false)}
         currentStep={tutorialStep}
-        onStepChange={setTutorialStep}
       />
     </div>
   );

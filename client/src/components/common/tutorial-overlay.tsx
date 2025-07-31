@@ -105,6 +105,12 @@ export default function TutorialOverlay({
     }
   }, []);
 
+  // Calcular les dades del pas actual PRIMER
+  const currentStepData = TUTORIAL_STEPS.find(s => s.id === step);
+  const currentStepIndex = TUTORIAL_STEPS.findIndex(s => s.id === step);
+  const isLastStep = currentStepIndex === TUTORIAL_STEPS.length - 1;
+  const isFirstStep = currentStepIndex === 0;
+
   // Sincronitzar l'estat intern amb les props
   useEffect(() => {
     setStep(currentStep);
@@ -114,11 +120,6 @@ export default function TutorialOverlay({
   useEffect(() => {
     console.log('Tutorial state:', { step, currentStep, isVisible, currentStepData: currentStepData?.id });
   }, [step, currentStep, isVisible, currentStepData]);
-
-  const currentStepData = TUTORIAL_STEPS.find(s => s.id === step);
-  const currentStepIndex = TUTORIAL_STEPS.findIndex(s => s.id === step);
-  const isLastStep = currentStepIndex === TUTORIAL_STEPS.length - 1;
-  const isFirstStep = currentStepIndex === 0;
 
   const handleNext = () => {
     console.log('Tutorial Next clicked - Current step:', step, 'Index:', currentStepIndex);
