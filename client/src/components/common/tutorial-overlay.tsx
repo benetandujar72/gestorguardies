@@ -20,7 +20,8 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     id: "welcome",
     title: "Benvingut al Sistema de Guardies",
     description: "T'ensenyarem com utilitzar l'aplicació pas a pas. No necessites experiència prèvia!",
-    action: "Començar tutorial"
+    action: "Començar tutorial",
+    nextStep: "navigation"
   },
   {
     id: "navigation",
@@ -75,7 +76,8 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     id: "completed",
     title: "Tutorial Completat!",
     description: "Ja estàs llest per utilitzar l'aplicació. Recorda que sempre pots tornar a veure aquest tutorial.",
-    action: "Finalitzar"
+    action: "Finalitzar",
+    nextStep: undefined
   }
 ];
 
@@ -103,19 +105,42 @@ export default function TutorialOverlay({
     }
   }, []);
 
+  // Sincronitzar l'estat intern amb les props
+  useEffect(() => {
+    setStep(currentStep);
+  }, [currentStep]);
+
+  // Debug logging i actualització del estat
+  useEffect(() => {
+    console.log('Tutorial state:', { step, currentStep, isVisible, currentStepData: currentStepData?.id });
+  }, [step, currentStep, isVisible, currentStepData]);
+
   const currentStepData = TUTORIAL_STEPS.find(s => s.id === step);
   const currentStepIndex = TUTORIAL_STEPS.findIndex(s => s.id === step);
   const isLastStep = currentStepIndex === TUTORIAL_STEPS.length - 1;
   const isFirstStep = currentStepIndex === 0;
 
   const handleNext = () => {
+    console.log('Tutorial Next clicked - Current step:', step, 'Index:', currentStepIndex);
+    
     if (currentStepData?.nextStep) {
       const nextStep = currentStepData.nextStep;
+      console.log('Moving to next step:', nextStep);
       setStep(nextStep);
       onStepChange?.(nextStep);
     } else if (isLastStep) {
+      console.log('Tutorial completed');
       localStorage.setItem('hasSeenTutorial', 'true');
       onClose();
+    } else {
+      // Si no hi ha nextStep definit però no és l'últim pas, passar al següent pas de la llista
+      const nextIndex = currentStepIndex + 1;
+      if (nextIndex < TUTORIAL_STEPS.length) {
+        const nextStep = TUTORIAL_STEPS[nextIndex].id;
+        console.log('Auto-advancing to next step:', nextStep);
+        setStep(nextStep);
+        onStepChange?.(nextStep);
+      }
     }
   };
 
