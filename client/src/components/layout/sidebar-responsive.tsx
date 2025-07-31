@@ -51,6 +51,11 @@ const principalItems = [
     label: "Gestió de Guardies",
     icon: Shield,
   },
+  {
+    href: "/sistema-guardies-unificat",
+    label: "Sistema Unificat de Guardies",
+    icon: Shield,
+  },
 ];
 
 // Elements de gestió detallada

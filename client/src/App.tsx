@@ -27,6 +27,7 @@ import ImportCSV from "@/pages/import-csv";
 import SortidesSubstitucions from "@/pages/sortides-substitucions-new";
 import SortidesSubstitucionsEnhanced from "@/pages/sortides-substitucions-enhanced";
 import GestioGuardies from "@/pages/gestio-guardies";
+import UnifiedGuardsSystem from "@/pages/unified-guards-system";
 import GmailConfig from "@/pages/gmail-config";
 import Setup from "@/pages/setup";
 import NotFound from "@/pages/not-found";
@@ -91,6 +92,7 @@ function Router() {
             <Route path="/sortides-substitucions-new" component={SortidesSubstitucions} />
             <Route path="/sortides-substitucions-enhanced" component={SortidesSubstitucionsEnhanced} />
             <Route path="/gestio-guardies" component={GestioGuardies} />
+            <Route path="/sistema-guardies-unificat" component={UnifiedGuardsSystem} />
             <Route path="/gmail-config" component={GmailConfig} />
             <Route path="/tasques" component={Tasks} />
             <Route path="/professors" component={Professors} />

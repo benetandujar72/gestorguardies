@@ -140,18 +140,19 @@ export const sortides = pgTable("sortides", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// SISTEMA UNIFICAT DE GUARDIES - Esquema corregit segons BD real
 export const guardies = pgTable("guardies", {
   id: serial("guardia_id").primaryKey(),
   anyAcademicId: integer("any_academic_id").references(() => anysAcademics.id).notNull(),
   sortidaId: integer("sortida_id").references(() => sortides.id), // Nullable per guardies no relacionades amb sortides
-  horariOriginalId: integer("horari_original_id").references(() => horaris.id).notNull(),
-  professorOriginalId: integer("professor_original_id").references(() => professors.id).notNull(),
+  horariOriginalId: integer("horari_original_id").references(() => horaris.id), // Nullable per guardies generals
+  professorOriginalId: integer("professor_original_id").references(() => professors.id), // Nullable per guardies generals
   professorSubstitutId: integer("professor_substitut_id").references(() => professors.id), // Nullable fins assignació
   data: date("data").notNull(),
   horaInici: time("hora_inici").notNull(),
   horaFi: time("hora_fi").notNull(),
-  tipusGuardia: varchar("tipus_guardia").notNull(), // "sortida", "baixa", "permis", etc.
-  estat: varchar("estat").notNull().default("pendent"), // "pendent", "assignada", "completada"
+  tipusGuardia: varchar("tipus_guardia").notNull(), // "biblioteca", "Pati", "Esbarjo", "Substitució", etc.
+  estat: varchar("estat").notNull().default("Pendent"), // "Pendent", "assignada", "completada"
   lloc: varchar("lloc"),
   observacions: text("observacions"),
   comunicacioEnviada: boolean("comunicacio_enviada").default(false),

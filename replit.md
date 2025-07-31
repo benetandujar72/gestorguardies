@@ -91,6 +91,15 @@ A comprehensive school guard duty management system built with React, TypeScript
 
 ## Changelog
 
+- July 31, 2025: **MAJOR UPDATE** - Unified Guards System Implementation
+  - **CRITICAL FIXES**: Resolved Error 500 in auto-assign endpoint and database schema inconsistencies
+  - **UNIFIED SYSTEM**: Created comprehensive `/sistema-guardies-unificat` page integrating all guard-related functionality
+  - **INTELLIGENT ASSIGNMENT**: Implemented both manual and AI-powered automatic guard assignment systems
+  - **REAL-TIME UPDATES**: Fixed frontend view updates with proper TanStack Query cache invalidation
+  - **DATABASE ALIGNMENT**: Corrected `shared/schema.ts` to match actual database structure
+  - **SIMPLIFIED ARCHITECTURE**: Consolidated calendar, assignments, professors, and pending guards into single interface
+  - **ENHANCED UX**: Added real-time statistics, filtering by date, and immediate feedback with toast notifications
+  - **ROBUST LOGGING**: Implemented detailed assignment process logging for debugging and transparency
 - January 31, 2025: Fixed critical DOM validation warnings and enhanced chatbot infrastructure
   - Fixed validateDOMNesting warning by removing nested `<a>` tags in ResponsiveSidebar component
   - Enhanced chatbot system with complete database schema and storage methods

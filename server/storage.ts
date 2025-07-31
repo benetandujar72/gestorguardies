@@ -133,8 +133,9 @@ export interface IStorage {
   updateSortida(id: number, sortida: Partial<InsertSortida>): Promise<Sortida>;
   deleteSortida(id: number): Promise<void>;
 
-  // Guardia operations
+  // Guardia operations - SISTEMA UNIFICAT
   getGuardies(): Promise<Guardia[]>;
+  getGuardiaById(id: number): Promise<Guardia | undefined>;
   getGuardiesWithDetails(): Promise<any[]>;
   getGuardiesAvui(): Promise<Guardia[]>;
   getGuardiesByDate(date: string): Promise<Guardia[]>;
@@ -786,7 +787,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Guardia operations
+  // SISTEMA UNIFICAT DE GUARDIES - Operacions principals
   async getGuardies(): Promise<Guardia[]> {
     const activeYear = await this.getActiveAcademicYear();
     return await db.select({
@@ -809,6 +810,11 @@ export class DatabaseStorage implements IStorage {
     .from(guardies)
     .where(eq(guardies.anyAcademicId, activeYear))
     .orderBy(desc(guardies.data), guardies.horaInici);
+  }
+
+  async getGuardiaById(id: number): Promise<Guardia | undefined> {
+    const [guardia] = await db.select().from(guardies).where(eq(guardies.id, id));
+    return guardia;
   }
 
   async getGuardiesAvui(): Promise<Guardia[]> {
