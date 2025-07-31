@@ -1,140 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "wouter";
-import { cn } from "@/lib/utils";
-import {
-  BarChart3,
-  Calendar,
-  ChevronDown,
-  DoorOpen,
-  CloudUpload,
-  Bot,
-  Route,
-  School,
-  Shield,
-  ListTodo,
-  Users,
-  UserCheck,
-  Presentation,
-  UsersIcon,
-  MessageSquare,
-  Mail,
-  Menu,
-  X,
-} from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import SimplifiedNavigation from "./simplified-navigation";
+import TutorialOverlay from "../common/tutorial-overlay";
 
-// Seccions principals organitzades
-const principalItems = [
-  {
-    href: "/dashboard-guardies",
-    label: "Centre de Control",
-    icon: Shield,
-  },
-  {
-    href: "/analytics-real",
-    label: "Estadístiques",
-    icon: BarChart3,
-  },
-  {
-    href: "/sortides-substitucions-new",
-    label: "Sortides i Substitucions",
-    icon: Route,
-  },
-  {
-    href: "/guard-calendar",
-    label: "Calendari de Guàrdies",
-    icon: Calendar,
-  },
-  {
-    href: "/gestio-guardies",
-    label: "Gestió de Guardies",
-    icon: Shield,
-  },
-  {
-    href: "/sistema-guardies-unificat",
-    label: "Sistema Unificat de Guardies",
-    icon: Shield,
-  },
-];
-
-// Elements de gestió detallada
-const gestioItems = [
-  {
-    href: "/professors",
-    label: "Professors",
-    icon: Users,
-  },
-  {
-    href: "/students",
-    label: "Alumnes",
-    icon: UsersIcon,
-  },
-  {
-    href: "/subjects",
-    label: "Matèries",
-    icon: Presentation,
-  },
-  {
-    href: "/groups",
-    label: "Grups",
-    icon: UserCheck,
-  },
-  {
-    href: "/classrooms",
-    label: "Aules",
-    icon: School,
-  },
-  {
-    href: "/schedules",
-    label: "Horaris",
-    icon: Calendar,
-  },
-  {
-    href: "/sortides",
-    label: "Sortides",
-    icon: Route,
-  },
-  {
-    href: "/guardies",
-    label: "Guàrdies",
-    icon: Shield,
-  },
-  {
-    href: "/tasques",
-    label: "Tasques",
-    icon: ListTodo,
-  },
-  {
-    href: "/comunicacions",
-    label: "Comunicacions",
-    icon: MessageSquare,
-  },
-];
-
-// Eines d'administració
-const adminItems = [
-  {
-    href: "/anys-academics",
-    label: "Anys Acadèmics",
-    icon: Calendar,
-  },
-  {
-    href: "/ai-chat",
-    label: "Assistent IA",
-    icon: Bot,
-  },
-  {
-    href: "/gmail-config",
-    label: "Configurar Gmail",
-    icon: Mail,
-  },
-  {
-    href: "/import-csv",
-    label: "Importar CSV",
-    icon: CloudUpload,
-  },
-];
+// NOVA SIDEBAR AMB NAVEGACIÓ SIMPLIFICADA I TUTORIAL INTEGRAT
 
 interface SidebarProps {
   isOpen: boolean;
@@ -142,9 +13,17 @@ interface SidebarProps {
 }
 
 export default function ResponsiveSidebar({ isOpen, onClose }: SidebarProps) {
-  const [location] = useLocation();
-  const [isAdminOpen, setIsAdminOpen] = useState(true);
-  const [isGestioOpen, setIsGestioOpen] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState("welcome");
+
+  // Comprovar si és la primera vegada que l'usuari utilitza l'app
+  useEffect(() => {
+    const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
+    if (!hasSeenTutorial) {
+      // Retardar el tutorial una mica perquè l'usuari pugui veure la interfície
+      setTimeout(() => setShowTutorial(true), 1000);
+    }
+  }, []);
 
   // Tancar sidebar al fer clic en un enllaç en mòbil
   const handleLinkClick = () => {
@@ -153,161 +32,78 @@ export default function ResponsiveSidebar({ isOpen, onClose }: SidebarProps) {
     }
   };
 
-  // Evitar scroll del body quan la sidebar està oberta en mòbil
-  useEffect(() => {
-    if (isOpen && window.innerWidth < 768) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
+  const handleTutorialStart = (stepId: string) => {
+    setTutorialStep(stepId);
+    setShowTutorial(true);
+  };
 
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
-
-  const isActive = (href: string) => {
-    if (href === "/") {
-      return location === "/";
-    }
-    return location.startsWith(href);
+  const handleTutorialClose = () => {
+    setShowTutorial(false);
   };
 
   return (
     <>
-      {/* Overlay per mòbil */}
+      {/* Backdrop per mòbil */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+        <div
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 transition-opacity md:hidden"
           onClick={onClose}
         />
       )}
-      
-      {/* Sidebar */}
-      <aside className={cn(
-        "fixed md:relative inset-y-0 left-0 z-50 w-64 bg-white shadow-lg border-r border-gray-200 transform transition-transform duration-300 ease-in-out h-full",
-        "md:translate-x-0 md:h-[calc(100vh-64px)]",
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
-        {/* Header amb logo */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <img 
-              src="/src/assets/bitacola-logo.svg" 
-              alt="Bitàcola" 
-              className="w-32 h-auto"
-            />
-            {/* Botó tancar per mòbil */}
+
+      {/* Sidebar amb navegació simplificada */}
+      <div
+        className={cn(
+          "fixed left-0 top-0 z-50 h-full w-80 transform bg-white shadow-lg transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:shadow-none",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+        id="sidebar"
+      >
+        {/* Header millorat */}
+        <div className="flex h-16 items-center justify-between border-b px-6 bg-gradient-to-r from-blue-600 to-blue-700">
+          <div className="text-white">
+            <h2 className="text-lg font-bold">Sistema de Guardies</h2>
+            <p className="text-xs text-blue-100">Gestió Intel·ligent</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="md:hidden text-white hover:bg-blue-800"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Contingut de navegació simplificada */}
+        <div className="h-[calc(100vh-4rem)] overflow-y-auto px-4 py-6">
+          <SimplifiedNavigation 
+            onTutorialStart={handleTutorialStart}
+            isCompact={false}
+          />
+
+          {/* Logout button millorat */}
+          <div className="border-t pt-6 mt-6">
             <Button
-              variant="ghost"
-              size="sm"
-              className="md:hidden"
-              onClick={onClose}
+              variant="outline"
+              className="w-full justify-center border-red-200 text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => {
+                window.location.href = "/api/logout";
+              }}
             >
-              <X className="h-5 w-5" />
+              Tancar Sessió
             </Button>
           </div>
         </div>
+      </div>
 
-        <nav className="mt-4 px-4 overflow-y-auto h-full pb-4">
-          {/* Secció Principal */}
-          <div className="mb-6">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-              Principal
-            </h3>
-            <ul className="space-y-1">
-              {principalItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <li key={item.href}>
-                    <Link 
-                      href={item.href}
-                      className={cn(
-                        "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors",
-                        isActive(item.href)
-                          ? "bg-blue-50 text-primary font-medium"
-                          : "text-text-secondary hover:bg-gray-100 hover:text-text-primary"
-                      )}
-                      onClick={handleLinkClick}
-                    >
-                      <Icon className="w-5 h-5" />
-                      <span>{item.label}</span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-
-          {/* Secció Gestió */}
-          <div className="mb-6">
-            <Collapsible open={isGestioOpen} onOpenChange={setIsGestioOpen}>
-              <CollapsibleTrigger className="flex items-center justify-between w-full text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 hover:text-text-primary">
-                Gestió Detallada
-                <ChevronDown className={cn("h-3 w-3 transition-transform", isGestioOpen && "rotate-180")} />
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <ul className="space-y-1">
-                  {gestioItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <li key={item.href}>
-                        <Link 
-                          href={item.href}
-                          className={cn(
-                            "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sm",
-                            isActive(item.href)
-                              ? "bg-blue-50 text-primary font-medium"
-                              : "text-text-secondary hover:bg-gray-100 hover:text-text-primary"
-                          )}
-                          onClick={handleLinkClick}
-                        >
-                          <Icon className="w-4 h-4" />
-                          <span>{item.label}</span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-
-          {/* Secció Administració */}
-          <div className="mb-6">
-            <Collapsible open={isAdminOpen} onOpenChange={setIsAdminOpen}>
-              <CollapsibleTrigger className="flex items-center justify-between w-full text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 hover:text-text-primary">
-                Eines Administració
-                <ChevronDown className={cn("h-3 w-3 transition-transform", isAdminOpen && "rotate-180")} />
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <ul className="space-y-1">
-                  {adminItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <li key={item.href}>
-                        <Link 
-                          href={item.href}
-                          className={cn(
-                            "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sm",
-                            isActive(item.href)
-                              ? "bg-blue-50 text-primary font-medium"
-                              : "text-text-secondary hover:bg-gray-100 hover:text-text-primary"
-                          )}
-                          onClick={handleLinkClick}
-                        >
-                          <Icon className="w-4 h-4" />
-                          <span>{item.label}</span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        </nav>
-      </aside>
+      {/* Tutorial overlay */}
+      <TutorialOverlay
+        isVisible={showTutorial}
+        onClose={handleTutorialClose}
+        currentStep={tutorialStep}
+        onStepChange={setTutorialStep}
+      />
     </>
   );
 }

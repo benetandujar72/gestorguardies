@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
+import DashboardEnhanced from "@/pages/dashboard-enhanced";
 import DashboardGuardiesVisual from "@/pages/dashboard-guardies";
 import Guards from "@/pages/guards";
 import Assignments from "@/pages/assignments";
@@ -79,7 +80,8 @@ function Router() {
         <main className="flex-1 overflow-auto min-h-[calc(100vh-64px)] md:min-h-[calc(100vh-64px)]">
           <div className="px-4 md:px-6 py-4 md:py-8">
             <Switch>
-            <Route path="/" component={Dashboard} />
+            <Route path="/" component={DashboardEnhanced} />
+            <Route path="/dashboard-old" component={Dashboard} />
             <Route path="/dashboard-guardies" component={DashboardGuardiesVisual} />
             <Route path="/guardies" component={Guards} />
             <Route path="/calendari-guardies" component={GuardCalendarResponsive} />

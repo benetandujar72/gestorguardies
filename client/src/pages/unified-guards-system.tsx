@@ -213,7 +213,7 @@ export default function UnifiedGuardsSystem() {
           <div className="flex items-center space-x-4 mb-4">
             <Label htmlFor="date-select">Seleccionar data:</Label>
             <Input
-              id="date-select"
+              id="date-picker"
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
@@ -270,6 +270,7 @@ export default function UnifiedGuardsSystem() {
                           {guardia.estat !== 'assignada' && (
                             <>
                               <Button
+                                id="auto-assign-btn"
                                 variant="outline"
                                 size="sm"
                                 onClick={() => autoAssignMutation.mutate(guardia.id)}
@@ -281,6 +282,7 @@ export default function UnifiedGuardsSystem() {
                               </Button>
                               
                               <Button
+                                id="manual-assign-btn"
                                 variant="secondary"
                                 size="sm"
                                 onClick={() => setSelectedGuardiaId(guardia.id)}
