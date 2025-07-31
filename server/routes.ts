@@ -67,18 +67,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
   // Verificar configuració d'email de forma no bloquejant
-  setTimeout(async () => {
-    try {
-      const emailConfigValid = await verifyEmailConfiguration();
-      if (emailConfigValid) {
-        console.log('✅ Configuració d\'email Gmail verificada correctament');
-      } else {
-        console.log('⚠️  Error en la configuració d\'email - Les notificacions per email no funcionaran');
-      }
-    } catch (error) {
-      console.log('⚠️  No s\'ha pogut verificar la configuració d\'email');
-    }
-  }, 1000);
+  verifyEmailConfiguration();
 
   // Rutes d'autenticació Gmail OAuth2
   app.get('/api/gmail/auth-url', isAuthenticated, async (req, res) => {
