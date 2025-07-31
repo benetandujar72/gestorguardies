@@ -91,6 +91,11 @@ A comprehensive school guard duty management system built with React, TypeScript
 
 ## Changelog
 
+- January 31, 2025: Fixed critical DOM validation warnings and enhanced chatbot infrastructure
+  - Fixed validateDOMNesting warning by removing nested `<a>` tags in ResponsiveSidebar component
+  - Enhanced chatbot system with complete database schema and storage methods
+  - Added chat sessions and messages support with OpenAI integration
+  - Improved error handling for authentication-protected chatbot endpoints
 - January 31, 2025: Fixed OAuth authentication for custom domain `assistatut.adeptify.es` 
   - Added custom domain support in replitAuth.ts configuration
   - Resolved "Unknown authentication strategy" error for production deployment

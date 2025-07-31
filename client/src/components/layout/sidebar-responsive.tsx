@@ -215,19 +215,18 @@ export default function ResponsiveSidebar({ isOpen, onClose }: SidebarProps) {
                 const Icon = item.icon;
                 return (
                   <li key={item.href}>
-                    <Link href={item.href}>
-                      <a
-                        className={cn(
-                          "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors",
-                          isActive(item.href)
-                            ? "bg-blue-50 text-primary font-medium"
-                            : "text-text-secondary hover:bg-gray-100 hover:text-text-primary"
-                        )}
-                        onClick={handleLinkClick}
-                      >
-                        <Icon className="w-5 h-5" />
-                        <span>{item.label}</span>
-                      </a>
+                    <Link 
+                      href={item.href}
+                      className={cn(
+                        "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors",
+                        isActive(item.href)
+                          ? "bg-blue-50 text-primary font-medium"
+                          : "text-text-secondary hover:bg-gray-100 hover:text-text-primary"
+                      )}
+                      onClick={handleLinkClick}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span>{item.label}</span>
                     </Link>
                   </li>
                 );
@@ -248,19 +247,18 @@ export default function ResponsiveSidebar({ isOpen, onClose }: SidebarProps) {
                     const Icon = item.icon;
                     return (
                       <li key={item.href}>
-                        <Link href={item.href}>
-                          <a
-                            className={cn(
-                              "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sm",
-                              isActive(item.href)
-                                ? "bg-blue-50 text-primary font-medium"
-                                : "text-text-secondary hover:bg-gray-100 hover:text-text-primary"
-                            )}
-                            onClick={handleLinkClick}
-                          >
-                            <Icon className="w-4 h-4" />
-                            <span>{item.label}</span>
-                          </a>
+                        <Link 
+                          href={item.href}
+                          className={cn(
+                            "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sm",
+                            isActive(item.href)
+                              ? "bg-blue-50 text-primary font-medium"
+                              : "text-text-secondary hover:bg-gray-100 hover:text-text-primary"
+                          )}
+                          onClick={handleLinkClick}
+                        >
+                          <Icon className="w-4 h-4" />
+                          <span>{item.label}</span>
                         </Link>
                       </li>
                     );
@@ -283,19 +281,18 @@ export default function ResponsiveSidebar({ isOpen, onClose }: SidebarProps) {
                     const Icon = item.icon;
                     return (
                       <li key={item.href}>
-                        <Link href={item.href}>
-                          <a
-                            className={cn(
-                              "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sm",
-                              isActive(item.href)
-                                ? "bg-blue-50 text-primary font-medium"
-                                : "text-text-secondary hover:bg-gray-100 hover:text-text-primary"
-                            )}
-                            onClick={handleLinkClick}
-                          >
-                            <Icon className="w-4 h-4" />
-                            <span>{item.label}</span>
-                          </a>
+                        <Link 
+                          href={item.href}
+                          className={cn(
+                            "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sm",
+                            isActive(item.href)
+                              ? "bg-blue-50 text-primary font-medium"
+                              : "text-text-secondary hover:bg-gray-100 hover:text-text-primary"
+                          )}
+                          onClick={handleLinkClick}
+                        >
+                          <Icon className="w-4 h-4" />
+                          <span>{item.label}</span>
                         </Link>
                       </li>
                     );
