@@ -236,6 +236,15 @@ export const chatSessions = pgTable("chat_sessions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Chat messages for detailed chat storage
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("message_id").primaryKey(),
+  sessionId: integer("session_id").references(() => chatSessions.id).notNull(),
+  role: varchar("role").notNull(), // 'user' or 'assistant'
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // File attachments
 export const attachments = pgTable("attachments", {
   id: serial("attachment_id").primaryKey(),
@@ -421,6 +430,8 @@ export const sortidaSubstitucionsRelations = relations(sortidaSubstitucions, ({ 
     references: [professors.id],
   }),
 }));
+
+
 
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({

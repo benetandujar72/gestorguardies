@@ -15,6 +15,7 @@ import {
   metrics,
   predictions,
   chatSessions,
+  chatMessages,
   anysAcademics,
   sortidaProfessors,
   sortidaAlumnes,
@@ -60,7 +61,7 @@ import {
   type AssignacioGuardiaWithProfessor,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, or, sql, count, between, gte, lte, isNotNull, isNull } from "drizzle-orm";
+import { eq, desc, asc, and, or, sql, count, between, gte, lte, isNotNull, isNull } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -1361,6 +1362,242 @@ export class DatabaseStorage implements IStorage {
 
   async getProfessorWorkloadBalance(): Promise<any[]> {
     return [];
+  }
+
+  // Chat session management for chatbot
+  async getUserActiveChatSession(userId: string): Promise<any | null> {
+    try {
+      const activeYear = await this.getActiveAcademicYearFull();
+      if (!activeYear) return null;
+
+      const [session] = await db
+        .select()
+        .from(chatSessions)
+        .where(and(
+          eq(chatSessions.usuariId, userId),
+          eq(chatSessions.anyAcademicId, activeYear.id),
+          eq(chatSessions.tancada, false)
+        ))
+        .orderBy(desc(chatSessions.createdAt))
+        .limit(1);
+      
+      return session || null;
+    } catch (error) {
+      console.error('Error getting user active chat session:', error);
+      return null;
+    }
+  }
+
+  async getChatSession(sessionId: string): Promise<any | null> {
+    try {
+      const sessionIdNum = parseInt(sessionId);
+      const [session] = await db
+        .select()
+        .from(chatSessions)
+        .where(eq(chatSessions.id, sessionIdNum))
+        .limit(1);
+      
+      return session || null;
+    } catch (error) {
+      console.error('Error getting chat session:', error);
+      return null;
+    }
+  }
+
+  async createChatSession(userId: string, title?: string): Promise<any> {
+    try {
+      const activeYear = await this.getActiveAcademicYearFull();
+      if (!activeYear) {
+        throw new Error("No hi ha cap any acadèmic actiu");
+      }
+
+      // Close any existing active session
+      await db
+        .update(chatSessions)
+        .set({ tancada: true })
+        .where(and(
+          eq(chatSessions.usuariId, userId),
+          eq(chatSessions.anyAcademicId, activeYear.id),
+          eq(chatSessions.tancada, false)
+        ));
+
+      // Create new session
+      const [newSession] = await db
+        .insert(chatSessions)
+        .values({
+          anyAcademicId: activeYear.id,
+          usuariId: userId,
+          inici: new Date(),
+          missatges: [],
+          tancada: false,
+          lastActivity: new Date(),
+          createdAt: new Date()
+        })
+        .returning();
+      
+      return newSession;
+    } catch (error) {
+      console.error('Error creating chat session:', error);
+      throw error;
+    }
+  }
+
+  async getChatMessages(sessionId: string): Promise<any[]> {
+    try {
+      const sessionIdNum = parseInt(sessionId);
+      const messages = await db
+        .select()
+        .from(chatMessages)
+        .where(eq(chatMessages.sessionId, sessionIdNum))
+        .orderBy(asc(chatMessages.createdAt));
+      
+      return messages;
+    } catch (error) {
+      console.error('Error getting chat messages:', error);
+      return [];
+    }
+  }
+
+  async addChatMessage(sessionId: string, role: string, content: string): Promise<any> {
+    try {
+      const sessionIdNum = parseInt(sessionId);
+      
+      // Update session with new message in JSON array and last activity
+      const session = await this.getChatSession(sessionId);
+      if (session) {
+        const currentMessages = Array.isArray(session.missatges) ? session.missatges : [];
+        const newMessage = { role, content, timestamp: new Date().toISOString() };
+        const updatedMessages = [...currentMessages, newMessage];
+        
+        await db
+          .update(chatSessions)
+          .set({ 
+            missatges: updatedMessages,
+            lastActivity: new Date()
+          })
+          .where(eq(chatSessions.id, sessionIdNum));
+      }
+
+      // Also store in separate messages table
+      const [message] = await db
+        .insert(chatMessages)
+        .values({
+          sessionId: sessionIdNum,
+          role,
+          content,
+          createdAt: new Date()
+        })
+        .returning();
+      
+      return message;
+    } catch (error) {
+      console.error('Error adding chat message:', error);
+      throw error;
+    }
+  }
+
+  // Communication functions
+  async getComunicacionsNoLlegides(professorId: number): Promise<any[]> {
+    try {
+      const comunicacions = await db
+        .select()
+        .from(comunicacions)
+        .where(and(
+          eq(comunicacions.professorId, professorId),
+          eq(comunicacions.llegida, false)
+        ))
+        .orderBy(desc(comunicacions.createdAt));
+      
+      return comunicacions;
+    } catch (error) {
+      console.error('Error getting unread communications:', error);
+      return [];
+    }
+  }
+
+  async markComunicacioAsRead(comunicacioId: number): Promise<void> {
+    try {
+      await db
+        .update(comunicacions)
+        .set({ llegida: true })
+        .where(eq(comunicacions.id, comunicacioId));
+    } catch (error) {
+      console.error('Error marking communication as read:', error);
+      throw error;
+    }
+  }
+
+  // Task management functions
+  async getTasquesByAssignacio(assignacioId: number): Promise<any[]> {
+    try {
+      const tasques = await db
+        .select()
+        .from(tasques)
+        .where(eq(tasques.assignaId, assignacioId))
+        .orderBy(desc(tasques.createdAt));
+      
+      return tasques;
+    } catch (error) {
+      console.error('Error getting tasks by assignment:', error);
+      return [];
+    }
+  }
+
+  async getTasquesPendents(): Promise<any[]> {
+    try {
+      const tasques = await db
+        .select()
+        .from(tasques)
+        .where(eq(tasques.estat, 'pendent'))
+        .orderBy(desc(tasques.createdAt));
+      
+      return tasques;
+    } catch (error) {
+      console.error('Error getting pending tasks:', error);
+      return [];
+    }
+  }
+
+  async getAttachmentsByTasca(tascaId: number): Promise<any[]> {
+    try {
+      // If there's no attachments table, return empty array
+      return [];
+    } catch (error) {
+      console.error('Error getting attachments by task:', error);
+      return [];
+    }
+  }
+
+  // Guard details function
+  async getGuardiesWithDetails(): Promise<any[]> {
+    try {
+      const guardies = await db
+        .select({
+          id: guardies.id,
+          data: guardies.data,
+          horaInici: guardies.horaInici,
+          horaFi: guardies.horaFi,
+          tipusGuardia: guardies.tipusGuardia,
+          lloc: guardies.lloc,
+          estat: guardies.estat,
+          anyAcademicId: guardies.anyAcademicId,
+          sortidaId: guardies.sortidaId,
+          professor: {
+            id: professors.id,
+            nom: professors.nom,
+            cognoms: professors.cognoms
+          }
+        })
+        .from(guardies)
+        .leftJoin(assignacionsGuardia, eq(guardies.id, assignacionsGuardia.guardiaId))
+        .leftJoin(professors, eq(assignacionsGuardia.professorId, professors.id))
+        .orderBy(desc(guardies.data));
+      
+      return guardies;
+    } catch (error) {
+      console.error('Error getting guards with details:', error);
+      return [];
+    }
   }
 }
 
