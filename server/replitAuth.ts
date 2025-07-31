@@ -72,6 +72,9 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  console.log('🔧 Configurant autenticació OAuth...');
+  console.log('📋 REPLIT_DOMAINS:', process.env.REPLIT_DOMAINS);
+  
   const config = await getOidcConfig();
 
   const verify: VerifyFunction = async (
@@ -84,8 +87,12 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  for (const domain of process.env
-    .REPLIT_DOMAINS!.split(",")) {
+  // Include both REPLIT_DOMAINS and custom domains
+  const replitDomains = process.env.REPLIT_DOMAINS!.split(",");
+  const customDomains = ["assistatut.adeptify.es"]; // Add custom domains here
+  const allDomains = [...replitDomains, ...customDomains];
+
+  for (const domain of allDomains) {
     const strategy = new Strategy(
       {
         name: `replitauth:${domain}`,
@@ -96,16 +103,31 @@ export async function setupAuth(app: Express) {
       verify,
     );
     passport.use(strategy);
+    console.log(`🔧 Configured OAuth strategy for domain: ${domain}`);
   }
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
+    const domain = req.hostname;
+    const strategyName = `replitauth:${domain}`;
+    
+    console.log(`🔑 Login request for domain: ${domain}`);
+    console.log(`🎯 Using strategy: ${strategyName}`);
+    
+    try {
+      passport.authenticate(strategyName, {
+        prompt: "login consent",
+        scope: ["openid", "email", "profile", "offline_access"],
+      })(req, res, next);
+    } catch (error) {
+      console.error(`❌ Authentication error for domain ${domain}:`, error);
+      return res.status(500).json({ 
+        message: `Authentication not configured for domain: ${domain}`,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
   });
 
   app.get("/api/callback", (req, res, next) => {

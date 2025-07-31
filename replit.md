@@ -91,7 +91,11 @@ A comprehensive school guard duty management system built with React, TypeScript
 
 ## Changelog
 
-- July 08, 2025. Initial setup
+- January 31, 2025: Fixed OAuth authentication for custom domain `assistatut.adeptify.es` 
+  - Added custom domain support in replitAuth.ts configuration
+  - Resolved "Unknown authentication strategy" error for production deployment
+  - Configured OAuth strategies for both Replit and custom domains
+- July 08, 2025: Initial setup
 
 ## User Preferences
 
