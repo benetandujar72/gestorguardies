@@ -1191,6 +1191,169 @@ export class DatabaseStorage implements IStorage {
     return activeYear;
   }
 
+  // New enhanced methods for advanced substitution management
+  async getHoresAlliberadesPorSortida(sortidaId: number): Promise<any[]> {
+    try {
+      const activeYear = await this.getActiveAcademicYearFull();
+      if (!activeYear) {
+        throw new Error("No hi ha cap any acadèmic actiu");
+      }
+
+      // Get the trip information first
+      const [sortida] = await db.select().from(sortides).where(eq(sortides.id, sortidaId)).limit(1);
+      if (!sortida) {
+        throw new Error("Sortida no trobada");
+      }
+
+      // Get the group that is going on the trip
+      if (!sortida.grupId) {
+        throw new Error("La sortida no té un grup assignat");
+      }
+
+      // Get all schedules for this group during the trip dates
+      const schedules = await db
+        .select({
+          horariId: horaris.id,
+          diaSetmana: horaris.diaSetmana,
+          horaInici: horaris.horaInici,
+          horaFi: horaris.horaFi,
+          professorId: horaris.professorId,
+          assignatura: horaris.assignatura,
+          aulaId: horaris.aulaId,
+          professorNom: professors.nom,
+          professorCognoms: professors.cognoms,
+          aulaNom: aules.nomAula
+        })
+        .from(horaris)
+        .leftJoin(professors, eq(horaris.professorId, professors.id))
+        .leftJoin(aules, eq(horaris.aulaId, aules.id))
+        .where(and(
+          eq(horaris.grupId, sortida.grupId),
+          eq(horaris.anyAcademicId, activeYear.id)
+        ))
+        .orderBy(horaris.diaSetmana, horaris.horaInici);
+
+      return schedules.map(schedule => ({
+        diaSetmana: schedule.diaSetmana,
+        horaInici: schedule.horaInici,
+        horaFi: schedule.horaFi,
+        professorId: schedule.professorId,
+        professorNom: `${schedule.professorNom} ${schedule.professorCognoms}`.trim(),
+        assignatura: schedule.assignatura,
+        aulaId: schedule.aulaId,
+        aulaNom: schedule.aulaNom,
+        horariId: schedule.horariId
+      }));
+    } catch (error) {
+      console.error('Error getting hores alliberades:', error);
+      throw error;
+    }
+  }
+
+  async getProfessorsDisponiblesPerHora(diaSetmana: number, horaInici: string, horaFi: string): Promise<any[]> {
+    try {
+      const activeYear = await this.getActiveAcademicYearFull();
+      if (!activeYear) {
+        throw new Error("No hi ha cap any acadèmic actiu");
+      }
+
+      // Get professors with guard duty at this time
+      const professorsAmbGuardia = await db
+        .select({
+          id: professors.id,
+          nom: professors.nom,
+          cognoms: professors.cognoms,
+          guardiesRealiitzades: sql<number>`COUNT(assignacionsGuardia.id)`.as('guardiesRealiitzades')
+        })
+        .from(professors)
+        .leftJoin(assignacionsGuardia, eq(professors.id, assignacionsGuardia.professorId))
+        .leftJoin(horaris, and(
+          eq(professors.id, horaris.professorId),
+          eq(horaris.diaSetmana, diaSetmana),
+          eq(horaris.horaInici, horaInici),
+          eq(horaris.anyAcademicId, activeYear.id)
+        ))
+        .where(and(
+          eq(professors.anyAcademicId, activeYear.id),
+          isNull(horaris.id) // Not teaching at this time
+        ))
+        .groupBy(professors.id, professors.nom, professors.cognoms);
+
+      // Get professors who are free at this time (not teaching)
+      const professorsLliures = await db
+        .select({
+          id: professors.id,
+          nom: professors.nom,
+          cognoms: professors.cognoms,
+          guardiesRealiitzades: sql<number>`COUNT(assignacionsGuardia.id)`.as('guardiesRealiitzades')
+        })
+        .from(professors)
+        .leftJoin(assignacionsGuardia, eq(professors.id, assignacionsGuardia.professorId))
+        .leftJoin(horaris, and(
+          eq(professors.id, horaris.professorId),
+          eq(horaris.diaSetmana, diaSetmana),
+          eq(horaris.horaInici, horaInici),
+          eq(horaris.anyAcademicId, activeYear.id)
+        ))
+        .where(and(
+          eq(professors.anyAcademicId, activeYear.id),
+          isNull(horaris.id) // Not teaching at this time
+        ))
+        .groupBy(professors.id, professors.nom, professors.cognoms);
+
+      // Combine and prioritize results
+      const professorsDisponibles = professorsLliures.map(prof => ({
+        id: prof.id,
+        nom: prof.nom,
+        cognoms: prof.cognoms,
+        prioritat: 1, // Lower number = higher priority
+        guardiesRealiitzades: prof.guardiesRealiitzades || 0,
+        color: 'Lliure',
+        motiu: 'Professor lliure en aquesta hora',
+        tipus: 'Lliure' as const,
+        disponible: true
+      }));
+
+      // Sort by guard workload (fewer guards = higher priority)
+      return professorsDisponibles.sort((a, b) => a.guardiesRealiitzades - b.guardiesRealiitzades);
+    } catch (error) {
+      console.error('Error getting professors disponibles per hora:', error);
+      throw error;
+    }
+  }
+
+  async crearSubstitucionsMultiple(substitucionsData: any[]): Promise<any[]> {
+    try {
+      const activeYear = await this.getActiveAcademicYearFull();
+      if (!activeYear) {
+        throw new Error("No hi ha cap any acadèmic actiu");
+      }
+
+      const results = [];
+      
+      for (const substitucio of substitucionsData) {
+        const newSubstitucio = await db.insert(sortidaSubstitucions).values({
+          anyAcademicId: activeYear.id,
+          sortidaId: substitucio.sortidaId,
+          horariOriginalId: substitucio.horariId,
+          professorOriginalId: substitucio.professorOriginalId,
+          professorSubstitutId: substitucio.professorSubstitutId,
+          estat: 'planificada',
+          observacions: substitucio.observacions || '',
+          comunicacioEnviada: false,
+          createdAt: new Date()
+        }).returning();
+        
+        results.push(newSubstitucio[0]);
+      }
+
+      return results;
+    } catch (error) {
+      console.error('Error creating multiple substitutions:', error);
+      throw error;
+    }
+  }
+
   // Missing analytics functions
   async getGuardAssignmentStats(): Promise<any[]> {
     return [];

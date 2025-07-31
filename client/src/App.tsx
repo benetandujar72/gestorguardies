@@ -25,6 +25,7 @@ import Analytics from "@/pages/analytics-real";
 import SimpleChat from "@/pages/simple-chat";
 import ImportCSV from "@/pages/import-csv";
 import SortidesSubstitucions from "@/pages/sortides-substitucions-new";
+import SortidesSubstitucionsEnhanced from "@/pages/sortides-substitucions-enhanced";
 import GestioGuardies from "@/pages/gestio-guardies";
 import GmailConfig from "@/pages/gmail-config";
 import Setup from "@/pages/setup";
@@ -88,6 +89,7 @@ function Router() {
             <Route path="/horaris" component={Schedules} />
             <Route path="/sortides" component={OutingsEnhanced} />
             <Route path="/sortides-substitucions-new" component={SortidesSubstitucions} />
+            <Route path="/sortides-substitucions-enhanced" component={SortidesSubstitucionsEnhanced} />
             <Route path="/gestio-guardies" component={GestioGuardies} />
             <Route path="/gmail-config" component={GmailConfig} />
             <Route path="/tasques" component={Tasks} />

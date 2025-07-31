@@ -583,6 +583,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New endpoint: Get hours that a group liberates when they go out
+  app.get('/api/sortides/:sortidaId/hores-alliberades', isAuthenticated, async (req, res) => {
+    try {
+      const sortidaId = parseInt(req.params.sortidaId);
+      const horesLliberades = await storage.getHoresAlliberadesPorSortida(sortidaId);
+      res.json(horesLliberades);
+    } catch (error) {
+      console.error('Error getting hores alliberades:', error);
+      res.status(500).json({ message: 'Error getting hours liberated by the trip' });
+    }
+  });
+
+  // New endpoint: Get available professors for specific day/time slot
+  app.get('/api/professors-disponibles/:diaSetmana/:horaInici/:horaFi', isAuthenticated, async (req, res) => {
+    try {
+      const diaSetmana = parseInt(req.params.diaSetmana);
+      const horaInici = req.params.horaInici;
+      const horaFi = req.params.horaFi;
+      
+      const professorsDisponibles = await storage.getProfessorsDisponiblesPerHora(diaSetmana, horaInici, horaFi);
+      res.json(professorsDisponibles);
+    } catch (error) {
+      console.error('Error getting professors disponibles:', error);
+      res.status(500).json({ message: 'Error getting available professors' });
+    }
+  });
+
+  // New endpoint: Create multiple substitutions
+  app.post('/api/substitucions/crear-multiple', isAuthenticated, async (req, res) => {
+    try {
+      const { substitucions } = req.body;
+      
+      if (!Array.isArray(substitucions) || substitucions.length === 0) {
+        return res.status(400).json({ message: 'Invalid substitutions data' });
+      }
+
+      const results = await storage.crearSubstitucionsMultiple(substitucions);
+      res.json({ success: true, created: results.length, substitucions: results });
+    } catch (error) {
+      console.error('Error creating multiple substitutions:', error);
+      res.status(500).json({ message: 'Error creating substitutions' });
+    }
+  });
+
   // Guardia routes
   app.get('/api/guardies', isAuthenticated, async (req, res) => {
     try {
