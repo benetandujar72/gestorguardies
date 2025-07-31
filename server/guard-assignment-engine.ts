@@ -34,67 +34,40 @@ export class GuardAssignmentEngine {
         throw new Error("Guardia no encontrada");
       }
 
-      // 2. Obtener contexto completo
-      const context = await this.getAssignmentContext(guardia);
-      
-      // 3. Calcular prioridades para todos los profesores
-      const priorities = await this.calculateProfessorPriorities(context);
+      // 2. Obtener profesores disponibles
+      const professors = await storage.getProfessors();
       
       console.log(`=== ASSIGNACIÓ AUTOMÀTICA GUÀRDIA ${guardia.id} ===`);
-      console.log(`Data: ${guardia.data}, Hora: ${guardia.horaInici}-${guardia.horaFi}, Tipus: ${guardia.tipusGuardia}`);
-      console.log(`Professors disponibles analitzats: ${priorities.length}`);
+      console.log(`Data: ${guardia.data}, Hora: ${guardia.horaInici}-${guardia.horaFi}`);
       
-      // 4. Ordenar por prioridad y seleccionar
-      const sortedProfessors = priorities.sort((a, b) => {
-        if (a.priority !== b.priority) {
-          return a.priority - b.priority; // Menor número = mayor prioridad
-        }
-        // En caso de empate, usar workloadScore (menor = mayor prioridad)
-        return a.workloadScore - b.workloadScore;
-      });
+      // 3. Filtrar profesores ya asignados
+      const currentAssignments = await storage.getAssignacionsGuardiaByGuardia(guardia.id);
+      const assignedProfessorIds = currentAssignments.map(a => a.professorId);
+      const availableProfessors = professors.filter(p => !assignedProfessorIds.includes(p.id));
+      
+      console.log(`Professors disponibles: ${availableProfessors.length}`);
 
-      console.log("=== TOP 5 PROFESSORS PER PRIORITAT ===");
-      sortedProfessors.slice(0, 5).forEach((prof, index) => {
-        console.log(`${index + 1}. Professor ID ${prof.professorId} - Prioritat: ${prof.priority} - Motiu: ${prof.reason} - Score: ${prof.workloadScore}`);
-      });
-
-      // 5. Seleccionar profesores según el tipo de guardia
-      const numProfessorsNeeded = this.getRequiredProfessors(guardia.tipusGuardia);
-      const selectedProfessors = sortedProfessors.slice(0, numProfessorsNeeded);
-
-      console.log(`=== PROFESSORS SELECCIONATS (${selectedProfessors.length}/${numProfessorsNeeded}) ===`);
-      selectedProfessors.forEach((prof, index) => {
-        console.log(`${index + 1}. Professor ID ${prof.professorId} - Prioritat: ${prof.priority} - Motiu: ${prof.reason}`);
-      });
-
-      // 6. Crear las asignaciones
-      const assignments = [];
-      for (const prof of selectedProfessors) {
-        console.log(`Creant assignació per Professor ID ${prof.professorId} amb prioritat ${prof.priority}`);
-        const assignment = await storage.createAssignacioGuardia({
-          guardiaId: guardia.id,
-          professorId: prof.professorId,
-          prioritat: prof.priority, // Afegim la prioritat calculada
-          estat: "assignada",
-          motiu: `Assignació automàtica - ${prof.reason}`,
-          anyAcademicId: guardia.anyAcademicId // Afegim l'any acadèmic de la guàrdia
-        });
-        assignments.push(assignment);
-        console.log(`Assignació creada amb ID ${assignment.id}`);
+      // 4. Seleccionar primer professor disponible (simpificat)
+      if (availableProfessors.length === 0) {
+        console.log("No hi ha professors disponibles");
+        return [];
       }
 
-      // 7. Actualizar estado de la guardia a "assignada"
-      await storage.updateGuardia(guardia.id, { estat: "assignada" });
-      console.log(`Guardia ${guardia.id} actualizada a estado "assignada"`);
+      const selectedProfessor = availableProfessors[0];
+      console.log(`Professor seleccionat: ${selectedProfessor.nom} ${selectedProfessor.cognoms}`);
 
-      // 8. Generar comunicaciones automáticas
-      await this.generateAssignmentCommunications(guardia, assignments);
+      // 5. Crear assignació
+      const assignment = await storage.createAssignacioGuardia({
+        guardiaId: guardia.id,
+        professorId: selectedProfessor.id,
+        prioritat: 1,
+        estat: "assignada",
+        motiu: "Assignació automàtica",
+        anyAcademicId: guardia.anyAcademicId
+      });
 
-      // 9. Actualizar métricas
-      await this.updateMetrics(guardia, assignments);
-
-      console.log(`=== ASSIGNACIÓ COMPLETADA ===`);
-      return assignments;
+      console.log(`Assignació creada amb ID ${assignment.id}`);
+      return [assignment];
 
     } catch (error) {
       console.error("Error en asignación automática:", error);

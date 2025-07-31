@@ -30,7 +30,7 @@ import {
   insertAttachmentSchema,
   insertMateriaSchema
 } from "@shared/schema";
-import { GuardAssignmentEngine } from "./guard-assignment-engine";
+import { GuardAssignmentEngine } from "./guard-assignment-engine-simple";
 import { analyzeGuardAssignments, generateChatResponse } from "./openai";
 
 // Configure multer for file uploads
