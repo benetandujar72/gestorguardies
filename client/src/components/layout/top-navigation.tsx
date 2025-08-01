@@ -17,16 +17,16 @@ export default function TopNavigation() {
   });
 
   // Trobar l'any acadèmic actiu
-  const activeAcademicYear = academicYears?.find((year: any) => year.estat === "actiu");
+  const activeAcademicYear = Array.isArray(academicYears) ? academicYears.find((year: any) => year.estat === "actiu") : null;
 
   const handleLogout = () => {
     logout();
     window.location.reload();
   };
 
-  const getInitials = (firstName?: string, lastName?: string) => {
-    if (!firstName && !lastName) return "U";
-    return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
+  const getInitials = (nom?: string, cognoms?: string) => {
+    if (!nom && !cognoms) return "U";
+    return `${nom?.[0] || ""}${cognoms?.[0] || ""}`.toUpperCase();
   };
 
   return (
@@ -68,14 +68,14 @@ export default function TopNavigation() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src={user?.profileImageUrl || ""} alt="Avatar" />
+                    <AvatarImage src="" alt="Avatar" />
                     <AvatarFallback className="bg-primary text-white text-sm">
-                      {getInitials(user?.firstName, user?.lastName)}
+                      {getInitials(user?.nom, user?.cognoms)}
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-sm font-medium text-text-primary">
-                    {user?.firstName && user?.lastName 
-                      ? `${user.firstName} ${user.lastName}` 
+                    {user?.nom && user?.cognoms 
+                      ? `${user.nom} ${user.cognoms}` 
                       : user?.email || "Usuari"
                     }
                   </span>
