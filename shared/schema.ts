@@ -634,7 +634,7 @@ export type SortidaWithRelations = {
   grupNom: string | null;
   responsableNom: string | null;
   responsableCognoms: string | null;
-  responsableFullName?: string;
+  responsableFullName?: string | undefined;
   grup?: {
     id: number;
     nomGrup: string;

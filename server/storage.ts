@@ -696,7 +696,7 @@ export class DatabaseStorage implements IStorage {
       ...result,
       responsableFullName: result.responsableNom && result.responsableCognoms 
         ? `${result.responsableNom} ${result.responsableCognoms}` 
-        : null,
+        : undefined,
       grup: result.grupNom ? {
         id: result.grupId!,
         nomGrup: result.grupNom,
@@ -1057,18 +1057,25 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(metrics).orderBy(desc(metrics.createdAt));
   }
 
-  async createMetric(metric: any): Promise<Metric> {
-    const [newMetric] = await db.insert(metrics).values(metric).returning();
-    return newMetric;
+  async createMetric(metric: Omit<Metric, 'id' | 'createdAt'>): Promise<void> {
+    await db.insert(metrics).values(metric);
   }
 
   async getPredictions(): Promise<Prediction[]> {
     return await db.select().from(predictions).orderBy(desc(predictions.createdAt));
   }
 
-  async createPrediction(prediction: any): Promise<Prediction> {
+  async createPrediction(prediction: Omit<Prediction, 'id' | 'createdAt'>): Promise<Prediction> {
     const [newPrediction] = await db.insert(predictions).values(prediction).returning();
     return newPrediction;
+  }
+
+  async getLatestPredictions(tipus: string, limit: number = 10): Promise<Prediction[]> {
+    return await db.select()
+      .from(predictions)
+      .where(eq(predictions.tipus, tipus))
+      .orderBy(desc(predictions.createdAt))
+      .limit(limit);
   }
 
   async getChatSessions(): Promise<ChatSession[]> {
@@ -1379,19 +1386,18 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getChatSession(sessionId: string): Promise<any | null> {
+  async getChatSession(id: number): Promise<ChatSession | undefined> {
     try {
-      const sessionIdNum = parseInt(sessionId);
       const [session] = await db
         .select()
         .from(chatSessions)
-        .where(eq(chatSessions.id, sessionIdNum))
+        .where(eq(chatSessions.id, id))
         .limit(1);
       
-      return session || null;
+      return session;
     } catch (error) {
       console.error('Error getting chat session:', error);
-      return null;
+      return undefined;
     }
   }
 
@@ -1416,7 +1422,7 @@ export class DatabaseStorage implements IStorage {
       const sessionIdNum = parseInt(sessionId);
       
       // Update session with new message in JSON array and last activity
-      const session = await this.getChatSession(sessionId);
+      const session = await this.getChatSession(sessionIdNum);
       if (session) {
         const currentMessages = Array.isArray(session.missatges) ? session.missatges : [];
         const newMessage = { role, content, timestamp: new Date().toISOString() };
@@ -1450,18 +1456,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Communication functions
-  async getComunicacionsNoLlegides(professorId: number): Promise<any[]> {
+  async getComunicacionsNoLlegides(userId: string): Promise<Comunicacio[]> {
     try {
-      const comunicacions = await db
+      const result = await db
         .select()
         .from(comunicacions)
         .where(and(
-          eq(comunicacions.professorId, professorId),
-          eq(comunicacions.llegida, false)
+          eq(comunicacions.destinatariId, parseInt(userId)),
+          eq(comunicacions.llegit, false)
         ))
         .orderBy(desc(comunicacions.createdAt));
       
-      return comunicacions;
+      return result;
     } catch (error) {
       console.error('Error getting unread communications:', error);
       return [];
@@ -1472,7 +1478,7 @@ export class DatabaseStorage implements IStorage {
     try {
       await db
         .update(comunicacions)
-        .set({ llegida: true })
+        .set({ llegit: true })
         .where(eq(comunicacions.id, comunicacioId));
     } catch (error) {
       console.error('Error marking communication as read:', error);
@@ -1481,30 +1487,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Task management functions
-  async getTasquesByAssignacio(assignacioId: number): Promise<any[]> {
+  async getTasquesByAssignacio(assignacioId: number): Promise<Tasca[]> {
     try {
-      const tasques = await db
+      const result = await db
         .select()
         .from(tasques)
         .where(eq(tasques.assignaId, assignacioId))
         .orderBy(desc(tasques.createdAt));
       
-      return tasques;
+      return result;
     } catch (error) {
       console.error('Error getting tasks by assignment:', error);
       return [];
     }
   }
 
-  async getTasquesPendents(): Promise<any[]> {
+  async getTasquesPendents(): Promise<Tasca[]> {
     try {
-      const tasques = await db
+      const result = await db
         .select()
         .from(tasques)
         .where(eq(tasques.estat, 'pendent'))
         .orderBy(desc(tasques.createdAt));
       
-      return tasques;
+      return result;
     } catch (error) {
       console.error('Error getting pending tasks:', error);
       return [];
@@ -1524,7 +1530,7 @@ export class DatabaseStorage implements IStorage {
   // Guard details function
   async getGuardiesWithDetails(): Promise<any[]> {
     try {
-      const guardies = await db
+      const result = await db
         .select({
           id: guardies.id,
           data: guardies.data,
@@ -1546,7 +1552,7 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(professors, eq(assignacionsGuardia.professorId, professors.id))
         .orderBy(desc(guardies.data));
       
-      return guardies;
+      return result;
     } catch (error) {
       console.error('Error getting guards with details:', error);
       return [];
