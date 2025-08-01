@@ -665,7 +665,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activeYear = await storage.getActiveAcademicYearFull();
       console.log('Any acadèmic actiu TEST:', activeYear);
       res.json(activeYear);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error obtenint any acadèmic actiu:", error);
       res.status(500).json({ message: "Error obtenint any acadèmic actiu", details: error.message });
     }
@@ -719,7 +719,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Trobades ${substitucions.length} substitucions TEST`);
       res.json(substitucions);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching substitucions TEST:", error);
       res.status(500).json({ message: "Error intern del servidor", details: error.message });
     }
@@ -1261,10 +1261,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/comunicacions/:id/read', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      console.log(`Marking communication ${id} as read...`);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid communication ID" });
+      }
+      
       await storage.markComunicacioAsRead(id);
+      console.log(`Communication ${id} marked as read successfully`);
       res.json({ success: true });
     } catch (error: any) {
-      res.status(400).json({ message: "Failed to mark as read" });
+      console.error(`Error marking communication ${req.params.id} as read:`, error);
+      res.status(400).json({ 
+        message: "Failed to mark as read",
+        error: error.message,
+        id: req.params.id
+      });
     }
   });
 

@@ -1476,12 +1476,20 @@ export class DatabaseStorage implements IStorage {
 
   async markComunicacioAsRead(comunicacioId: number): Promise<void> {
     try {
-      await db
+      console.log(`Storage: Updating communication ${comunicacioId} to mark as read...`);
+      const result = await db
         .update(comunicacions)
         .set({ llegit: true })
-        .where(eq(comunicacions.id, comunicacioId));
+        .where(eq(comunicacions.id, comunicacioId))
+        .returning({ id: comunicacions.id });
+      
+      console.log(`Storage: Update result:`, result);
+      
+      if (result.length === 0) {
+        throw new Error(`Communication with ID ${comunicacioId} not found`);
+      }
     } catch (error) {
-      console.error('Error marking communication as read:', error);
+      console.error(`Storage: Error marking communication ${comunicacioId} as read:`, error);
       throw error;
     }
   }
