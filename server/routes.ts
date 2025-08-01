@@ -4,7 +4,8 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { authenticateToken } from "./auth";
+import authRoutes from "./authRoutes";
 import { sendSubstitutionEmails, verifyEmailConfiguration } from "./emailService";
 import { gmailService } from "./gmailService";
 import { pool } from "./db";
@@ -64,13 +65,18 @@ const upload = multer({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
-  await setupAuth(app);
+  // Add JWT authentication routes
+  app.use(authRoutes);
+  
+  // Initialize users creation
+  const { createInitialUsers } = await import('./auth');
+  await createInitialUsers();
 
   // Verificar configuració d'email de forma no bloquejant
   verifyEmailConfiguration();
 
   // Rutes d'autenticació Gmail OAuth2
-  app.get('/api/gmail/auth-url', isAuthenticated, async (req, res) => {
+  app.get('/api/gmail/auth-url', authenticateToken, async (req, res) => {
     try {
       const authUrl = gmailService.getAuthUrl();
       res.json({ authUrl });
@@ -80,7 +86,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/gmail/auth-callback', isAuthenticated, async (req, res) => {
+  app.post('/api/gmail/auth-callback', authenticateToken, async (req, res) => {
     try {
       const { code } = req.body;
       if (!code) {
@@ -99,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/gmail/status', isAuthenticated, async (req, res) => {
+  app.get('/api/gmail/status', authenticateToken, async (req, res) => {
     try {
       const isConfigured = await gmailService.verifyConfiguration();
       res.json({ configured: isConfigured });
@@ -179,14 +185,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Test endpoint for debugging (MUST BE FIRST)
-  app.post('/api/chat/test', isAuthenticated, async (req, res) => {
+  app.post('/api/chat/test', authenticateToken, async (req, res) => {
     console.log("=== TEST ENDPOINT HIT ===");
     res.setHeader('Content-Type', 'application/json');
     res.json({ response: "Test response working!" });
   });
 
   // Simple Chat route (MUST BE EARLY)
-  app.post('/api/chat/simple', isAuthenticated, async (req, res) => {
+  app.post('/api/chat/simple', authenticateToken, async (req, res) => {
     try {
       console.log("=== SIMPLE CHAT ENDPOINT HIT ===");
       const { message } = req.body;
@@ -216,7 +222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', authenticateToken, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -229,7 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Professor routes
-  app.get('/api/professors', isAuthenticated, async (req, res) => {
+  app.get('/api/professors', authenticateToken, async (req, res) => {
     try {
       const professors = await storage.getProfessors();
       res.json(professors);
@@ -238,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/professors', isAuthenticated, async (req, res) => {
+  app.post('/api/professors', authenticateToken, async (req, res) => {
     try {
       const professorData = insertProfessorSchema.parse(req.body);
       const professor = await storage.createProfessor(professorData);
@@ -260,7 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/professors/:id', isAuthenticated, async (req, res) => {
+  app.put('/api/professors/:id', authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const professorData = insertProfessorSchema.partial().parse(req.body);
@@ -271,7 +277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/professors/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/professors/:id', authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteProfessor(id);
@@ -282,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Grup routes
-  app.get('/api/grups', isAuthenticated, async (req, res) => {
+  app.get('/api/grups', authenticateToken, async (req, res) => {
     try {
       const grups = await storage.getGrups();
       res.json(grups);
@@ -291,7 +297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/grups', isAuthenticated, async (req, res) => {
+  app.post('/api/grups', authenticateToken, async (req, res) => {
     try {
       const grupData = insertGrupSchema.parse(req.body);
       const grup = await storage.createGrup(grupData);
@@ -301,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/grups/:id', isAuthenticated, async (req, res) => {
+  app.put('/api/grups/:id', authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const grupData = insertGrupSchema.partial().parse(req.body);
@@ -312,7 +318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/grups/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/grups/:id', authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteGrup(id);
@@ -323,7 +329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Alumne routes
-  app.get('/api/alumnes', isAuthenticated, async (req, res) => {
+  app.get('/api/alumnes', authenticateToken, async (req, res) => {
     try {
       const { grupId } = req.query;
       const alumnes = grupId 
@@ -335,7 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/alumnes', isAuthenticated, async (req, res) => {
+  app.post('/api/alumnes', authenticateToken, async (req, res) => {
     try {
       const alumneData = insertAlumneSchema.parse(req.body);
       const alumne = await storage.createAlumne(alumneData);
@@ -346,7 +352,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Aula routes
-  app.get('/api/aules', isAuthenticated, async (req, res) => {
+  app.get('/api/aules', authenticateToken, async (req, res) => {
     try {
       const aules = await storage.getAules();
       res.json(aules);
@@ -355,7 +361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/aules', isAuthenticated, async (req, res) => {
+  app.post('/api/aules', authenticateToken, async (req, res) => {
     try {
       const aulaData = insertAulaSchema.parse(req.body);
       const aula = await storage.createAula(aulaData);
@@ -366,7 +372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Materia routes
-  app.get('/api/materies', isAuthenticated, async (req, res) => {
+  app.get('/api/materies', authenticateToken, async (req, res) => {
     try {
       const materies = await storage.getMateries();
       res.json(materies);
@@ -375,7 +381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/materies', isAuthenticated, async (req, res) => {
+  app.post('/api/materies', authenticateToken, async (req, res) => {
     try {
       const materiaData = insertMateriaSchema.parse(req.body);
       const materia = await storage.createMateria(materiaData);
@@ -385,7 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/materies/:id', isAuthenticated, async (req, res) => {
+  app.put('/api/materies/:id', authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const materiaData = insertMateriaSchema.partial().parse(req.body);
@@ -396,7 +402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/materies/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/materies/:id', authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteMateria(id);
@@ -407,7 +413,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Horari routes
-  app.get('/api/horaris', isAuthenticated, async (req, res) => {
+  app.get('/api/horaris', authenticateToken, async (req, res) => {
     try {
       const { professorId, grupId } = req.query;
       let horaris;
@@ -426,7 +432,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/horaris', isAuthenticated, async (req, res) => {
+  app.post('/api/horaris', authenticateToken, async (req, res) => {
     try {
       const horariData = insertHorariSchema.parse(req.body);
       const horari = await storage.createHorari(horariData);
@@ -437,7 +443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create multiple schedules (for multi-hour classes)
-  app.post('/api/horaris/bulk', isAuthenticated, async (req, res) => {
+  app.post('/api/horaris/bulk', authenticateToken, async (req, res) => {
     try {
       const { schedules } = req.body;
       const createdSchedules = [];
@@ -458,7 +464,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/horaris/:id', isAuthenticated, async (req, res) => {
+  app.patch('/api/horaris/:id', authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const horariData = insertHorariSchema.partial().parse(req.body);
@@ -470,7 +476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/horaris/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/horaris/:id', authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteHorari(id);
@@ -481,7 +487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Sortida routes
-  app.get('/api/sortides', isAuthenticated, async (req, res) => {
+  app.get('/api/sortides', authenticateToken, async (req, res) => {
     try {
       const { thisWeek } = req.query;
       const sortides = thisWeek === 'true' 
@@ -493,7 +499,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/sortides', isAuthenticated, async (req, res) => {
+  app.post('/api/sortides', authenticateToken, async (req, res) => {
     try {
       console.log('Creating sortida with data:', req.body);
       
@@ -526,7 +532,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/sortides/:id', isAuthenticated, async (req, res) => {
+  app.put('/api/sortides/:id', authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const sortidaData = insertSortidaSchema.partial().parse(req.body);
@@ -550,7 +556,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/sortides/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/sortides/:id', authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteSortida(id);
@@ -575,7 +581,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // New endpoint: Get hours that a group liberates when they go out
-  app.get('/api/sortides/:sortidaId/hores-alliberades', isAuthenticated, async (req, res) => {
+  app.get('/api/sortides/:sortidaId/hores-alliberades', authenticateToken, async (req, res) => {
     try {
       const sortidaId = parseInt(req.params.sortidaId);
       const horesLliberades = await storage.getHoresAlliberadesPorSortida(sortidaId);
@@ -587,7 +593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // New endpoint: Get available professors for specific day/time slot
-  app.get('/api/professors-disponibles/:diaSetmana/:horaInici/:horaFi', isAuthenticated, async (req, res) => {
+  app.get('/api/professors-disponibles/:diaSetmana/:horaInici/:horaFi', authenticateToken, async (req, res) => {
     try {
       const diaSetmana = parseInt(req.params.diaSetmana);
       const horaInici = req.params.horaInici;
@@ -602,7 +608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // New endpoint: Create multiple substitutions
-  app.post('/api/substitucions/crear-multiple', isAuthenticated, async (req, res) => {
+  app.post('/api/substitucions/crear-multiple', authenticateToken, async (req, res) => {
     try {
       const { substitucions } = req.body;
       
@@ -619,7 +625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Guardia routes
-  app.get('/api/guardies', isAuthenticated, async (req, res) => {
+  app.get('/api/guardies', authenticateToken, async (req, res) => {
     try {
       const { today, date } = req.query;
       let guardies;
@@ -638,7 +644,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/guardies', isAuthenticated, async (req, res) => {
+  app.get('/api/guardies', authenticateToken, async (req, res) => {
     try {
       const guardies = await storage.getGuardies();
       res.json(guardies);
@@ -649,7 +655,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get guardies with detailed information for calendar view
-  app.get('/api/guardies-calendar', isAuthenticated, async (req, res) => {
+  app.get('/api/guardies-calendar', authenticateToken, async (req, res) => {
     try {
       const guardies = await storage.getGuardiesWithDetails();
       res.json(guardies);
@@ -776,7 +782,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Get all substitutions needed (from sortides and other activities)
-  app.get('/api/substitucions-necessaries', isAuthenticated, async (req, res) => {
+  app.get('/api/substitucions-necessaries', authenticateToken, async (req, res) => {
     try {
       const activeYear = await storage.getActiveAcademicYearFull();
       if (!activeYear) {
@@ -924,7 +930,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update substitution
-  app.put('/api/substitucions/:id', isAuthenticated, async (req, res) => {
+  app.put('/api/substitucions/:id', authenticateToken, async (req, res) => {
     try {
       const substitucioId = parseInt(req.params.id);
       const { professorSubstitutId, estat, observacions } = req.body;
@@ -950,7 +956,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete substitution
-  app.delete('/api/substitucions/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/substitucions/:id', authenticateToken, async (req, res) => {
     try {
       const substitucioId = parseInt(req.params.id);
       
@@ -968,7 +974,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/guardies', isAuthenticated, async (req, res) => {
+  app.post('/api/guardies', authenticateToken, async (req, res) => {
     try {
       const guardiaData = insertGuardiaSchema.parse(req.body);
       const guardia = await storage.createGuardia(guardiaData);
@@ -991,7 +997,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Assignacio Guardia routes
-  app.get('/api/assignacions-guardia', isAuthenticated, async (req, res) => {
+  app.get('/api/assignacions-guardia', authenticateToken, async (req, res) => {
     try {
       const { professorId, guardiaId } = req.query;
       let assignacions;
@@ -1010,7 +1016,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/assignacions-guardia', isAuthenticated, async (req, res) => {
+  app.post('/api/assignacions-guardia', authenticateToken, async (req, res) => {
     try {
       console.log('Assignment creation request body:', req.body);
       const assignacioData = insertAssignacioGuardiaSchema.parse(req.body);
@@ -1045,7 +1051,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get available professors for a specific guard duty
-  app.get('/api/professors/available/:guardiaId', isAuthenticated, async (req, res) => {
+  app.get('/api/professors/available/:guardiaId', authenticateToken, async (req, res) => {
     try {
       const guardiaId = parseInt(req.params.guardiaId);
       const availableProfessors = await storage.getAvailableProfessorsForGuard(guardiaId);
@@ -1057,7 +1063,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Auto-assign guards based on priority rules
-  app.post('/api/assignacions-guardia/auto-assign', isAuthenticated, async (req, res) => {
+  app.post('/api/assignacions-guardia/auto-assign', authenticateToken, async (req, res) => {
     try {
       const { guardiaId } = req.body;
       
@@ -1105,7 +1111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Tasca routes
-  app.get('/api/tasques', isAuthenticated, async (req, res) => {
+  app.get('/api/tasques', authenticateToken, async (req, res) => {
     try {
       const { assignacioId, pendent } = req.query;
       let tasques;
@@ -1125,7 +1131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Ruta original per crear tasques generals (mantinguda per compatibilitat)
-  app.post('/api/tasques/general', isAuthenticated, async (req, res) => {
+  app.post('/api/tasques/general', authenticateToken, async (req, res) => {
     try {
       const tascaData = insertTascaSchema.parse(req.body);
       const tasca = await storage.createTasca(tascaData);
@@ -1147,7 +1153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/tasques/:id', isAuthenticated, async (req, res) => {
+  app.put('/api/tasques/:id', authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const tascaData = insertTascaSchema.partial().parse(req.body);
@@ -1159,7 +1165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // File upload for tasks
-  app.post('/api/tasques/:id/attachments', isAuthenticated, upload.array('files'), async (req, res) => {
+  app.post('/api/tasques/:id/attachments', authenticateToken, upload.array('files'), async (req, res) => {
     try {
       const tascaId = parseInt(req.params.id);
       const files = req.files as Express.Multer.File[];
@@ -1190,7 +1196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/tasques/:id/attachments', isAuthenticated, async (req, res) => {
+  app.get('/api/tasques/:id/attachments', authenticateToken, async (req, res) => {
     try {
       const tascaId = parseInt(req.params.id);
       const attachments = await storage.getAttachmentsByTasca(tascaId);
@@ -1201,7 +1207,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Comunicacio routes
-  app.get('/api/comunicacions', isAuthenticated, async (req, res) => {
+  app.get('/api/comunicacions', authenticateToken, async (req, res) => {
     try {
       const { unread } = req.query;
       let comunicacions;
@@ -1218,7 +1224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/comunicacions', isAuthenticated, async (req, res) => {
+  app.post('/api/comunicacions', authenticateToken, async (req, res) => {
     try {
       console.log("POST /api/comunicacions - Request body:", req.body);
       
@@ -1258,7 +1264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/comunicacions/:id/read', isAuthenticated, async (req, res) => {
+  app.put('/api/comunicacions/:id/read', authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       console.log(`Marking communication ${id} as read...`);
@@ -1281,7 +1287,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Academic Years routes
-  app.get('/api/anys-academics', isAuthenticated, async (req, res) => {
+  app.get('/api/anys-academics', authenticateToken, async (req, res) => {
     try {
       const anysAcademics = await storage.getAcademicYears();
       res.json(anysAcademics);
@@ -1290,7 +1296,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/anys-academics', isAuthenticated, async (req, res) => {
+  app.post('/api/anys-academics', authenticateToken, async (req, res) => {
     try {
       const anyAcademic = await storage.createAnyAcademic(req.body);
       res.json(anyAcademic);
@@ -1299,7 +1305,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/anys-academics/:id', isAuthenticated, async (req, res) => {
+  app.put('/api/anys-academics/:id', authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const anyAcademic = await storage.updateAnyAcademic(id, req.body);
@@ -1309,7 +1315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/anys-academics/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/anys-academics/:id', authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteAnyAcademic(id);
@@ -1320,7 +1326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get active academic year ID
-  app.get('/api/anys-academics/active/id', isAuthenticated, async (req, res) => {
+  app.get('/api/anys-academics/active/id', authenticateToken, async (req, res) => {
     try {
       const activeYearId = await storage.getActiveAcademicYear();
       res.json({ activeYearId });
@@ -1330,7 +1336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Activate academic year (sets it as active and finalizes the previous one)
-  app.post('/api/anys-academics/:id/activate', isAuthenticated, async (req, res) => {
+  app.post('/api/anys-academics/:id/activate', authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -1355,7 +1361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analytics routes
-  app.get('/api/analytics/guard-stats', isAuthenticated, async (req, res) => {
+  app.get('/api/analytics/guard-stats', authenticateToken, async (req, res) => {
     try {
       const stats = await storage.getGuardAssignmentStats();
       res.json(stats);
@@ -1364,7 +1370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/analytics/workload-balance', isAuthenticated, async (req, res) => {
+  app.get('/api/analytics/workload-balance', authenticateToken, async (req, res) => {
     try {
       const balance = await storage.getProfessorWorkloadBalance();
       res.json(balance);
@@ -1376,7 +1382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // AI Chat routes
-  app.get('/api/chat/sessions', isAuthenticated, async (req, res) => {
+  app.get('/api/chat/sessions', authenticateToken, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       // For now, return empty array as we'll implement session listing later
@@ -1386,7 +1392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/chat/active-session', isAuthenticated, async (req, res) => {
+  app.get('/api/chat/active-session', authenticateToken, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const session = await storage.getUserActiveChatSession(userId);
@@ -1396,7 +1402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/chat/sessions', isAuthenticated, async (req, res) => {
+  app.post('/api/chat/sessions', authenticateToken, async (req, res) => {
     try {
       console.log("POST /api/chat/sessions - Creating new session");
       const userId = (req as any).user.claims.sub;
@@ -1412,7 +1418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/chat/messages/:sessionId', isAuthenticated, async (req, res) => {
+  app.get('/api/chat/messages/:sessionId', authenticateToken, async (req, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
       const session = await storage.getChatSession(sessionId);
@@ -1435,7 +1441,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/chat/session', isAuthenticated, async (req, res) => {
+  app.post('/api/chat/session', authenticateToken, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       
@@ -1451,7 +1457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/chat/sessions/:sessionId/messages', isAuthenticated, async (req, res) => {
+  app.post('/api/chat/sessions/:sessionId/messages', authenticateToken, async (req, res) => {
     try {
       console.log("=== CHAT MESSAGE ENDPOINT HIT ===");
       console.log("POST /api/chat/sessions/:sessionId/messages - Request received");
@@ -1522,7 +1528,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // CSV Import route
-  app.post('/api/import/csv', isAuthenticated, upload.single('csvFile'), async (req, res) => {
+  app.post('/api/import/csv', authenticateToken, upload.single('csvFile'), async (req, res) => {
     try {
       const file = req.file;
       const { entityType, academicYearId } = req.body;
@@ -1892,7 +1898,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Download CSV template endpoint
-  app.get('/api/download/template', isAuthenticated, async (req, res) => {
+  app.get('/api/download/template', authenticateToken, async (req, res) => {
     try {
       console.log('Template download request received:', req.query);
       const entityType = req.query.type as string;
@@ -1959,7 +1965,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Export CSV endpoint
-  app.get('/api/export/csv', isAuthenticated, async (req, res) => {
+  app.get('/api/export/csv', authenticateToken, async (req, res) => {
     try {
       const entityType = req.query.type as string;
       
@@ -2163,7 +2169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analytics routes
-  app.get('/api/analytics/workload-balance', isAuthenticated, async (req, res) => {
+  app.get('/api/analytics/workload-balance', authenticateToken, async (req, res) => {
     try {
       const engine = new GuardAssignmentEngine();
       const workloadBalance = await engine.getWorkloadBalance();
@@ -2173,7 +2179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/analytics/guard-stats', isAuthenticated, async (req, res) => {
+  app.get('/api/analytics/guard-stats', authenticateToken, async (req, res) => {
     try {
       const stats = await storage.getGuardAssignmentStats();
       res.json(stats);
@@ -2183,7 +2189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Route for creating professors quickly
-  app.post('/api/setup/create-professors', isAuthenticated, async (req, res) => {
+  app.post('/api/setup/create-professors', authenticateToken, async (req, res) => {
     try {
       console.log('Creating professors...');
       
@@ -2254,7 +2260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ENDPOINTS PER SUBSTITUCIONS DE SORTIDES
 
   // Obtenir classes que cal substituir per una sortida
-  app.get('/api/sortides/:sortidaId/classes-substituir', isAuthenticated, async (req, res) => {
+  app.get('/api/sortides/:sortidaId/classes-substituir', authenticateToken, async (req, res) => {
     try {
       console.log('=== INICI RUTA CLASSES-SUBSTITUIR ===');
       const sortidaId = parseInt(req.params.sortidaId);
@@ -2291,7 +2297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Obtenir professors disponibles per substituir una classe específica
-  app.get('/api/horari/:horariId/professors-disponibles', isAuthenticated, async (req, res) => {
+  app.get('/api/horari/:horariId/professors-disponibles', authenticateToken, async (req, res) => {
     try {
       const horariId = parseInt(req.params.horariId);
       console.log(`=== INICI RUTA PROFESSORS-DISPONIBLES ===`);
@@ -2317,7 +2323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Assignar professors acompanyants a una sortida
-  app.post('/api/sortides/:sortidaId/professors', isAuthenticated, async (req, res) => {
+  app.post('/api/sortides/:sortidaId/professors', authenticateToken, async (req, res) => {
     try {
       const sortidaId = parseInt(req.params.sortidaId);
       const { professorIds } = req.body;
@@ -2346,7 +2352,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Gestionar alumnes afectats per una sortida
-  app.post('/api/sortides/:sortidaId/alumnes', isAuthenticated, async (req, res) => {
+  app.post('/api/sortides/:sortidaId/alumnes', authenticateToken, async (req, res) => {
     try {
       const sortidaId = parseInt(req.params.sortidaId);
       const { alumneIds } = req.body;
@@ -2375,7 +2381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Crear substitució per una classe específica
-  app.post('/api/sortides/:sortidaId/substitucions', isAuthenticated, async (req, res) => {
+  app.post('/api/sortides/:sortidaId/substitucions', authenticateToken, async (req, res) => {
     try {
       const sortidaId = parseInt(req.params.sortidaId);
       const { horariOriginalId, professorOriginalId, professorSubstitutId, observacions } = req.body;
@@ -2404,7 +2410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Confirmar totes les substitucions d'una sortida i enviar comunicacions
-  app.post('/api/sortides/:sortidaId/confirmar-substitucions', isAuthenticated, async (req, res) => {
+  app.post('/api/sortides/:sortidaId/confirmar-substitucions', authenticateToken, async (req, res) => {
     try {
       const sortidaId = parseInt(req.params.sortidaId);
       const activeYear = await storage.getActiveAcademicYearFull();
@@ -2480,7 +2486,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Obtenir substitucions d'una sortida
-  app.get('/api/sortides/:sortidaId/substitucions', isAuthenticated, async (req, res) => {
+  app.get('/api/sortides/:sortidaId/substitucions', authenticateToken, async (req, res) => {
     try {
       const sortidaId = parseInt(req.params.sortidaId);
       const substitucions = await storage.getSortidaSubstitucions(sortidaId);
@@ -2492,7 +2498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Crear tasca de substitució amb comunicacions automàtiques
-  app.post('/api/tasques', isAuthenticated, async (req, res) => {
+  app.post('/api/tasques', authenticateToken, async (req, res) => {
     try {
       const {
         professorOriginalId,
