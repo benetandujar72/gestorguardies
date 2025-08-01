@@ -8,7 +8,7 @@ import { Bell, ChevronDown, LogOut, Settings, User, Calendar } from "lucide-reac
 import { useQuery } from "@tanstack/react-query";
 
 export default function TopNavigation() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [notificationCount] = useState(3); // This would come from actual notifications
   
   // Obtenir informació dels anys acadèmics
@@ -20,7 +20,8 @@ export default function TopNavigation() {
   const activeAcademicYear = academicYears?.find((year: any) => year.estat === "actiu");
 
   const handleLogout = () => {
-    window.location.href = "/api/logout";
+    logout();
+    window.location.reload();
   };
 
   const getInitials = (firstName?: string, lastName?: string) => {

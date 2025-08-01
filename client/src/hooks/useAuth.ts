@@ -33,23 +33,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for stored auth data on mount
+  // Check for stored auth data on mount and validate token
   useEffect(() => {
-    const storedToken = localStorage.getItem('auth_token');
-    const storedUser = localStorage.getItem('user_data');
+    const checkAuthStatus = async () => {
+      const storedToken = localStorage.getItem('auth_token');
+      const storedUser = localStorage.getItem('user_data');
 
-    if (storedToken && storedUser) {
-      try {
-        const userData = JSON.parse(storedUser);
-        setToken(storedToken);
-        setUser(userData);
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user_data');
+      if (storedToken && storedUser) {
+        try {
+          // Validate token by checking current user
+          const response = await fetch('/api/auth/me', {
+            headers: {
+              'Authorization': `Bearer ${storedToken}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (response.ok) {
+            const userData = JSON.parse(storedUser);
+            setToken(storedToken);
+            setUser(userData);
+          } else {
+            // Token invalid, clear storage
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_data');
+          }
+        } catch (error) {
+          console.error('Error validating auth:', error);
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user_data');
+        }
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+
+    checkAuthStatus();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
