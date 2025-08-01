@@ -882,19 +882,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(anysAcademics).orderBy(desc(anysAcademics.dataInici));
   }
 
-  async getActiveAcademicYear(): Promise<number> {
-    const [activeYear] = await db
-      .select({ id: anysAcademics.id })
-      .from(anysAcademics)
-      .where(eq(anysAcademics.estat, "actiu"))
-      .limit(1);
-    
-    if (!activeYear) {
-      throw new Error("No active academic year found");
-    }
-    
-    return activeYear.id;
-  }
+
 
   async setActiveAcademicYear(yearId: number): Promise<void> {
     await db
@@ -1193,10 +1181,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(anysAcademics).where(eq(anysAcademics.id, id));
   }
 
-  async getActiveAcademicYearFull(): Promise<any> {
-    const [activeYear] = await db.select().from(anysAcademics).where(eq(anysAcademics.estat, "actiu")).limit(1);
-    return activeYear;
-  }
+
 
   // New enhanced methods for advanced substitution management
   async getHoresAlliberadesPorSortida(sortidaId: number): Promise<any[]> {
@@ -1407,44 +1392,6 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting chat session:', error);
       return null;
-    }
-  }
-
-  async createChatSession(userId: string, title?: string): Promise<any> {
-    try {
-      const activeYear = await this.getActiveAcademicYearFull();
-      if (!activeYear) {
-        throw new Error("No hi ha cap any acadèmic actiu");
-      }
-
-      // Close any existing active session
-      await db
-        .update(chatSessions)
-        .set({ tancada: true })
-        .where(and(
-          eq(chatSessions.usuariId, userId),
-          eq(chatSessions.anyAcademicId, activeYear.id),
-          eq(chatSessions.tancada, false)
-        ));
-
-      // Create new session
-      const [newSession] = await db
-        .insert(chatSessions)
-        .values({
-          anyAcademicId: activeYear.id,
-          usuariId: userId,
-          inici: new Date(),
-          missatges: [],
-          tancada: false,
-          lastActivity: new Date(),
-          createdAt: new Date()
-        })
-        .returning();
-      
-      return newSession;
-    } catch (error) {
-      console.error('Error creating chat session:', error);
-      throw error;
     }
   }
 

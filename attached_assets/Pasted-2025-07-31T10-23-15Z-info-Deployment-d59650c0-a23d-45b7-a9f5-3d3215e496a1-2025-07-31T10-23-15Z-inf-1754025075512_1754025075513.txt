@@ -1,0 +1,87 @@
+2025-07-31T10:23:15Z info: Deployment: d59650c0-a23d-45b7-a9f5-3d3215e496a1
+2025-07-31T10:23:15Z info: Build: 4d927918-19b4-4cf1-86ba-25d1a3eca9ef
+2025-07-31T10:23:15Z info: Connecting to builder
+2025-07-31T10:23:16Z info: Builder connected
+2025-07-31T10:23:17Z info: Installing packages
+2025-07-31T10:23:17Z info: Starting Build
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+
+vite v5.4.14 building for production...
+
+transforming...
+
+Browserslist: browsers data (caniuse-lite) is 9 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+✓ 3861 modules transformed.
+
+rendering chunks...
+
+computing gzip size...
+
+../dist/public/index.html                     1.37 kB │ gzip:   0.71 kB
+
+../dist/public/assets/index-CHmqS3ZR.css    106.79 kB │ gzip:  16.58 kB
+
+../dist/public/assets/index-Bd7iGODE.js   1,400.74 kB │ gzip: 380.04 kB
+
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+✓ built in 24.08s
+
+▲ [WARNING] Duplicate member "getActiveAcademicYear" in class body [duplicate-class-member]
+
+    server/storage.ts:885:8:
+      885 │   async getActiveAcademicYear(): Promise<number> {
+          ╵         ~~~~~~~~~~~~~~~~~~~~~
+
+  The original member "getActiveAcademicYear" is here:
+
+    server/storage.ts:191:8:
+      191 │   async getActiveAcademicYear(): Promise<number> {
+          ╵         ~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] Duplicate member "getActiveAcademicYearFull" in class body [duplicate-class-member]
+
+    server/storage.ts:1196:8:
+      1196 │   async getActiveAcademicYearFull(): Promise<any> {
+           ╵         ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  The original member "getActiveAcademicYearFull" is here:
+
+    server/storage.ts:206:8:
+      206 │   async getActiveAcademicYearFull(): Promise<any> {
+          ╵         ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] Duplicate member "createChatSession" in class body [duplicate-class-member]
+
+    server/storage.ts:1413:8:
+      1413 │   async createChatSession(userId: string, title?: string): Promi...
+           ╵         ~~~~~~~~~~~~~~~~~
+
+  The original member "createChatSession" is here:
+
+    server/storage.ts:1090:8:
+      1090 │   async createChatSession(session: any): Promise<ChatSession> {
+           ╵         ~~~~~~~~~~~~~~~~~
+
+
+3 warnings
+
+
+  dist/index.js  174.7kb
+
+⚡ Done in 274ms
+
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 11.5.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.5.2
+npm notice To update 
