@@ -1,23 +1,16 @@
 import { gmailService, type SubstitutionEmailData } from './gmailService';
 
 export async function sendSubstitutionEmails(data: SubstitutionEmailData): Promise<void> {
-  return await gmailService.sendSubstitutionEmails(data);
+  // TEMPORALMENT DESACTIVAT - Gmail service disabled to allow app testing
+  console.log('⚠️  Email service temporalment desactivat. Email que s\'hauria enviat:', data);
+  return Promise.resolve();
 }
 
 // Verificar la configuració del Gmail API sense bloquejar
 export async function verifyEmailConfiguration(): Promise<boolean> {
   try {
-    // Verifica asíncrona sense bloquejar l'arrencada
-    setTimeout(async () => {
-      try {
-        const result = await gmailService.verifyConfiguration();
-        if (result) {
-          console.log('✅ Configuració d\'email Gmail verificada correctament');
-        }
-      } catch (error) {
-        console.log('⚠️  Error en la configuració d\'email - Les notificacions per email no funcionaran');
-      }
-    }, 1000);
+    // TEMPORALMENT DESACTIVAT - Gmail service disabled to allow app testing
+    console.log('⚠️  Gmail service temporalment desactivat - Les notificacions per email no funcionaran');
     return true;
   } catch (error) {
     console.log('⚠️  Error en la configuració d\'email - Les notificacions per email no funcionaran');
