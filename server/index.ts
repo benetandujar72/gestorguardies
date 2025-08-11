@@ -1,5 +1,6 @@
+import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { createServer } from "http";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
@@ -37,7 +38,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  let server = createServer(app);
+
+  if (process.env.DATABASE_URL) {
+    const { registerRoutes } = await import("./routes");
+    server = await registerRoutes(app);
+  } else {
+    log("DATABASE_URL no configurada; iniciando en modo solo-frontend", "init");
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -60,11 +68,17 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
+  const listenOptions: {
+    port: number;
+    host: string;
+    reusePort?: boolean;
+  } = { port, host: "0.0.0.0" };
+
+  if (process.platform !== "win32") {
+    listenOptions.reusePort = true;
+  }
+
+  server.listen(listenOptions, () => {
     log(`serving on port ${port}`);
   });
 })();

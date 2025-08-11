@@ -2420,7 +2420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Obtenir totes les substitucions de la sortida
-      const substitucions = await storage.getSortidaSubstitucions(sortidaId);
+      const substitucions = await storage.getSortidaSubstituciosBySortida(sortidaId);
       
       // Obtenir informació de la sortida
       const sortida = await storage.getSortida(sortidaId);
@@ -2489,7 +2489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/sortides/:sortidaId/substitucions', authenticateToken, async (req, res) => {
     try {
       const sortidaId = parseInt(req.params.sortidaId);
-      const substitucions = await storage.getSortidaSubstitucions(sortidaId);
+      const substitucions = await storage.getSortidaSubstituciosBySortida(sortidaId);
       res.json(substitucions);
     } catch (error: any) {
       console.error("Error getting sortida substitutions:", error);
@@ -2528,9 +2528,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let anyAcademicId = req.body.anyAcademicId;
         if (!anyAcademicId) {
           const activeYear = await storage.getActiveAcademicYear();
-          if (activeYear) {
-            anyAcademicId = typeof activeYear === 'number' ? activeYear : activeYear.id;
-          }
+          anyAcademicId = activeYear;
         }
         
         const tascaDataGeneral = {
@@ -2563,12 +2561,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const activeYear = await storage.getActiveAcademicYear();
-      if (!activeYear) {
-        return res.status(400).json({ message: "No hi ha cap any acadèmic actiu" });
-      }
-
-      const anyAcademicId = typeof activeYear === 'number' ? activeYear : activeYear.id;
+      const anyAcademicId = await storage.getActiveAcademicYear();
 
       // Crear la tasca amb relació a sortida si existeix
       const tascaData = {
