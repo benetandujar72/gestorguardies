@@ -31,7 +31,7 @@ import {
   insertAttachmentSchema,
   insertMateriaSchema
 } from "@shared/schema";
-import { GuardAssignmentEngine } from "./guard-assignment-engine-simple";
+import { GuardAssignmentEngine } from "./guard-assignment-engine";
 import { analyzeGuardAssignments, generateChatResponse } from "./openai";
 
 // Configure multer for file uploads
@@ -2313,7 +2313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const anyAcademicId = horari.anyAcademicId;
       console.log('anyAcademicId del horari:', anyAcademicId);
 
-      const availableProfessors = await storage.getProfessorsAvailableForSubstitution(horariId, anyAcademicId);
+      const availableProfessors = await storage.getAvailableProfessorsForGuard(horariId);
       console.log(`Resultat professors disponibles: ${availableProfessors.length} professors`);
       res.json(availableProfessors);
     } catch (error: any) {

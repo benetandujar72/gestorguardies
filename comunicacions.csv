@@ -1,4 +1,0 @@
-titol,missatge,usuariId,destinataris,tipus,llegida
-Canvi d'horari - Guàrdia de pati,S'ha modificat l'horari de la guàrdia de pati del dia 15/06. Nova hora: 10:15-10:45,sistema,professors,urgent,false
-Recordatori: Sortida educativa demà,Recordem la sortida al Museu de Ciències demà. Punt de trobada a les 8:45 a l'entrada principal.,coordinator,professors,alumnes,informacio,true
-Nou protocol de guàrdies,S'ha actualitzat el protocol de guàrdies. Consulteu el document adjunt per a més detalls.,direccio,professors,protocol,false
