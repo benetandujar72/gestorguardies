@@ -40,12 +40,9 @@ app.use((req, res, next) => {
 (async () => {
   let server = createServer(app);
 
-  if (process.env.DATABASE_URL) {
-    const { registerRoutes } = await import("./routes");
-    server = await registerRoutes(app);
-  } else {
-    log("DATABASE_URL no configurada; iniciando en modo solo-frontend", "init");
-  }
+  // Siempre registrar las rutas, incluso sin DATABASE_URL
+  const { registerRoutes } = await import("./routes");
+  server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

@@ -66,7 +66,7 @@ const upload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   // Add JWT authentication routes
-  app.use(authRoutes);
+  app.use('/api/auth', authRoutes);
   
   // Initialize users creation
   const { createInitialUsers } = await import('./auth');

@@ -4,7 +4,7 @@ import { loginUser, createInitialUsers, authenticateToken, AuthUser } from './au
 const router = Router();
 
 // Login endpoint
-router.post('/api/auth/login', async (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -47,7 +47,7 @@ router.post('/api/auth/login', async (req, res) => {
 });
 
 // Get current user endpoint
-router.get('/api/auth/me', authenticateToken, (req, res) => {
+router.get('/me', authenticateToken, (req, res) => {
   const user = req.user as AuthUser;
   res.json({
     user: {
@@ -62,14 +62,14 @@ router.get('/api/auth/me', authenticateToken, (req, res) => {
 });
 
 // Logout endpoint (client-side JWT deletion)
-router.post('/api/auth/logout', (req, res) => {
+router.post('/logout', (req, res) => {
   res.json({ 
     message: 'Logout correcte. Elimina el token del client.' 
   });
 });
 
 // Initialize users endpoint (for development)
-router.post('/api/auth/init-users', async (req, res) => {
+router.post('/init-users', async (req, res) => {
   try {
     await createInitialUsers();
     res.json({ 
